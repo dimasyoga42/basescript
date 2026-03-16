@@ -1,0 +1,78 @@
+import axios from "axios";
+import { config, thumbnail } from "../../config.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
+
+const handler = async (m, { conn }) => {
+  try {
+    const query = m.text.split(" ").slice(1).join(" ");
+    if (!query)
+      return sendFancyText(conn, m.chat, {
+        title: config.BotName,
+        body: "exemple: .xtal name",
+        thumbnail: thumbnail,
+        text: config.message.invalid,
+        quoted: m,
+      });
+
+    const { data } = await axios.get(
+      "https://raw.githubusercontent.com/dimasyoga42/dataset/refs/heads/main/xtal_data.json",
+    );
+
+    if (!Array.isArray(data)) {
+      return sendFancyText(conn, m.chat, {
+        title: config.BotName,
+        body: `Developer By ${config.OwnerName}`,
+        thumbnail: thumbnail,
+        text: config.message.notFound ?? "Data tidak ditemukan.",
+        quoted: m,
+      });
+    }
+
+    const result = data.filter((x) =>
+      x.name.toLowerCase().includes(query.toLowerCase()),
+    );
+
+    if (!result || result.length === 0)
+      return sendFancyText(conn, m.chat, {
+        title: config.BotName,
+        body: `Developer By ${config.OwnerName}`,
+        thumbnail: thumbnail,
+        text: config.message.notFound ?? "Data tidak ditemukan.",
+        quoted: m,
+      });
+
+    const mtext = result
+      .map((xtall) => {
+        const statsText = Object.entries(xtall.stats || {})
+          .map(([key, val]) => {
+            const cleanKey = key.replace(/\s+/g, " ").trim();
+
+            const cleanVal = String(val)
+              .replace(/\n+/g, " ")
+              .replace(/\s{2,}/g, " ")
+              .trim();
+
+            return `${cleanKey} : ${cleanVal}`;
+          })
+          .join("\n");
+
+        return `*${xtall.name} - ${xtall.type}*\n${statsText}\n\nUpgrade Route :\n- ${xtall.upgrade_route || "-"}\n\nMax Upgrade Route :\n- ${xtall.max_upgrade_route || "-"}`;
+      })
+      .join("\n\n");
+
+    sendText(conn, m.chat, mtext, m);
+  } catch (err) {
+    sendFancyText(conn, m.chat, {
+      title: config.BotName,
+      body: `Developer By ${config.OwnerName}`,
+      thumbnail: thumbnail,
+      text: config.message.error,
+      quoted: m,
+    });
+  }
+};
+
+handler.command = ["xtal"];
+handler.category = "Toram Search";
+handler.submenu = "Toram";
+export default handler;
