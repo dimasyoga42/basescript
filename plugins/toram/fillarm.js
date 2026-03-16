@@ -55,7 +55,13 @@ const handler = async (m, { conn }) => {
 
    Process Time : ${data.duration} ms
    `.trim();
-    sendText(conn, m.chat, result, m);
+    await sendFancyText(conn, m.chat, {
+      title: config.BotName,
+      body: `Develop by ${config.OwnerName}`,
+      thumbnail: thumbnail,
+      text: result,
+      quoted: m,
+    });
   } catch (err) {}
 };
 

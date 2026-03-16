@@ -1,6 +1,7 @@
 import axios from "axios";
 import { config, thumbnail } from "../../config.js";
 import { sendFancyText, sendText } from "../../src/config/message.js";
+import { supa } from "../../src/config/supa.js";
 const handler = async (m, { conn }) => {
   try {
     const query = m.text.split(" ").slice(1).join(" ");
@@ -13,11 +14,10 @@ const handler = async (m, { conn }) => {
         quoted: m,
       });
 
-    const res = await axios.get(
-      `${config.restapi.toram}toram/ability?name=${encodeURIComponent(query)}`,
-    );
-    const data = res.data.result?.data ?? res.data.result;
-
+    const { data } = await supa
+      .from("ability")
+      .select("*")
+      .ilike("name", `%${query}%`);
     if (!data || data.length === 0)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
@@ -31,7 +31,13 @@ const handler = async (m, { conn }) => {
       .map((item) => `${item.name}\n${item.stat_effect}`)
       .join("\n\n");
 
-    sendText(conn, m.chat, mtext, m);
+    await sendFancyText(conn, m.chat, {
+      title: config.BotName,
+      body: `Develop by ${config.OwnerName}`,
+      thumbnail: thumbnail,
+      text: mtext,
+      quoted: m,
+    });
   } catch (err) {
     sendFancyText(conn, m.chat, {
       title: config.BotName,

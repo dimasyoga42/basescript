@@ -11,6 +11,7 @@ const handler = async (m, { conn }) => {
     const arg = m.text.split(" ");
     const ele = arg[1];
     const price = arg[2];
+    if (!ele || !price) return;
     const data = await getUserData(db);
     const raidReady = data.find((item) => item.id === m.chat);
     if (raidReady)
