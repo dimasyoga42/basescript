@@ -1,4 +1,5 @@
 import { config } from "./config.js";
+import { checkUnAfk } from "./plugins/_function/_afk.js";
 import { isBan } from "./plugins/_function/_ban.js";
 import { isMuted } from "./plugins/_function/_muted.js";
 import { checkVip, cleanExpiredVip } from "./plugins/_function/_vip.js";
@@ -19,6 +20,7 @@ export async function runCommand(conn, m, plugins) {
   if (await isBan(conn, m)) return;
   //if (!checkVip(m.chat)) return;
   cleanExpiredVip();
+  checkUnAfk(sock, m.chat, m);
   const input = body.slice(prefix.length).trim();
   const [command, ...args] = input.split(/\s+/);
   const text = args.join(" ");
