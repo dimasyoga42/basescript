@@ -3,7 +3,15 @@ import fs from "fs";
 const ensure = (v, name) => {
   if (!v) throw new Error(`${name} is required`);
 };
-
+const CHANNEL = {
+  forwardingScore: 999,
+  isForwarded: true,
+  forwardedNewsletterMessageInfo: {
+    newsletterJid: "120363401312267152@newsletter",
+    newsletterName: "Neura Inc",
+    serverMessageId: 1,
+  },
+};
 export const sendText = async (sock, jid, text, quoted = null) => {
   ensure(jid, "jid");
   ensure(text, "text");
@@ -187,6 +195,46 @@ export const sendFancyText = async (
       text,
       contextInfo: {
         externalAdReply,
+      },
+    },
+    { quoted },
+  );
+};
+
+export const sendFancyTextModif = async (
+  sock,
+  jid,
+  {
+    title = "Bot",
+    body = "Message",
+    text = "",
+    thumbnail = null,
+    renderLargerThumbnail = true,
+    quoted = null,
+  } = {},
+) => {
+  let externalAdReply = {
+    title,
+    body,
+    mediaType: 1,
+    renderLargerThumbnail,
+  };
+
+  if (thumbnail) {
+    if (Buffer.isBuffer(thumbnail)) {
+      externalAdReply.thumbnail = thumbnail;
+    } else {
+      externalAdReply.thumbnailUrl = thumbnail;
+    }
+  }
+
+  return await sock.sendMessage(
+    jid,
+    {
+      text,
+      contextInfo: {
+        externalAdReply,
+        ...CHANNEL,
       },
     },
     { quoted },
