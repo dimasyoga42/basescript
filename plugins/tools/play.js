@@ -98,7 +98,7 @@ const handler = async (m, { conn }) => {
       title: config.BotName,
       body: `Developer By ${config.OwnerName}`,
       thumbnail: data.thumbnail || thumbnail,
-      text: `🎵 ${data.title}\n📺 Channel: ${data.channel}\n⏱ Durasi: ${data.fduration}\n👁 Views: ${data.views}\n💾 Size: ${data.data.size}`,
+      text: `${data.title}\nChannel: ${data.channel}\nDurasi: ${data.fduration}\nViews: ${data.views}\nSize: ${data.data.size}`,
       msg: m,
     });
 
