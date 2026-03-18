@@ -20,7 +20,7 @@ export async function runCommand(conn, m, plugins) {
   if (await isBan(conn, m)) return;
   //if (!checkVip(m.chat)) return;
   cleanExpiredVip();
-  checkUnAfk(conn, m.chat, m);
+  //checkUnAfk(conn, m.chat, m);
   const input = body.slice(prefix.length).trim();
   const [command, ...args] = input.split(/\s+/);
   const text = args.join(" ");

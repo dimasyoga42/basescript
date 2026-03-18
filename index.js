@@ -39,10 +39,12 @@ const start = async () => {
       m.text = text;
       m.chat = m.key.remoteJid;
       m.sender = m.key.participant || m.key.remoteJid;
-
+      const isAfkCommand = m.text?.trim().toLowerCase().startsWith(".afk");
+      if (!isAfkCommand) {
+        await checkUnAfk(sock, m.chat, m);
+        await checkMentionAfk(sock, m.chat, m);
+      }
       await runCommand(sock, m, plugins);
-      checkMentionAfk(sock, m.chat, m);
-      checkUnAfk(sock, m.chat, m);
     } catch (err) {
       console.error("Error saat memproses pesan:", err);
     }
