@@ -52,11 +52,11 @@ const handler = async (m, { conn }) => {
 
             return `${cleanKey} : ${cleanVal}`;
           })
-          .join("\n");
+          .join("\n- ");
 
-        return `*${xtall.name} - ${xtall.type}*\n${statsText}\n\nUpgrade Route :\n- ${xtall.upgrade_route || "-"}\n\nMax Upgrade Route :\n- ${xtall.max_upgrade_route || "-"}\n────────────`;
+        return `*${xtall.name} - ${xtall.type}*\n${statsText}\nUpgrade Route :\n- ${xtall.upgrade_route || "-"}\nMax Upgrade Route :\n- ${xtall.max_upgrade_route || "-"}\n────────────`;
       })
-      .join("\n\n");
+      .join("\n");
 
     sendText(conn, m.chat, mtext, m);
   } catch (err) {
