@@ -2,8 +2,8 @@ import { sendFancyText, sendText } from "../../src/config/message.js";
 
 const handler = (m, { conn }) => {
   try {
-    const arg = m.text.split(" ");
-    const query = m.text.replace(".cek", "").trim();
+    // const arg = m.text.split(" ");
+    const query = m.text.replace(/\.cek/, "").trim();
     if (!query)
       return sendFancyText(conn, m.chat, {
         title: "Neura Sama",
