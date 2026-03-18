@@ -19,7 +19,7 @@ const handler = async (m, { conn }) => {
       //   text: mtext,
       //   quoted: m,
       // });
-      sendText(conn, m.chat, mtext, m);
+      return sendText(conn, m.chat, mtext, m);
     }
 
     const { data } = await supa
