@@ -323,6 +323,32 @@ export const config = {
   - 20x Cairan lekat (Juvestida - Nov Diela)
   - 30x Kulit Pelik (Mata Jahat - Padang Morga:A1)
   `,
+  mq: `
+  BAHAN MQ
+  - Daun Colon (Colon Leaf) x5
+  - Sisik Naga (Hard Dragon Skin) x2
+  - Daging Domba (Lamb Meat) x1
+  - Sulur (Vine) x3
+  - Paruh Tebal (Thick Beak) x3
+  - Sayap Peri (Fairy Feather) x3
+  - Koin Ksatria (Swordsman Stone Coin) x20
+  - Daging Tikus Pasir (Sand Mole Meat) x1
+  - Cakar binatang buas (Beast Claw) 3x
+  - Kulit Kodok Pasir (Sand Frog Skin) x5
+  - Taring Bergerigi (Jagged Fang) x10
+  - Kristal Saham (Saham Crystal) x5
+  - Permata Jiwa (Spiritual Gemstone) x1
+  - Anggur Rokoko (Rokoko Grape) x5
+  - Kayu Labilans (Labilans Wood) x10
+  - Tanduk Patah ( Broken Horn) x20
+  - Biji Berkembang (Growing Ore ) x5
+  - Batu Jabali (Jabali Stone) x5
+  - Kulit Tebal Berlendir (Slimy Thick Skin) x20
+  - Akar Melilit (Tangled Roots) x10
+  - Kayu Menabra (Menabra Wood) x10
+  - Pupuk Keruh (Stagnant Fertilizer) x10
+
+  `,
 };
 const thumbnails = (config?.thumbnail ?? []).filter(Boolean);
 export const thumbnail =
