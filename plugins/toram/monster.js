@@ -6,13 +6,11 @@ const handler = async (m, { conn }) => {
   try {
     const name = m.text.split(" ").slice(1).join(" ").trim();
     if (!name)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: "exemple: .mob name",
-        thumbnail: thumbnail,
-        text: config.message.invalid,
-        quoted: m,
-      });
+      return sendText(
+        conn,
+        m.chat,
+        `${config.message.invalid}, use: .mob nameMobs`,
+      );
 
     const { data } = await supa
       .from("monster")

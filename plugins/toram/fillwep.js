@@ -5,13 +5,11 @@ const handler = async (m, { conn }) => {
   try {
     const stats = m.text.replace(".fillwep", "");
     if (!stats)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: "exemple: .fillwep stats",
-        thumbnail: thumbnail,
-        text: config.message.invalid,
-        quoted: m,
-      });
+      return sendText(
+        conn,
+        m.chat,
+        `${config.message.invalid}, use: .fillwep stat`,
+      );
     const url = `https://neurapi.mochinime.cyou/api/toram/filwep?text=${encodeURIComponent(stats)}`;
     const { data } = await axios.get(url, { timeout: 15000 });
     if (!data?.ok || !data?.hasValidResult)

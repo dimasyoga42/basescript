@@ -1,5 +1,5 @@
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
@@ -7,13 +7,11 @@ const handler = async (m, { conn }) => {
     const arg = m.text.split(" ");
     const name = arg[1];
     if (!name)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: "exemple: .bosdef name",
-        thumbnail: thumbnail,
-        text: config.message.invalid,
-        quoted: m,
-      });
+      return sendText(
+        conn,
+        m.chat,
+        `${config.message.invalid}, use: .bosdef namebos`,
+      );
     const { data } = await supa
       .from("bosdef")
       .select("name, type, image_url, spawn, element, stat")

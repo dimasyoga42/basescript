@@ -1,15 +1,9 @@
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 
 const handler = async (m, { conn }) => {
   try {
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `aku selalu setia`,
-      thumbnail: thumbnail,
-      text: config.leveling,
-      quoted: m,
-    });
+    sendText(conn, m.chat, config.leveling, m);
   } catch (err) {}
 };
 

@@ -6,13 +6,11 @@ const handler = async (m, { conn }) => {
   try {
     const query = m.text.split(" ").slice(1).join(" ");
     if (!query)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: "exemple: .xtal name",
-        thumbnail: thumbnail,
-        text: config.message.invalid,
-        quoted: m,
-      });
+      return sendText(
+        conn,
+        m.chat,
+        `${config.message.invalid}, use: .xtal name`,
+      );
 
     const { data } = await axios.get(
       "https://raw.githubusercontent.com/dimasyoga42/dataset/refs/heads/main/xtal_data.json",

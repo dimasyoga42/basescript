@@ -6,13 +6,11 @@ const handler = async (m, { conn }) => {
   try {
     const query = m.text.split(" ").slice(1).join(" ");
     if (!query)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: "exemple: .regis nama",
-        thumbnail: thumbnail,
-        text: config.message.invalid,
-        quoted: m,
-      });
+      return sendText(
+        conn,
+        m.chat,
+        `${config.message.invalid}, use: .regis name`,
+      );
 
     const res = await axios.get(
       `${config.restapi.neura}/regis?name=${encodeURIComponent(query)}`,

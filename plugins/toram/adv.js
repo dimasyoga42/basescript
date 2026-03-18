@@ -20,14 +20,7 @@ const handler = async (m, { conn }) => {
     );
 
     const result = res.data?.result?.data?.[0];
-    if (!result)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Develop by ${config.OwnerName}`,
-        thumbnail: thumbnail,
-        text: config.message.invalid,
-        quoted: m,
-      });
+    if (!result) return sendText(conn, m.chat, config.message.invalid, m);
 
     const progressText =
       Array.isArray(result.progress) && result.progress.length > 0

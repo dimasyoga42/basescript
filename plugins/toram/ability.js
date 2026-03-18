@@ -19,13 +19,7 @@ const handler = async (m, { conn }) => {
       .select("*")
       .ilike("name", `%${query}%`);
     if (!data || data.length === 0)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Developer By ${config.OwnerName}`,
-        thumbnail: thumbnail,
-        text: config.message.notFound ?? "Data tidak ditemukan.",
-        quoted: m,
-      });
+      return sendText(conn, m.chat, config.message.notFound, m);
 
     const mtext = data
       .map((item) => `${item.name}\n${item.stat_effect}`)

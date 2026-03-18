@@ -6,13 +6,12 @@ const handler = async (m, { conn }) => {
   try {
     const level = m.text.trim().split(/\s+/)[1];
     if (!level || isNaN(level))
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `exemple: .lv 299`,
-        thumbnail: thumbnail,
-        text: config.message.invalid,
-        quoted: m,
-      });
+      return sendText(
+        conn,
+        m.chat,
+        `${config.message.invalid}, use: .lv 299`,
+        m,
+      );
     const res = await fetch(
       `https://coryn.club/leveling.php?lv=${encodeURIComponent(level)}&gap=7&bonusEXP=0`,
     );
