@@ -1,5 +1,5 @@
 import { getUserData, saveUserData } from "../../src/config/func.js";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 import path from "path";
 const db = path.resolve("db", "afk.json");
 export const checkUnAfk = async (conn, mchat, m) => {
@@ -23,14 +23,20 @@ export const checkUnAfk = async (conn, mchat, m) => {
     else if (minutes > 0) timeText = `${minutes} menit`;
     else timeText = "beberapa detik";
 
-    sendFancyText(conn, mchat, {
-      title: "Neura Afk",
-      body: "Neura Sama",
-      text: `selamat datang kembali anda sudah afk selama ${timeText}`,
-      thumbnail:
-        "https://i.pinimg.com/736x/f5/37/29/f5372928b53a4f87fc59ef26503c78e3.jpg",
-      quoted: m,
-    });
+    // sendFancyText(conn, mchat, {
+    //   title: "Neura Afk",
+    //   body: "Neura Sama",
+    //   text: `selamat datang kembali anda sudah afk selama ${timeText}`,
+    //   thumbnail:
+    //     "https://i.pinimg.com/736x/f5/37/29/f5372928b53a4f87fc59ef26503c78e3.jpg",
+    //   quoted: m,
+    // });
+    sendText(
+      conn,
+      m.chat,
+      `selamat datang kemabli, anda afk selama ${timeText}`,
+      m,
+    );
   } catch (err) {
     sendFancyText(conn, mchat, {
       title: "Neura Sama",

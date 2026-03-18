@@ -1,5 +1,5 @@
 import { getUserData, saveUserData } from "../../src/config/func.js";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 import path from "path";
 
 const db = path.resolve("db", "afk.json");
@@ -26,14 +26,20 @@ const handler = (m, { conn }) => {
       };
       data.push(newAfk);
       saveUserData(db, data);
-      sendFancyText(conn, m.chat, {
-        title: "Neura Afk",
-        body: "selalu hadir di sisi mu",
-        text: `anda memasuki mode afk\nPesan: ${pesan}`,
-        thumbnail:
-          "https://i.pinimg.com/736x/16/46/ee/1646eef2bf7003c46eb1c0ac6aa6e16e.jpg",
-        msg: m,
-      });
+      // sendFancyText(conn, m.chat, {
+      //   title: "Neura Afk",
+      //   body: "selalu hadir di sisi mu",
+      //   text: `anda memasuki mode afk\nPesan: ${pesan}`,
+      //   thumbnail:
+      //     "https://i.pinimg.com/736x/16/46/ee/1646eef2bf7003c46eb1c0ac6aa6e16e.jpg",
+      //   msg: m,
+      // });
+      sendText(
+        conn,
+        m.chat,
+        `anda memasuki mode afk dengan alasan: ${pesan}`,
+        m,
+      );
     }
   } catch (err) {
     sendFancyText(conn, m.chat, {
