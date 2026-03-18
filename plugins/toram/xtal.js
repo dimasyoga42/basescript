@@ -52,7 +52,7 @@ const handler = async (m, { conn }) => {
 
             return `${cleanKey} : ${cleanVal}`;
           })
-          .join("\n");
+          .join("\n────────────");
 
         return `*${xtall.name} - ${xtall.type}*\n${statsText}\n\nUpgrade Route :\n- ${xtall.upgrade_route || "-"}\n\nMax Upgrade Route :\n- ${xtall.max_upgrade_route || "-"}`;
       })

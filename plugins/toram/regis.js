@@ -1,6 +1,7 @@
 import axios from "axios";
 import { config, thumbnail } from "../../config.js";
 import { sendFancyText, sendText } from "../../src/config/message.js";
+import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
@@ -12,10 +13,10 @@ const handler = async (m, { conn }) => {
         `${config.message.invalid}, use: .regis name`,
       );
 
-    const res = await axios.get(
-      `${config.restapi.neura}/regis?name=${encodeURIComponent(query)}`,
-    );
-    const data = res.data.result?.data ?? res.data.result;
+    const res = await supa
+      .from("regist")
+      .select("*")
+      .ilike("name", `%${query}%`);
 
     if (!data || data.length === 0)
       return sendFancyText(conn, m.chat, {
@@ -26,12 +27,12 @@ const handler = async (m, { conn }) => {
         quoted: m,
       });
 
-    const mtext = data
+    const mtext = res
       .map(
         (item) =>
           `${item.name}\n${item.effect}\nMax Level:\n- ${item.max_lv}\nLevel Stode:\n- ${item.levels_studied}`,
       )
-      .join("\n\n");
+      .join("\n────────────");
 
     sendText(conn, m.chat, mtext, m);
   } catch (err) {
