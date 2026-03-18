@@ -30,7 +30,8 @@ const handler = async (m, { conn }) => {
 
   await sendFancyTextModif(conn, m.chat, {
     title: config.BotName,
-    body: `Halo ${Namemesage}`,
+    body: `Develop by ${config.OwnerName}`,
+    name: Namemesage,
     thumbnail,
     text: result.trim(),
     msg: m,

@@ -3,14 +3,17 @@ import fs from "fs";
 const ensure = (v, name) => {
   if (!v) throw new Error(`${name} is required`);
 };
-const CHANNEL = {
-  forwardingScore: 999,
-  isForwarded: true,
-  forwardedNewsletterMessageInfo: {
-    newsletterJid: "120363401312267152@newsletter",
-    newsletterName: "Neura Inc",
-    serverMessageId: 1,
-  },
+const messagetxt = (name) => {
+  const CHANNEL = {
+    forwardingScore: 999,
+    isForwarded: true,
+    forwardedNewsletterMessageInfo: {
+      newsletterJid: "120363401312267152@newsletter",
+      newsletterName: `${name}`,
+      serverMessageId: 1,
+    },
+  };
+  return CHANNEL;
 };
 export const sendText = async (sock, jid, text, quoted = null) => {
   ensure(jid, "jid");
@@ -207,6 +210,7 @@ export const sendFancyTextModif = async (
   {
     title = "Bot",
     body = "Message",
+    name = "neura",
     text = "",
     thumbnail = null,
     renderLargerThumbnail = true,
@@ -234,7 +238,7 @@ export const sendFancyTextModif = async (
       text,
       contextInfo: {
         externalAdReply,
-        ...CHANNEL,
+        ...messagetxt(name),
       },
     },
     { quoted },
