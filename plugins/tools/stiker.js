@@ -16,7 +16,7 @@ const getMediaMessage = (m) => {
 };
 
 const parseText = (text = "") => {
-  const input = text.replace(/\.(stiker|sticker)/i, "").trim();
+  const input = text.replace(/\.(stiker|s)/i, "").trim();
   const [top = "_", bottom = "_"] = input.split("|");
   return {
     top: encodeURIComponent(top.trim() || "_"),
@@ -90,7 +90,7 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["stiker"];
+handler.command = ["stiker", "s"];
 handler.category = "Menu Tools";
 handler.submenu = "Media";
 export default handler;
