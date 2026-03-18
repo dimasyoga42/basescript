@@ -1,6 +1,8 @@
 import path from "path";
 import Groq from "groq-sdk";
 import { getUserData, saveUserData } from "../../src/config/func.js";
+import dotenv from "dotenv";
+dotenv.config();
 const db = path.resolve("db", "neura.json");
 const res = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const getGroqMessage = async (cotext, sys) => {
