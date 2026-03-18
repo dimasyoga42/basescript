@@ -9,6 +9,7 @@ import { loadPlugins, plugins } from "./plugins/index.js";
 import dotenv from "dotenv";
 import { checkMentionAfk, checkUnAfk } from "./plugins/_function/_afk.js";
 import { jawab } from "./plugins/fun/game.js";
+import { messageHandler } from "./plugins/ai/neura.js";
 dotenv.config();
 const start = async () => {
   // Load semua plugin dulu sebelum bot jalan
@@ -46,6 +47,7 @@ const start = async () => {
         await checkMentionAfk(sock, m.chat, m);
       }
       await jawab(sock, m);
+      await messageHandler(sock, m.chat, m);
       await runCommand(sock, m, plugins);
     } catch (err) {
       console.error("Error saat memproses pesan:", err);
