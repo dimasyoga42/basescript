@@ -31,13 +31,14 @@ const handler = async (m, { conn }) => {
       .map((item) => `${item.name}\n${item.stat_effect}`)
       .join("\n\n");
 
-    await sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Develop by ${config.OwnerName}`,
-      thumbnail: thumbnail,
-      text: mtext,
-      quoted: m,
-    });
+    // await sendFancyText(conn, m.chat, {
+    //   title: config.BotName,
+    //   body: `Develop by ${config.OwnerName}`,
+    //   thumbnail: thumbnail,
+    //   text: mtext,
+    //   quoted: m,
+    // });
+    sendText(conn, m.chat, mtext, m);
   } catch (err) {
     sendFancyText(conn, m.chat, {
       title: config.BotName,
