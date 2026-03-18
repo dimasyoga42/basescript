@@ -62,8 +62,8 @@ const handler = async (m, { conn }) => {
     });
   }
 };
-handler.command = ["lv"];
-handler.alis = ["level"];
+handler.command = "lv";
+handler.alias = ["level"];
 handler.category = "Toram Search";
 handler.submenu = "Toram";
 export default handler;
