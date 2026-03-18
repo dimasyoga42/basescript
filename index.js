@@ -29,7 +29,7 @@ const start = async () => {
     if (type !== "notify") return;
 
     const m = messages[0];
-    console.log(m);
+    //console.log(m);
     if (!m?.message) return;
 
     try {
