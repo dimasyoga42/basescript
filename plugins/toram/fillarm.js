@@ -55,13 +55,14 @@ const handler = async (m, { conn }) => {
 
    Process Time : ${data.duration} ms
    `.trim();
-    await sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Develop by ${config.OwnerName}`,
-      thumbnail: thumbnail,
-      text: result,
-      quoted: m,
-    });
+    // await sendFancyText(conn, m.chat, {
+    //   title: config.BotName,
+    //   body: `Develop by ${config.OwnerName}`,
+    //   thumbnail: thumbnail,
+    //   text: result,
+    //   quoted: m,
+    // });
+    sendText(conn, m.chat, result, m);
   } catch (err) {}
 };
 

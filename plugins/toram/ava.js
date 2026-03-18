@@ -1,6 +1,6 @@
 import axios from "axios";
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendImage } from "../../src/config/message.js";
 
 const handler = async (m, { conn }) => {
   try {
@@ -8,14 +8,15 @@ const handler = async (m, { conn }) => {
     const { data } = res.data.result;
 
     data.map((item) => {
-      sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: item.name,
-        thumbnail: item.image,
-        renderLargerThumbnail: true,
-        text: `*${item.name}*\n${item.date}`,
-        quoted: m,
-      });
+      // sendFancyText(conn, m.chat, {
+      //   title: config.BotName,
+      //   body: item.name,
+      //   thumbnail: item.image,
+      //   renderLargerThumbnail: true,
+      //   text: `*${item.name}*\n${item.date}`,
+      //   quoted: m,
+      // });
+      sendImage(conn, m.chat, item.image, item.name, m);
     });
   } catch (err) {
     sendFancyText(conn, m.chat, {

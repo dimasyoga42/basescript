@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 import { config, thumbnail } from "../../config.js";
 //import fetch from "node-fetch";
 const handler = async (m, { conn }) => {
@@ -45,13 +45,14 @@ const handler = async (m, { conn }) => {
     });
     if (!found) return (mtext += config.message.notFound);
 
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Develop by ${config.OwnerName}`,
-      thumbnail: thumbnail,
-      text: mtext,
-      quoted: m,
-    });
+    // sendFancyText(conn, m.chat, {
+    //   title: config.BotName,
+    //   body: `Develop by ${config.OwnerName}`,
+    //   thumbnail: thumbnail,
+    //   text: mtext,
+    //   quoted: m,
+    // });
+    sendText(conn, m.chat, mtext, m);
   } catch (err) {
     sendFancyText(conn, m.chat, {
       title: config.BotName,
