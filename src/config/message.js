@@ -9,7 +9,7 @@ const messagetxt = (name) => {
     isForwarded: true,
     forwardedNewsletterMessageInfo: {
       newsletterJid: "120363401312267152@newsletter",
-      newsletterName: `${name}`,
+      newsletterName: `hello ${name}`,
       serverMessageId: 1,
     },
   };
