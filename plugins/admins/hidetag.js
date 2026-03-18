@@ -1,6 +1,7 @@
 import { downloadMediaMessage } from "@whiskeysockets/baileys";
 import { sendFancyText, sendText } from "../../src/config/message.js";
 import { config, thumbnail } from "../../config.js";
+import { isAdmin } from "../_function/_admin.js";
 
 const MEDIA_TYPES = [
   { key: "imageMessage", type: "image" },
@@ -59,6 +60,7 @@ const handleQuoted = async (conn, m, quotedMsg, mentions) => {
 
 const handler = async (m, { conn }) => {
   try {
+    if (!(await isAdmin(conn, m))) return;
     if (!m.chat.endsWith("@g.us"))
       return sendText(conn, m.chat, "Group only", m);
 
@@ -85,7 +87,7 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["hidetag", "h"];
+handler.command = ["hidetag"];
 handler.category = "Menu Admin";
 handler.submenu = "Admin";
 export default handler;
