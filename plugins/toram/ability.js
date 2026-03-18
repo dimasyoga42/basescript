@@ -4,7 +4,7 @@ import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 const handler = async (m, { conn }) => {
   try {
-    const query = m.text.split(" ").slice(1).join(" ");
+    const query = m.text.replace(/\.trait|.ability/, "").trim();
     if (!query)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
@@ -49,7 +49,8 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["trait"];
+handler.command = "trait";
+handler.alias = ["ability"];
 handler.category = "Toram Search";
 handler.submenu = "Toram";
 export default handler;

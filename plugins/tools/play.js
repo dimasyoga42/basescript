@@ -51,7 +51,7 @@ const convertToMp3 = (inputBuffer) => {
 
 const handler = async (m, { conn }) => {
   try {
-    const query = m.text.replace(/^\.play\s*/i, "").trim();
+    const query = m.text.replace(/^\.play|.music|.p\s*/i, "").trim();
 
     if (!query)
       return sendText(
@@ -117,7 +117,8 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["play"];
+handler.command = "play";
+handler.alias = ["music", "p"];
 handler.category = "Menu Tools";
 handler.submenu = "Tools";
 export default handler;
