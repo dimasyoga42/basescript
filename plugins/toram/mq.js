@@ -7,7 +7,7 @@ const handler = async (m, { conn }) => {
       title: config.BotName,
       body: "Neura Disini",
       thumbnail: thumbnail,
-      text: config.mq,
+      text: `${config.mq}`.trim(),
       quoted: m,
     });
   } catch (err) {}
