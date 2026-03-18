@@ -1,5 +1,5 @@
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
@@ -39,13 +39,14 @@ const handler = async (m, { conn }) => {
       .map((item) => `\n*${item.name}*\n${item.code}\n`)
       .join("\n\n────────────");
 
-    await sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Develop by ${config.OwnerName}`,
-      thumbnail,
-      text: mtext,
-      quoted: m,
-    });
+    // await sendFancyText(conn, m.chat, {
+    //   title: config.BotName,
+    //   body: `Develop by ${config.OwnerName}`,
+    //   thumbnail,
+    //   text: mtext,
+    //   quoted: m,
+    // });
+    sendText(conn, m.chat, mtext, m);
   } catch (err) {
     console.error(err);
     await sendFancyText(conn, m.chat, {
