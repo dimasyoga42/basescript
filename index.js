@@ -45,7 +45,7 @@ const start = async () => {
         await checkUnAfk(sock, m.chat, m);
         await checkMentionAfk(sock, m.chat, m);
       }
-      await jawab(conn, m);
+      await jawab(sock, m);
       await runCommand(sock, m, plugins);
     } catch (err) {
       console.error("Error saat memproses pesan:", err);
