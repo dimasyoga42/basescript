@@ -5,8 +5,7 @@ import path from "path";
 const db = path.resolve("db", "afk.json");
 const handler = (m, { conn }) => {
   try {
-    const arg = m.text.split(" ");
-    const pesan = arg[1];
+    const pesan = m.text.replace(".afk", "");
     if (!pesan)
       return sendFancyText(conn, m.chat, {
         title: "Neura Sama",
