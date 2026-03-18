@@ -12,13 +12,14 @@ const handler = async (m, { conn }) => {
         .map((item) => `\n*${item.name}*\n${item.code}`)
         .join("\n────────────");
 
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Develop by ${config.OwnerName}`,
-        thumbnail,
-        text: mtext,
-        quoted: m,
-      });
+      // return sendFancyText(conn, m.chat, {
+      //   title: config.BotName,
+      //   body: `Develop by ${config.OwnerName}`,
+      //   thumbnail,
+      //   text: mtext,
+      //   quoted: m,
+      // });
+      sendText(conn, m.chat, mtext, m);
     }
 
     const { data } = await supa
