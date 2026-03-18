@@ -22,21 +22,21 @@ export async function runCommand(conn, m, plugins) {
   cleanExpiredVip();
   //checkUnAfk(conn, m.chat, m);
   const input = body.slice(prefix.length).trim();
-  const [command, ...args] = input.split(/\s+/);
+  const [command, alias, ...args] = input.split(/\s+/);
   const text = args.join(" ");
 
   for (const name in plugins) {
     const plugin = plugins[name];
     if (!plugin) continue;
 
-    const cmds = plugin.command;
+    const cmds = plugin.command || plugin.alias;
     if (!cmds) continue;
 
     const match =
       typeof cmds === "string"
         ? cmds === command
         : Array.isArray(cmds)
-          ? cmds.includes(command)
+          ? cmds.includes(command, alias)
           : cmds instanceof RegExp
             ? cmds.test(command)
             : false;
