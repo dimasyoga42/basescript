@@ -68,6 +68,7 @@ const handler = async (m, { conn }) => {
     );
 
     const data = res.data;
+    console.log(data);
     if (!data?.data?.url)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
