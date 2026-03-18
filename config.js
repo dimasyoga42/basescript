@@ -31,6 +31,21 @@ export const config = {
     create: "party raid successfully created",
     allready: "the data already exists",
   },
+  kerang: [
+    "ya",
+    "mungkin",
+    "tidak",
+    "mungkin saja",
+    "tidak mungkin",
+    "ya bisa jadi",
+    "semoga saja",
+    "tidak akan",
+    "coba lagi",
+    "ya pasti",
+    "agak ragu",
+    "...",
+  ],
+  owner: "179573169848377@lid",
 };
 const thumbnails = (config?.thumbnail ?? []).filter(Boolean);
 export const thumbnail =

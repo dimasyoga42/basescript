@@ -1,55 +1,51 @@
-import axios from "axios";
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText, sendText } from "../../src/config/message.js";
+import { sendFancyText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
+
 const handler = async (m, { conn }) => {
   try {
-    const query = m.text.split(" ").slice(1).join(" ");
-    if (!query)
+    const arg = m.text.split(" ");
+    const name = arg[1];
+    if (!name)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
-        body: "exemple: .ability nama",
+        body: `Develop by ${config.OwnerName}`,
         thumbnail: thumbnail,
-        text: config.message.invalid,
+        text: config.message.notFound,
         quoted: m,
       });
-
     const { data } = await supa
-      .from("ability")
-      .select("*")
-      .ilike("name", `%${query}%`);
-    if (!data || data.length === 0)
+      .from("hdb")
+      .select("bosname, stat")
+      .ilike("bosname", `%${name}%`)
+      .limit(1)
+      .maybeSingle();
+    if (!data)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
-        body: `Developer By ${config.OwnerName}`,
+        body: `Develop by ${config.OwnerName}`,
         thumbnail: thumbnail,
-        text: config.message.notFound ?? "Data tidak ditemukan.",
+        text: config.message.notFound,
         quoted: m,
       });
-
-    const mtext = data
-      .map((item) => `${item.name}\n${item.stat_effect}`)
-      .join("\n\n");
-
-    await sendFancyText(conn, m.chat, {
-      title: config.BotName,
+    sendFancyText(conn, m.chat, {
+      title: data.bosname,
       body: `Develop by ${config.OwnerName}`,
       thumbnail: thumbnail,
-      text: mtext,
+      text: data.stat,
       quoted: m,
     });
   } catch (err) {
     sendFancyText(conn, m.chat, {
       title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
+      body: `Develop by ${config.OwnerName}`,
       thumbnail: thumbnail,
       text: config.message.error,
       quoted: m,
     });
   }
 };
-
-handler.command = ["trait"];
+handler.command = ["hdb"];
 handler.category = "Toram Search";
 handler.submenu = "Toram";
 export default handler;
