@@ -28,10 +28,9 @@ const handler = async (m, { conn }) => {
   const thumbnails = (config?.thumbnail ?? []).filter(Boolean);
   const thumbnail = thumbnails[Math.floor(Math.random() * thumbnails.length)];
 
-  await sendFancyTextModif(conn, m.chat, {
+  await sendFancyText(conn, m.chat, {
     title: config.BotName,
-    body: `Develop by ${config.OwnerName}`,
-    name: Namemesage,
+    body: `halo ${Namemesage}`,
     thumbnail,
     text: result.trim(),
     msg: m,
