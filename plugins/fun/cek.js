@@ -27,7 +27,7 @@ const handler = (m, { conn }) => {
     });
   }
 };
-handler.command = ["cek"];
+handler.command = "cek";
 handler.category = "Menu Fun";
 handler.submenu = "Fun";
 export default handler;

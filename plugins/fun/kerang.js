@@ -3,7 +3,7 @@ import { sendFancyText, sendText } from "../../src/config/message.js";
 
 const handler = (m, { conn }) => {
   try {
-    const query = m.text.replace(".kerang", "").trim();
+    const query = m.text.replace(/\.kerang/, "").trim();
     if (!query)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
