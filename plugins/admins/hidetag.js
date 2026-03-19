@@ -64,7 +64,7 @@ const handler = async (m, { conn }) => {
     if (!m.chat.endsWith("@g.us"))
       return sendText(conn, m.chat, "Group only", m);
 
-    const arg = m.text.replace(/^\.hidetag\s*/i, "").trim();
+    const arg = m.text.replace(/^\.hidetag|.h|.tagall\s*/i, "").trim();
     const meta = await conn.groupMetadata(m.chat);
 
     if (!meta?.participants?.length)
@@ -87,7 +87,8 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["hidetag"];
+handler.command = "hidetag";
+handler.alias = ["h", "tagall"];
 handler.category = "Menu Admin";
 handler.submenu = "Admin";
 export default handler;

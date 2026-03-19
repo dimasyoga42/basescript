@@ -34,6 +34,6 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = "item";
-handler.category = "Menu Search";
+handler.category = "Toram Search";
 handler.submenu = "Toram";
 export default handler;

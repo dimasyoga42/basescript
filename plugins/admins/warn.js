@@ -44,7 +44,7 @@ const handler = async (m, { conn }) => {
 
     saveUserData(db, data);
 
-    if (member.warn >= 10) {
+    if (member.warn >= 4) {
       await conn.groupParticipantsUpdate(m.chat, [target], "remove");
       group.members = group.members.filter((u) => u.id !== target);
       saveUserData(db, data);
@@ -61,7 +61,7 @@ const handler = async (m, { conn }) => {
       title: config.BotName,
       body: `Developer By ${config.OwnerName}`,
       thumbnail,
-      text: `User berhasil diberi peringatan.\nTotal warn: *${member.warn}/10*`,
+      text: `User berhasil diberi peringatan.\nTotal warn: *${member.warn}/4*`,
       msg: m,
     });
   } catch (err) {
@@ -75,7 +75,8 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["warn"];
+handler.command = "warn";
+handler.alias = ["w"];
 handler.category = "Menu Admin";
 handler.submenu = "Admin";
 export default handler;
