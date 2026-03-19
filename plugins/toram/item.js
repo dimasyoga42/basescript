@@ -32,3 +32,8 @@ const handler = async (m, { conn }) => {
     sendText(conn, m.chat, err.message, m);
   }
 };
+
+handler.command = "item";
+handler.category = "Menu Search";
+handler.submenu = "Toram";
+export default handler;
