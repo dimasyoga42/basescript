@@ -12,7 +12,7 @@ const handler = async (m, { conn }) => {
       .select("name, image_url")
       .ilike("name", `%${name}%`);
 
-    if (data.length === 0 || error)
+    if (!data || error)
       return sendText(conn, m.chat, config.message.notFound, m);
 
     data.map((item) => {
