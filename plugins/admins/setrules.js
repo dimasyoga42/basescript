@@ -12,7 +12,7 @@ const handler = async (m, { conn }) => {
     if (!m.chat?.endsWith("@g.us"))
       return sendText(conn, m.chat, "Group only", m);
 
-    const text = m.text.replace(/^\.setrules\s*/i, "").trim();
+    const text = m.text.replace(/^\.setrules/, "").trim();
     if (!text)
       return sendText(
         conn,
