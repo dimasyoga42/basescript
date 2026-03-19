@@ -22,7 +22,7 @@ const handler = async (m, { conn }) => {
     sendText(conn, m.chat, config.message.error);
   }
 };
-handler.command = "appsearch";
+handler.command = "searchapp";
 handler.category = "Toram Search";
 handler.submenu = "Toram";
 export default handler;
