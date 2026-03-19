@@ -37,7 +37,15 @@ const handler = async (m, { conn }) => {
         text: `${title}\nname: ${nickname}\nUsername: ${username}`,
       });
     console.log(videoUrl);
-    sendVideo(conn, m.chat, videoUrl, "video result", m);
+    await conn.sendMessage(
+      m.chat,
+      {
+        video: { url: videoUrl },
+        mimetype: "video/mp4",
+        fileName: `${result.id}.mp4`,
+      },
+      { quoted: m },
+    );
   } catch (err) {
     sendText(conn, m.chat, err.message, m);
   }
