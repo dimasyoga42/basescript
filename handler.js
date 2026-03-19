@@ -27,7 +27,6 @@ function isMatch(pattern, command) {
 export async function runCommand(conn, m, plugins) {
   const prefix = config.prefix;
 
-  // Ambil teks dari berbagai tipe pesan (teks, caption gambar/video/dokumen)
   const body =
     m.text ||
     m.message?.imageMessage?.caption ||
