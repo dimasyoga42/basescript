@@ -11,7 +11,7 @@ const handler = async (m, { conn }) => {
       .from("appview")
       .select("name")
       .ilike("name", `%${name}%`)
-      .limit(20);
+      .limit(40);
 
     if (!data || error)
       return sendText(conn, m.chat, config.message.notFound, m);
