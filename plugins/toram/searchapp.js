@@ -10,12 +10,13 @@ const handler = async (m, { conn }) => {
     const { data, error } = await supa
       .from("appview")
       .select("name")
-      .select("name", `%${name}%`);
+      .select("name", `%${name}%`)
+      .limit(20);
 
     if (!data || error)
       return sendText(conn, m.chat, config.message.notFound, m);
     let mtext = `App Name Found:\n`;
-    mtext += data.map((item) => `- ${item.name}\n`).join("\n");
+    mtext += data.map((item) => `- ${item.name}\n`);
     return sendText(conn, m.chat, mtext, m);
   } catch (err) {
     sendText(conn, m.chat, config.message.error);
