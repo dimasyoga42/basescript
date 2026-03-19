@@ -16,7 +16,7 @@ const handler = async (m, { conn }) => {
     if (!data || error)
       return sendText(conn, m.chat, config.message.notFound, m);
     let mtext = `App Name Found:\n`;
-    mtext += data.map((item) => `- ${item.name}\n`);
+    mtext += data.map((item) => `- ${item.name}`).join("\n");
     return sendText(conn, m.chat, mtext, m);
   } catch (err) {
     sendText(conn, m.chat, config.message.error);
