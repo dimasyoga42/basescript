@@ -36,6 +36,7 @@ const handler = async (m, { conn }) => {
         name: namepage,
         text: `${title}\nname: ${nickname}\nUsername: ${username}`,
       });
+    console.log(videoUrl);
     sendVideo(conn, m.chat, videoUrl, "video result", m);
   } catch (err) {
     sendText(conn, m.chat, err.message, m);
