@@ -27,7 +27,10 @@ export const sendText = async (sock, jid, text, quoted = null) => {
 export const editText = async (sock, jid, message, text) => {
   ensure(jid, "jid");
   ensure(text, "text");
-  return await sock.sendMessage(jid, { text, edit: message.key });
+  await sock.sendPresenceUpdate("composing", jid);
+  await new Promise((r) => setTimeout(r, 2000));
+  await sock.sendMessage(jid, { text, edit: message.key });
+  return await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const reactMessage = async (sock, jid, message, emoji) => {
@@ -46,7 +49,9 @@ export const sendImage = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
-  return await sock.sendMessage(
+  await sock.sendPresenceUpdate("composing", jid);
+  await new Promise((r) => setTimeout(r, 2000));
+  await sock.sendMessage(
     jid,
     {
       image: Buffer.isBuffer(image) ? image : { url: image },
@@ -54,6 +59,7 @@ export const sendImage = async (
     },
     { quoted },
   );
+  return await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const sendVideo = async (
@@ -64,7 +70,9 @@ export const sendVideo = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
-  return await sock.sendMessage(
+  await sock.sendPresenceUpdate("composing", jid);
+  await new Promise((r) => setTimeout(r, 2000));
+  await sock.sendMessage(
     jid,
     {
       video: Buffer.isBuffer(video) ? video : { url: video },
@@ -72,6 +80,7 @@ export const sendVideo = async (
     },
     { quoted },
   );
+  return await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const sendAudio = async (
@@ -82,7 +91,9 @@ export const sendAudio = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
-  return await sock.sendMessage(
+  await sock.sendPresenceUpdate("composing", jid);
+  await new Promise((r) => setTimeout(r, 2000));
+  await sock.sendMessage(
     jid,
     {
       audio: Buffer.isBuffer(audio) ? audio : { url: audio },
@@ -90,17 +101,21 @@ export const sendAudio = async (
     },
     { quoted },
   );
+  return await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const sendSticker = async (sock, jid, sticker, quoted = null) => {
   ensure(jid, "jid");
-  return await sock.sendMessage(
+  await sock.sendPresenceUpdate("composing", jid);
+  await new Promise((r) => setTimeout(r, 2000));
+  await sock.sendMessage(
     jid,
     {
       sticker: Buffer.isBuffer(sticker) ? sticker : { url: sticker },
     },
     { quoted },
   );
+  return await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const sendDocument = async (
@@ -194,8 +209,9 @@ export const sendFancyText = async (
       externalAdReply.thumbnailUrl = thumbnail;
     }
   }
-
-  return await sock.sendMessage(
+  await sock.sendPresenceUpdate("composing", jid);
+  await new Promise((r) => setTimeout(r, 2000));
+  await sock.sendMessage(
     jid,
     {
       text,
@@ -205,6 +221,7 @@ export const sendFancyText = async (
     },
     { quoted },
   );
+  return await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const sendFancyTextModif = async (
@@ -234,8 +251,9 @@ export const sendFancyTextModif = async (
       externalAdReply.thumbnailUrl = thumbnail;
     }
   }
-
-  return await sock.sendMessage(
+  await sock.sendPresenceUpdate("composing", jid);
+  await new Promise((r) => setTimeout(r, 2000));
+  await sock.sendMessage(
     jid,
     {
       text,
@@ -246,6 +264,7 @@ export const sendFancyTextModif = async (
     },
     { quoted },
   );
+  await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const downloadMedia = async (message, type = "buffer") => {
