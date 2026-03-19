@@ -18,7 +18,8 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["tgc"];
+handler.command = "tgc";
+handler.alias = ["close", "tutup"];
 handler.category = "Menu Admin";
 handler.submenu = "Admin";
 
