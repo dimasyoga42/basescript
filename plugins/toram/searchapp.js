@@ -10,7 +10,7 @@ const handler = async (m, { conn }) => {
     const { data, error } = await supa
       .from("appview")
       .select("name")
-      .select("name", `%${name}%`)
+      .ilike("name", `%${name}%`)
       .limit(20);
 
     if (!data || error)
