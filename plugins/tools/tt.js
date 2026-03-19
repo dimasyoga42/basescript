@@ -28,14 +28,15 @@ const handler = async (m, { conn }) => {
     //const musicUrl = result.music;
     if (!videoUrl) return sendText(conn, m.chat, config.message.notFound, m);
     const namepage = m.pushName;
-    if (avatar)
-      return sendFancyTextModif(conn, m.chat, {
+    if (avatar) {
+      sendFancyTextModif(conn, m.chat, {
         title: config.BotName,
         body: `develop by: ${config.OwnerName}`,
         thumbnail: avatar,
         name: namepage,
         text: `${title}\nname: ${nickname}\nUsername: ${username}`,
       });
+    }
     console.log(videoUrl);
     await conn.sendMessage(
       m.chat,
