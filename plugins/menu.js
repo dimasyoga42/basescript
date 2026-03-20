@@ -1,5 +1,9 @@
 import { config } from "../config.js";
-import { sendFancyText, sendFancyTextModif } from "../src/config/message.js";
+import {
+  sendFancyText,
+  sendFancyTextModif,
+  sendText,
+} from "../src/config/message.js";
 
 const handler = async (m, { conn }) => {
   const { plugins } = await import("./index.js");
@@ -31,10 +35,15 @@ const handler = async (m, { conn }) => {
   await sendFancyText(conn, m.chat, {
     title: config.BotName,
     body: `halo ${Namemesage}`,
-    thumbnail,
+    thumbnail: "https://i.ibb.co/B5XTQ9TM/Desain-tanpa-judul.png",
     text: result.trim(),
     msg: m,
   });
+  await sendText(
+    conn,
+    m.chat,
+    "Owner Neura Sama, Mengucapkan Minal aidin wal faizin, mohon maaf lahir dan batin✨",
+  );
 };
 
 handler.command = ["menu", "help"];

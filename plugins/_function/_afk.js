@@ -34,7 +34,7 @@ export const checkUnAfk = async (conn, mchat, m) => {
     sendText(
       conn,
       m.chat,
-      `selamat datang kemabli, anda afk selama ${timeText}`,
+      `selamat datang kembali, anda afk selama ${timeText}`,
       m,
     );
   } catch (err) {
