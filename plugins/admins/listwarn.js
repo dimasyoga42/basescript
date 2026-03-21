@@ -24,7 +24,7 @@ const handler = async (m, { conn }) => {
 
     const mentions = group.members.map((u) => u.id);
     const list = group.members
-      .map((u, i) => `${i + 1}. @${u.id.split("@")[0]} - *${u.warn}/10*`)
+      .map((u, i) => `${i + 1}. @${u.id.split("@")[0]} - *${u.warn}/4*`)
       .join("\n");
 
     await conn.sendMessage(
