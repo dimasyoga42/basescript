@@ -52,7 +52,7 @@ const handler = async (m, { conn }) => {
         title: config.BotName,
         body: `Developer By ${config.OwnerName}`,
         thumbnail,
-        text: `User mencapai 10 warn dan telah dikeluarkan dari grup.`,
+        text: `User mencapai 4 warn dan telah dikeluarkan dari grup.`,
         msg: m,
       });
     }
