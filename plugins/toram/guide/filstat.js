@@ -62,6 +62,6 @@ elelight
 };
 
 handler.command = "stats";
-handler.category = "Menu Simulator";
+handler.category = "Toram Info";
 handler.submenu = "Toram";
 export default handler;
