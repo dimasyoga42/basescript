@@ -8,6 +8,7 @@ stat yang bisa digunakan:
 min = untuk status yang di negatifkan
 max = poin status maksimal
 lv = adalah level char (wajib)
+pot = potensial (Wajib)
 bs = level Blacksmith profession (opsional)
 
 cd, critdmg, cd%, critdmg% = Critical Damage

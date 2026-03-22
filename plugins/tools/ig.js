@@ -1,6 +1,6 @@
 import axios from "axios";
 import { config } from "../../config.js";
-import { sendText } from "../../src/config/message.js";
+import { sendImage, sendText, sendVideo } from "../../src/config/message.js";
 
 const handler = async (m, { conn }) => {
   try {
@@ -22,13 +22,13 @@ const handler = async (m, { conn }) => {
     const { images, videos } = data.result.media;
     if (Array.isArray(images) && images.length > 0) {
       for (const img of images) {
-        await conn.sendMessage(m.chat, { image: { url: img } }, { quoted: m });
+        await sendImage(conn, m.chat, img, "hasil download", m);
       }
       return;
     }
     if (Array.isArray(videos) && videos.length > 0) {
       for (const vid of videos) {
-        await conn.sendMessage(chatId, { video: { url: vid } }, { quoted: m });
+        await sendVideo(conn, m.chat, vid, "hasil download", m);
       }
       return;
     }
