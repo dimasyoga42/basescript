@@ -39,7 +39,7 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["toimg", "simg", "stotoimg"];
+handler.command = "toimg";
 handler.category = "Menu Tools";
 handler.submenu = "Media";
 export default handler;
