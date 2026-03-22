@@ -18,7 +18,7 @@ const handler = async (m, { conn }) => {
       { timeout: 15000 },
     );
     if (!data?.status || !data?.result?.media)
-      return sendText(conn, m.cat, config.message.notFound, m);
+      return sendText(conn, m.chat, config.message.notFound, m);
     const { images, videos } = data.result.media;
     if (Array.isArray(images) && images.length > 0) {
       for (const img of images) {
