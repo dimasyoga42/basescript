@@ -4,7 +4,8 @@ import { sendImage, sendText, sendVideo } from "../../src/config/message.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const link = m.text.replace(/\.ig/, "");
+    const link = m.text.replace(/\.ig/, "").trim();
+    console.log(link);
     if (!link)
       return sendText(
         conn,
