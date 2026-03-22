@@ -4,8 +4,8 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const query = m.text.replace(/^\.(trait|ability)\s*/, "").trim();
-
+    const query = m.text.replace(/^\.(trait|ability)\s*/i, "");
+    console.log(query);
     if (!query)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
