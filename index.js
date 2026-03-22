@@ -51,7 +51,31 @@ const start = async () => {
       plugins,
     );
   });
+  const extractText = (m) => {
+    const msg = m.message;
+    if (!msg) return "";
 
+    // Coba interactiveResponseMessage dulu
+    try {
+      const params = JSON.parse(
+        msg.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson ||
+          "{}",
+      );
+      if (params.id) return params.id;
+    } catch {}
+
+    return (
+      msg.conversation ||
+      msg.extendedTextMessage?.text ||
+      msg.imageMessage?.caption ||
+      msg.videoMessage?.caption ||
+      msg.buttonsResponseMessage?.selectedButtonId ||
+      msg.buttonsResponseMessage?.selectedDisplayText ||
+      msg.listResponseMessage?.singleSelectReply?.selectedRowId ||
+      msg.templateButtonReplyMessage?.selectedId ||
+      ""
+    );
+  };
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
 
@@ -70,7 +94,7 @@ const start = async () => {
         m.message.listResponseMessage?.singleSelectReply?.selectedRowId ||
         "";
 
-      m.text = text;
+      m.text = extractText(m);
       m.chat = m.key.remoteJid;
       m.sender = m.key.participant || m.key.remoteJid;
       const isAfkCommand = m.text?.trim().toLowerCase().startsWith(".afk");
