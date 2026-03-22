@@ -32,18 +32,19 @@ const handler = async (m, { conn }) => {
   const thumbnails = (config?.thumbnail ?? []).filter(Boolean);
   const thumbnail = thumbnails[Math.floor(Math.random() * thumbnails.length)];
 
-  await sendFancyText(conn, m.chat, {
+  await sendFancyTextModif(conn, m.chat, {
     title: config.BotName,
-    body: `halo ${Namemesage}`,
-    thumbnail: "https://i.ibb.co/B5XTQ9TM/Desain-tanpa-judul.png",
+    body: `developer by ${config.OwnerName}`,
+    name: Namemesage,
+    thumbnail: thumbnail,
     text: result.trim(),
-    msg: m,
+    quoted: m,
   });
-  await sendText(
-    conn,
-    m.chat,
-    "Owner Neura Sama, Mengucapkan Minal aidin wal faizin, mohon maaf lahir dan batin✨",
-  );
+  // await sendText(
+  //   conn,
+  //   m.chat,
+  //   "",
+  // );
 };
 
 handler.command = ["menu", "help"];
