@@ -1,45 +1,59 @@
-import axios from "axios";
 import { config, thumbnail } from "../../config.js";
 import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
+
 const handler = async (m, { conn }) => {
   try {
-    const query = m.text.replace(/\.trait|.ability/, "").trim();
+    const query = m.text.replace(/\.(trait|ability)/i, "").trim();
+
     if (!query)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
-        body: "exemple: .ability nama",
-        thumbnail: thumbnail,
+        body: "Contoh: .ability nama",
+        thumbnail,
         text: config.message.invalid,
-        quoted: m,
+        msg: m,
       });
 
-    const { data } = await supa
+    const { data, error } = await supa
       .from("ability")
       .select("*")
       .ilike("name", `%${query}%`);
-    if (!data || data.length === 0)
+
+    if (error || !data || data.length === 0)
       return sendText(conn, m.chat, config.message.notFound, m);
+    if (data.length === 1) {
+      const item = data[0];
+      return sendText(conn, m.chat, `*${item.name}*\n\n${item.stat_effect}`, m);
+    }
 
-    const mtext = data
-      .map((item) => `${item.name}\n${item.stat_effect}`)
-      .join("\n\n");
+    const mtext =
+      `*Hasil: ${query}*\n${"─".repeat(20)}\n\n` +
+      data.map((item, i) => `*${i + 1}.* ${item.name}`).join("\n") +
+      `\n\n> Pilih salah satu:`;
 
-    // await sendFancyText(conn, m.chat, {
-    //   title: config.BotName,
-    //   body: `Develop by ${config.OwnerName}`,
-    //   thumbnail: thumbnail,
-    //   text: mtext,
-    //   quoted: m,
-    // });
-    sendText(conn, m.chat, mtext, m);
+    await sendText(conn, m.chat, mtext, m);
+
+    await conn.sendButton(m.chat, {
+      caption: `Pilih ability untuk melihat detail:`,
+      image: { url: thumbnail },
+      footer: config.OwnerName,
+      buttons: data.slice(0, 3).map((item) => ({
+        name: "quick_reply",
+        buttonParamsJson: JSON.stringify({
+          display_text: `${item.name}`,
+          id: `.ability ${item.name}`,
+        }),
+      })),
+    });
   } catch (err) {
-    sendFancyText(conn, m.chat, {
+    console.error("[ability]", err.message);
+    await sendFancyText(conn, m.chat, {
       title: config.BotName,
       body: `Developer By ${config.OwnerName}`,
-      thumbnail: thumbnail,
+      thumbnail,
       text: config.message.error,
-      quoted: m,
+      msg: m,
     });
   }
 };
