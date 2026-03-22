@@ -5,7 +5,7 @@ import { supa } from "../../src/config/supa.js";
 const handler = async (m, { conn }) => {
   try {
     // ✅ Fix regex — hapus prefix .trait atau .ability beserta spasi
-    const query = m.text.replace(/^\.(trait|ability)\s*/i, "").trim();
+    const query = m.text.replace(/^\.(trait|ability)\s*/, "").trim();
 
     if (!query)
       return sendFancyText(conn, m.chat, {
