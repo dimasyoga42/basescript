@@ -44,7 +44,7 @@ const handler = async (m, { conn }) => {
           video: buffer,
           mimetype: "image/gif",
           gifPlayback: true,
-          caption,
+          caption: data.name,
         },
         { quoted }
       );
@@ -53,7 +53,7 @@ const handler = async (m, { conn }) => {
         chatId,
         {
           image: buffer,
-          caption,
+          caption: data.name,
         },
         { quoted }
       );
