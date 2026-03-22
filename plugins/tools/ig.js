@@ -17,6 +17,7 @@ const handler = async (m, { conn }) => {
       `https://api.deline.web.id/downloader/ig?url=${encodeURIComponent(link)}`,
       { timeout: 15000 },
     );
+    console.log(data);
     if (!data?.status || !data?.result?.media)
       return sendText(conn, m.chat, config.message.notFound, m);
     const { images, videos } = data.result.media;
