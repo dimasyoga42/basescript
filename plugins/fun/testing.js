@@ -1,20 +1,6 @@
 import { generateWAMessageFromContent, proto } from "@whiskeysockets/baileys";
+import axios from "axios";
 import { config, thumbnail } from "../../config.js";
-
-const CATEGORY_EMOJIS = {
-  main: "🏠",
-  tools: "🛠️",
-  fun: "🎮",
-  group: "👥",
-  download: "📥",
-  search: "🔍",
-  media: "🎬",
-  toram: "⚔️",
-  owner: "👑",
-  ai: "🤖",
-  game: "🎯",
-  info: "ℹ️",
-};
 
 const toSmallCaps = (text) => {
   const map = {
@@ -52,37 +38,58 @@ const toSmallCaps = (text) => {
     .join("");
 };
 
+const CATEGORY_EMOJIS = {
+  main: "🏠",
+  tools: "🛠️",
+  fun: "🎮",
+  group: "👥",
+  download: "📥",
+  media: "🎬",
+  toram: "⚔️",
+  owner: "👑",
+  ai: "🤖",
+  info: "ℹ️",
+  other: "📋",
+};
+
+const getThumbnailBuffer = async () => {
+  try {
+    if (!thumbnail) return null;
+    const res = await axios.get(thumbnail, { responseType: "arraybuffer" });
+    return Buffer.from(res.data);
+  } catch {
+    return null;
+  }
+};
+
 const handler = async (m, { conn }) => {
   try {
-    const { plugins } = await import("./index.js");
     const categories = {};
 
-    for (const name in plugins) {
-      const plugin = plugins[name];
+    for (const name in global.plugins) {
+      const plugin = global.plugins[name];
       if (!plugin?.command) continue;
       const cmds = Array.isArray(plugin.command)
         ? plugin.command
         : [plugin.command];
-      const cat = plugin.category || "other";
+      const cat = (plugin.category || "other").toLowerCase();
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(...cmds);
     }
 
-    let txt = `Hai *@${m.pushName || "User"}* 👋\n`;
-    txt += `Aku *${config.BotName}*, bot WhatsApp siap membantu kamu!\n\n`;
-
-    const sortedCats = Object.keys(categories).sort();
-
-    for (const cat of sortedCats) {
-      const emoji = CATEGORY_EMOJIS[cat.toLowerCase()] || "📋";
+    // build teks menu
+    let txt = `Hai *${m.pushName || "User"}* 👋\n\n`;
+    for (const cat of Object.keys(categories).sort()) {
+      const emoji = CATEGORY_EMOJIS[cat] || "📋";
       txt += `╭┈┈⬡「 ${emoji} *${toSmallCaps(cat)}* 」\n`;
       for (const cmd of categories[cat]) {
-        txt += `┃ ◦ *${config.prefix}${toSmallCaps(cmd)}*\n`;
+        txt += `┃ ◦ ${config.prefix}${toSmallCaps(cmd)}\n`;
       }
       txt += `╰┈┈┈┈┈┈┈┈⬡\n\n`;
     }
+    txt += `_© ${config.BotName} | Dev: ${config.OwnerName}_`;
 
-    txt += `_© ${config.BotName} | Developer: ${config.OwnerName}_`;
+    const thumbBuffer = await getThumbnailBuffer();
 
     const msg = generateWAMessageFromContent(
       m.chat,
@@ -91,7 +98,7 @@ const handler = async (m, { conn }) => {
           message: {
             interactiveMessage: {
               body: { text: txt },
-              footer: { text: config.BotName },
+              footer: { text: `${config.BotName} • ${config.Version}` },
               contextInfo: {
                 mentionedJid: [m.sender],
                 forwardingScore: 777,
@@ -100,33 +107,16 @@ const handler = async (m, { conn }) => {
                   title: config.BotName,
                   body: `Developer: ${config.OwnerName}`,
                   mediaType: 1,
-                  thumbnail: thumbnail
-                    ? Buffer.isBuffer(thumbnail)
-                      ? thumbnail
-                      : await import("axios")
-                          .then((a) =>
-                            a.default.get(thumbnail, {
-                              responseType: "arraybuffer",
-                            }),
-                          )
-                          .then((r) => Buffer.from(r.data))
-                          .catch(() => null)
-                    : null,
+                  thumbnail: thumbBuffer,
                   renderLargerThumbnail: true,
                 },
               },
               nativeFlowMessage: {
-                messageParamsJson: JSON.stringify({
-                  bottom_sheet: {
-                    in_thread_buttons_limit: 2,
-                    divider_indices: [1, 2, 999],
-                  },
-                }),
                 buttons: [
                   {
                     name: "quick_reply",
                     buttonParamsJson: JSON.stringify({
-                      display_text: "🏠 Menu Utama",
+                      display_text: "🏠 Menu",
                       id: `${config.prefix}menu`,
                     }),
                   },
@@ -135,6 +125,13 @@ const handler = async (m, { conn }) => {
                     buttonParamsJson: JSON.stringify({
                       display_text: "🏓 Ping",
                       id: `${config.prefix}ping`,
+                    }),
+                  },
+                  {
+                    name: "quick_reply",
+                    buttonParamsJson: JSON.stringify({
+                      display_text: "ℹ️ Info",
+                      id: `${config.prefix}info`,
                     }),
                   },
                 ],
@@ -150,12 +147,10 @@ const handler = async (m, { conn }) => {
   } catch (err) {
     console.error("[menu]", err.message);
 
-    // fallback teks biasa jika button gagal
-    const { plugins } = await import("./index.js");
+    // fallback teks biasa
     const categories = {};
-
-    for (const name in plugins) {
-      const plugin = plugins[name];
+    for (const name in global.plugins) {
+      const plugin = global.plugins[name];
       if (!plugin?.command) continue;
       const cmds = Array.isArray(plugin.command)
         ? plugin.command
