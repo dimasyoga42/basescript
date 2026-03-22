@@ -26,11 +26,9 @@ const handler = async (m, { conn }) => {
       return sendText(conn, m.chat, config.message.notFound, m);
 
     for (const item of data.slice(0, 5)) {
-      await conn.sendMessage(
-        m.chat,
-        { image: { url: item.image } },
-        { quoted: m },
-      );
+      await conn.sendAlbum(m.chat, [{ image: { url: item.image } }], {
+        quoted: m,
+      });
     }
   } catch (err) {
     console.error("[pinterest]", err.message);

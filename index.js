@@ -2,7 +2,24 @@ import makeWASocket, {
   fetchLatestBaileysVersion,
   useMultiFileAuthState,
   DisconnectReason,
-} from "@whiskeysockets/baileys";
+  proto,
+  generateWAMessageFromContent,
+  jidDecode,
+  downloadContentFromMessage,
+  prepareWAMessageMedia,
+  generateMessageID,
+  generateWAMessage,
+} from "@ryuu-reinzz/baileys";
+import haruka from "@ryuu-reinzz/haruka-lib";
+const property = {
+  proto,
+  generateWAMessageFromContent,
+  jidDecode,
+  downloadContentFromMessage,
+  prepareWAMessageMedia,
+  generateMessageID,
+  generateWAMessage,
+};
 import qrcode from "qrcode-terminal";
 import { runCommand, runEvent } from "./handler.js";
 import { loadPlugins, plugins } from "./plugins/index.js";
@@ -24,8 +41,9 @@ const start = async () => {
     auth: state,
     printQRInTerminal: false,
   });
-
+  haruka.addProperty(sock, property);
   sock.ev.on("creds.update", saveCreds);
+
   sock.ev.on("group-participants.update", async (event) => {
     await runEvent(
       sock,
@@ -43,7 +61,14 @@ const start = async () => {
 
     try {
       const text =
-        m.message.conversation || m.message.extendedTextMessage?.text || "";
+        m.message.conversation ||
+        m.message.extendedTextMessage?.text ||
+        m.message.imageMessage?.caption ||
+        m.message.videoMessage?.caption ||
+        // ✅ Tambah ini
+        m.message.buttonsResponseMessage?.selectedButtonId ||
+        m.message.listResponseMessage?.singleSelectReply?.selectedRowId ||
+        "";
 
       m.text = text;
       m.chat = m.key.remoteJid;

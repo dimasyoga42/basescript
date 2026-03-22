@@ -1,82 +1,80 @@
-import { generateWAMessageFromContent, proto } from "@whiskeysockets/baileys";
 import axios from "axios";
 import { config, thumbnail } from "../../config.js";
 
-const getThumbnailBuffer = async () => {
-  try {
-    if (!thumbnail) return null;
-    const res = await axios.get(thumbnail, { responseType: "arraybuffer" });
-    return Buffer.from(res.data);
-  } catch {
-    return null;
-  }
-};
-
 const handler = async (m, { conn }) => {
   try {
-    const thumbBuffer = await getThumbnailBuffer();
+    const thumbBuffer = thumbnail
+      ? await axios
+          .get(thumbnail, { responseType: "arraybuffer" })
+          .then((r) => Buffer.from(r.data))
+          .catch(() => null)
+      : null;
 
-    const msg = generateWAMessageFromContent(
-      m.chat,
-      proto.Message.fromObject({
-        viewOnceMessage: {
-          message: {
-            interactiveMessage: {
-              body: {
-                text: `Hai *${m.pushName || "User"}* 👋\nPilih menu di bawah ini:`,
-              },
-              footer: { text: `${config.BotName} • ${config.Version}` },
-              contextInfo: {
-                mentionedJid: [m.sender],
-                forwardingScore: 777,
-                isForwarded: true,
-                externalAdReply: {
-                  title: config.BotName,
-                  body: `Developer: ${config.OwnerName}`,
-                  mediaType: 1,
-                  thumbnail: thumbBuffer,
-                  renderLargerThumbnail: true,
-                },
-              },
-              nativeFlowMessage: {
-                buttons: [
-                  {
-                    name: "quick_reply",
-                    buttonParamsJson: JSON.stringify({
-                      display_text: "🏠 Menu",
-                      id: `${config.prefix}menu`,
-                    }),
-                  },
-                  {
-                    name: "quick_reply",
-                    buttonParamsJson: JSON.stringify({
-                      display_text: "🏓 Ping",
-                      id: `${config.prefix}ping`,
-                    }),
-                  },
-                  {
-                    name: "quick_reply",
-                    buttonParamsJson: JSON.stringify({
-                      display_text: "ℹ️ Info",
-                      id: `${config.prefix}info`,
-                    }),
-                  },
-                ],
-              },
-            },
-          },
-        },
-      }),
-      { quoted: m, userJid: conn.user?.id },
-    );
+    // Bangun teks menu dari plugins
+    const categories = {};
+    for (const name in global.plugins) {
+      const plugin = global.plugins[name];
+      if (!plugin?.command) continue;
+      const cmds = Array.isArray(plugin.command)
+        ? plugin.command
+        : [plugin.command];
+      const cat = plugin.category || "other";
+      if (!categories[cat]) categories[cat] = [];
+      categories[cat].push(...cmds);
+    }
 
-    await conn.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
-  } catch (err) {
-    console.error("[menu]", err.message);
+    let menuText = `*MENU ${config.BotName}*\n`;
+    for (const cat in categories) {
+      menuText += `\n*${cat.toUpperCase()}*\n`;
+      menuText +=
+        categories[cat].map((c) => `• ${config.prefix}${c}`).join("\n") + "\n";
+    }
+
+    // Kirim button utama
     await conn.sendMessage(
       m.chat,
       {
-        text: `*${config.BotName}*\n\n• ${config.prefix}ping\n• ${config.prefix}menu\n• ${config.prefix}info`,
+        image: thumbBuffer || { url: thumbnail },
+        caption: `Hai *${m.pushName || "User"}* 👋\nPilih menu di bawah ini:`,
+        title: config.BotName,
+        subtitle: `Developer: ${config.OwnerName}`,
+        footer: config.BotName,
+        viewOnce: true,
+        buttons: [
+          {
+            name: "quick_reply",
+            buttonParamsJson: JSON.stringify({
+              display_text: "menu",
+              // ✅ id = command yang akan dipanggil bot
+              id: `.menu`,
+            }),
+          },
+          {
+            name: "quick_reply",
+            buttonParamsJson: JSON.stringify({
+              display_text: "🏓 Ping",
+              id: `${config.prefix}ping`,
+            }),
+          },
+          {
+            name: "cta_url",
+            buttonParamsJson: JSON.stringify({
+              display_text: "🌐 Website",
+              url: "https://github.com",
+            }),
+          },
+        ],
+        bottom_sheet: true, //kalau mau button dalam button
+        bottom_name: "Bottom sheet",
+      },
+      { quoted: m },
+    );
+  } catch (err) {
+    console.error("[menutes]", err.message);
+    await conn.sendMessage(
+      m.chat,
+      {
+        text: `*${config.BotName}*\n\n• ${config.prefix}ping\n• ${config.prefix}menu`,
       },
       { quoted: m },
     );
