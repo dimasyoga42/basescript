@@ -4,7 +4,8 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const query = m.text.replace(/^\.(trait|ability)\s*/i, "");
+    const parts = m.text.trim().split(/\s+/);
+    const query = parts.slice(1).join(" ").trim();
     console.log(query);
     if (!query)
       return sendFancyText(conn, m.chat, {
@@ -28,14 +29,6 @@ const handler = async (m, { conn }) => {
       return sendText(conn, m.chat, `*${item.name}*\n\n${item.stat_effect}`, m);
     }
 
-    const mtext =
-      `*Hasil: ${query}*\n${"─".repeat(20)}\n\n` +
-      data.map((item, i) => `*${i + 1}.* ${item.name}`).join("\n") +
-      `\n\n> Pilih salah satu:`;
-
-    await sendText(conn, m.chat, mtext, m);
-
-    // ✅ FIX UTAMA
     await conn.sendButton(m.chat, {
       image: thumbnail, // ❗ jangan pakai { url: thumbnail }
       caption: "Pilih ability untuk melihat detail:",
