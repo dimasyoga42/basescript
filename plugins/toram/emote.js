@@ -1,6 +1,7 @@
 import { config, thumbnail } from "../../config.js";
 import { sendFancyText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
+import axios from "axios";
 
 const handler = async (m, { conn }) => {
   try {
@@ -27,13 +28,36 @@ const handler = async (m, { conn }) => {
         text: config.message.notFound ?? "Data tidak ditemukan.",
         quoted: m,
       });
-    sendFancyText(conn, m.chat, {
-      title: data.name,
-      body: config.BotName,
-      thumbnail: data.url,
-      text: "klik tulisan nama emot",
-      quoted: m,
-    });
+    const res = await axios.get(data.url, {
+      responseType: "arraybuffer",
+      timeout: 15000,
+    })
+    const buffer = Buffer.from(res.data);
+    const contentType = res.headers["content-type"] || "";
+    const isGif = contentType.includes("gif") || url.toLowerCase().endsWith(".gif");
+
+
+    if (isGif) {
+      await conn.sendMessage(
+        chatId,
+        {
+          video: buffer,
+          mimetype: "image/gif",
+          gifPlayback: true,
+          caption,
+        },
+        { quoted }
+      );
+    } else {
+      await conn.sendMessage(
+        chatId,
+        {
+          image: buffer,
+          caption,
+        },
+        { quoted }
+      );
+    }
   } catch (err) {
     sendFancyText(conn, m.chat, {
       title: config.BotName,
