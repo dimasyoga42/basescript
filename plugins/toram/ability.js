@@ -45,6 +45,8 @@ const handler = async (m, { conn }) => {
           id: `.ability ${item.name}`,
         }),
       })),
+      bottom_sheet: true, //kalau mau button dalam button
+      bottom_name: "Bottom sheet",
     });
   } catch (err) {
     console.error("[ability]", err.message);
