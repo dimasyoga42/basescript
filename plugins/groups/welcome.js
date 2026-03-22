@@ -28,7 +28,7 @@ const handler = async (m, { conn }) => {
       const avatar = await getProfilePicture(conn, jid);
 
       if (action === "add") {
-        const url = `https://api.siputzx.my.id/api/canvas/welcomev5?username=${encodeURIComponent(name)}&guildName=${encodeURIComponent(groupName)}&memberCount=${totalMember}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(config.welcomeBg || "")}&quality=90`;
+        const url = `https://api.siputzx.my.id/api/canvas/welcomev5?username=petualang&guildName=${encodeURIComponent(groupName)}&memberCount=${totalMember}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(config.welcomeBg || "")}&quality=90`;
 
         const res = await axios.get(url, { responseType: "arraybuffer" });
 
