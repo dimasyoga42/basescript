@@ -46,9 +46,9 @@ const handler = async (m, { conn }) => {
           display_text: item.name,
           id: `.trait ${item.name}`,
         }),
-        bottom_sheet: true, //kalau mau button dalam button
-        bottom_name: "menu Ability",
       })),
+      bottom_sheet: true, //kalau mau button dalam button
+      bottom_name: "menu Ability",
     });
   } catch (err) {
     console.error("[ability]", err.message);
