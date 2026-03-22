@@ -38,11 +38,11 @@ const handler = async (m, { conn }) => {
       caption: `Pilih ability untuk melihat detail:`,
       image: { url: thumbnail },
       footer: config.OwnerName,
-      buttons: data.slice(0, 3).map((item) => ({
+      buttons: data.map((item) => ({
         name: "quick_reply",
         buttonParamsJson: JSON.stringify({
           display_text: `${item.name}`,
-          id: `.ability ${item.name}`,
+          id: `.trait ${item.name}`,
         }),
       })),
       bottom_sheet: true, //kalau mau button dalam button
