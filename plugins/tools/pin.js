@@ -14,7 +14,7 @@ const handler = async (m, { conn }) => {
         m,
       );
 
-    await sendText(conn, m.chat, "waiting...", m);
+    await sendText(conn, m.chat, "⏳ Mencari...", m);
 
     const res = await axios.get(
       `https://api.deline.web.id/search/pinterest?q=${encodeURIComponent(query)}`,
@@ -25,11 +25,12 @@ const handler = async (m, { conn }) => {
     if (!Array.isArray(data) || data.length === 0)
       return sendText(conn, m.chat, config.message.notFound, m);
 
-    for (const item of data.slice(0, 5)) {
-      await conn.sendAlbum(m.chat, [{ image: { url: item.image } }], {
-        quoted: m,
-      });
-    }
+    const images = data.slice(0, 10).map((item, i) => ({
+      image: { url: item.image },
+      caption: i === 0 ? `*${query}*\nPinterest` : "",
+    }));
+
+    await conn.sendAlbum(m.chat, images, { quoted: m });
   } catch (err) {
     console.error("[pinterest]", err.message);
     await sendText(conn, m.chat, config.message.error, m);
