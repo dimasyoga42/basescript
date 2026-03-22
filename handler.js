@@ -49,7 +49,6 @@ export async function runCommand(conn, m, plugins) {
   for (const name in plugins) {
     const plugin = plugins[name];
     if (!plugin) continue;
-
     const matched =
       isMatch(plugin.command, command) || isMatch(plugin.alias, command);
 
@@ -62,5 +61,19 @@ export async function runCommand(conn, m, plugins) {
     }
 
     return;
+  }
+}
+
+export async function runEvent(conn, event, plugins) {
+  for (const name in plugins) {
+    const plugin = plugins[name];
+    if (!plugin) continue;
+    if (plugin.on !== event.type) continue;
+
+    try {
+      await plugin(event, { conn });
+    } catch (err) {
+      console.error(`Error event plugin "${name}":`, err);
+    }
   }
 }

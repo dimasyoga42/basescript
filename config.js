@@ -533,6 +533,10 @@ BAHAN MQ
   Basis Data: Toram Online Forum ID
   Tautan Asli: https://toram-id.com/forum/all-about-pet-on-tor-4f8ea981
   `.trim(),
+  welcomeBg:
+    "https://i.pinimg.com/736x/b1/c4/31/b1c4312a666d5367b3b7df8944c61a6c.jpg",
+  goodbyeBg:
+    "https://i.pinimg.com/736x/1d/3a/11/1d3a11c83a8b1885e55f92afb8ed4339.jpg",
 };
 const thumbnails = (config?.thumbnail ?? []).filter(Boolean);
 export const thumbnail =

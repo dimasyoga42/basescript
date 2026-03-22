@@ -4,7 +4,7 @@ import makeWASocket, {
   DisconnectReason,
 } from "@whiskeysockets/baileys";
 import qrcode from "qrcode-terminal";
-import { runCommand } from "./handler.js";
+import { runCommand, runEvent } from "./handler.js";
 import { loadPlugins, plugins } from "./plugins/index.js";
 import dotenv from "dotenv";
 import { checkMentionAfk, checkUnAfk } from "./plugins/_function/_afk.js";
@@ -26,6 +26,13 @@ const start = async () => {
   });
 
   sock.ev.on("creds.update", saveCreds);
+  sock.ev.on("group-participants.update", async (event) => {
+    await runEvent(
+      sock,
+      { ...event, type: "group_participants_update" },
+      plugins,
+    );
+  });
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
