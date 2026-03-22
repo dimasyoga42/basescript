@@ -45,7 +45,8 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["mob"];
+handler.command = "mob";
+handler.alias = ["mobs"];
 handler.category = "Toram Search";
 handler.submenu = "Toram";
 export default handler;
