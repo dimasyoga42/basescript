@@ -52,7 +52,7 @@ const handler = async (m, { conn }) => {
         {
           name: "cta_url",
           buttonParamsJson: JSON.stringify({
-            display_text: "Github",
+            display_text: "Follow Github",
             url: "https://github.com/dimasyoga42",
           }),
         },
