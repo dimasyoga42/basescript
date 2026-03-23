@@ -32,10 +32,11 @@ const handler = async (m, { conn }) => {
 
   const thumbnails = (config?.thumbnail ?? []).filter(Boolean);
   const thumbnail = thumbnails[Math.floor(Math.random() * thumbnails.length)];
-  conn.sendButton(m.chat, {
+  conn.sendMessage(m.chat, {
     caption: result.trim(),
     image: { url: thumbnail },
     footer: `Develop By ${config.OwnerName}`,
+    viewOnce: true,
     buttons: [
       {
         name: "Donasi Sekarang",
