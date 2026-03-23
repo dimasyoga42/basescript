@@ -15,7 +15,7 @@ const handler = async (m, { conn }) => {
     const { data } = await supa
       .from("monster_v2")
       .select(
-        "Name, Level, Type, Mode, HP, Element, EXP, Tamable, Location, Drops ",
+        "Name, Level, Type, Mode, HP, Element, EXP, Tamable, Location, Drops",
       )
       .ilike("Name", `%${name}%`);
 

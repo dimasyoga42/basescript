@@ -22,6 +22,7 @@ const handler = async (m, { conn }) => {
     categories[cat].push(...cmds);
   }
   const Namemesage = m.pushName;
+
   let result =
     "*Rules*\n- no spamming on bots is allowed\n- It is prohibited to make stickers that are vulgar and contain LGBT, racist, or SARA elements.\n- it is forbidden to make inappropriate conversations to artificial intelligence\n";
   for (const cat in categories) {
@@ -31,20 +32,22 @@ const handler = async (m, { conn }) => {
 
   const thumbnails = (config?.thumbnail ?? []).filter(Boolean);
   const thumbnail = thumbnails[Math.floor(Math.random() * thumbnails.length)];
-
-  await sendFancyTextModif(conn, m.chat, {
-    title: config.BotName,
-    body: `developer by ${config.OwnerName}`,
-    name: Namemesage,
-    thumbnail: thumbnail,
-    text: result.trim(),
-    quoted: m,
+  conn.sendButton(m.chat, {
+    caption: result.trim(),
+    image: { url: thumbnail },
+    footer: global.ownername,
+    buttons: [
+      {
+        name: "Donasi Sekarang",
+        buttonParamsJson: JSON.stringify({
+          display_text: "View Link",
+          url: "https://sociabuzz.com/neurabot/tribe",
+        }),
+      },
+    ],
+    bottom_sheet: true,
+    bottom_name: "Donasi Jika Suka",
   });
-  // await sendText(
-  //   conn,
-  //   m.chat,
-  //   "",
-  // );
 };
 
 handler.command = ["menu", "help"];
