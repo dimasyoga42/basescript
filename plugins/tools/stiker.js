@@ -44,22 +44,12 @@ const handler = async (m, { conn }) => {
     );
 
     if (mediaMsg.message?.videoMessage) {
-      const sticker = await new Sticker(buffer, {
-        pack: PACK_NAME,
-        author: AUTHOR_NAME,
-        type: StickerTypes.FULL,
-        quality: 50,
-        animated: true,
-      }).toBuffer();
-      return await conn.sendMessage(m.chat, { sticker }, { quoted: m });
+      conn.sendSticker(m.chat, {
+        sticker: buffer,
+        packname: config.BotName,
+        author: "dimasyoga",
+      });
     }
-
-    conn.sendSticker(m.chat, {
-      sticker: buffer,
-      packname: config.BotName,
-      author: "dimasyoga",
-    });
-
     const { top, bottom } = parseText(m.text);
 
     const form = new FormData();
@@ -76,14 +66,11 @@ const handler = async (m, { conn }) => {
 
     const memeRes = await axios.get(memeUrl, { responseType: "arraybuffer" });
 
-    const sticker = await new Sticker(Buffer.from(memeRes.data), {
-      pack: config.BotName,
-      author: config.OwnerName,
-      type: StickerTypes.FULL,
-      quality: 80,
-    }).toBuffer();
-
-    await conn.sendMessage(m.chat, { sticker }, { quoted: m });
+    conn.sendSticker(m.chat, {
+      sticker: memeRes.data,
+      packname: "Neura Sama",
+      author: "dimasyoga",
+    });
   } catch (err) {
     console.error("[stiker]", err.message);
     await sendFancyText(conn, m.chat, {
