@@ -111,6 +111,20 @@ const handler = async (m, { conn }) => {
       },
       { quoted: m },
     );
+    conn.sendOrder(
+      m.chat,
+      {
+        thumbnail: data.thumbnail,
+        status: 1,
+        surface: 1,
+        orderTitle: data.title,
+        sellerJid: conn.user.jid,
+        audio: fixedBuffer,
+        mimetype: "audio/mpeg",
+        fileName: `${data.title}.mp3`,
+      },
+      { quoted: m },
+    );
   } catch (err) {
     console.error("[play]", err.message);
     await sendText(conn, m.chat, config.message.error, m);
