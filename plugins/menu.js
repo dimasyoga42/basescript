@@ -32,23 +32,29 @@ const handler = async (m, { conn }) => {
 
   const thumbnails = (config?.thumbnail ?? []).filter(Boolean);
   const thumbnail = thumbnails[Math.floor(Math.random() * thumbnails.length)];
-  conn.sendMessage(m.chat, {
-    caption: result.trim(),
-    image: { url: thumbnail },
-    footer: `Develop By ${config.OwnerName}`,
-    viewOnce: true,
-    buttons: [
-      {
-        name: "Donasi Sekarang",
-        buttonParamsJson: JSON.stringify({
-          display_text: "View Link",
-          url: "https://sociabuzz.com/neurabot/tribe",
-        }),
-      },
-    ],
-    bottom_sheet: true,
-    bottom_name: "Donasi Jika Suka",
-  });
+  await conn.sendMessage(
+    m.chat,
+    {
+      image: { url: thumbnail },
+      caption: result.trim(),
+      title: config.BotName,
+      subtitle: `Developer: ${config.OwnerName}`,
+      footer: `Develope By ${config.OwnerName}`,
+      viewOnce: true,
+      buttons: [
+        {
+          name: "cta_url",
+          buttonParamsJson: JSON.stringify({
+            display_text: "Donasi Sekarang",
+            url: "https://github.com",
+          }),
+        },
+      ],
+      bottom_sheet: true, //kalau mau button dalam button
+      bottom_name: "Donasi Jika Anda Suka",
+    },
+    { quoted: m },
+  );
 };
 
 handler.command = ["menu", "help"];
