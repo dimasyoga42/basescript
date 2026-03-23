@@ -49,9 +49,14 @@ const handler = async (m, { conn }) => {
             url: "https://github.com",
           }),
         },
+        {
+          name: "cta_url",
+          buttonParamsJson: JSON.stringify({
+            display_text: "Github",
+            url: "https://github.com/dimasyoga42",
+          }),
+        },
       ],
-      bottom_sheet: true, //kalau mau button dalam button
-      bottom_name: "Donasi Jika Anda Suka",
     },
     { quoted: m },
   );
