@@ -54,6 +54,12 @@ const handler = async (m, { conn }) => {
       return await conn.sendMessage(m.chat, { sticker }, { quoted: m });
     }
 
+    conn.sendSticker(m.chat, {
+      sticker: buffer,
+      packname: config.BotName,
+      author: "dimasyoga",
+    });
+
     const { top, bottom } = parseText(m.text);
 
     const form = new FormData();
