@@ -13,9 +13,11 @@ const handler = async (m, { conn }) => {
       );
 
     const { data } = await supa
-      .from("monster")
-      .select("name, level, element, map, drops, hp")
-      .ilike("name", `%${name}%`);
+      .from("monster_v2")
+      .select(
+        "Name, Level, Type, Mode, HP, Element, EXP, Tamable, Location, Drops ",
+      )
+      .ilike("Name", `%${name}%`);
 
     if (!data || data.length === 0)
       return sendFancyText(conn, m.chat, {
@@ -29,7 +31,7 @@ const handler = async (m, { conn }) => {
     const mtext = data
       .map(
         (item) =>
-          `*${item.name}*\nLevel: ${item.level}\nElement: ${item.element}\nHP: ${item.hp}\nMap: ${item.map}\nDrops:\n- ${item.drops}`,
+          `*${item.Name}*\nLevel: ${item.Level}\nType: ${item.Type}\nTamable: ${item.Tamable}\nElement: ${item.Element}\nHP: ${item.HP}\nEXP: ${item.EXP}\nMap: ${item.Location}\nDrops:\n- ${item.Drops}`,
       )
       .join("\n\n");
 

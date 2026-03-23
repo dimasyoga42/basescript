@@ -14,7 +14,7 @@ const handler = async (m, { conn }) => {
         m,
       );
 
-    await sendText(conn, m.chat, "⏳ Mencari...", m);
+    await sendText(conn, m.chat, "Mencari...", m);
 
     const res = await axios.get(
       `https://api.deline.web.id/search/pinterest?q=${encodeURIComponent(query)}`,
