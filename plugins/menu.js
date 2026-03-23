@@ -35,7 +35,7 @@ const handler = async (m, { conn }) => {
   conn.sendButton(m.chat, {
     caption: result.trim(),
     image: { url: thumbnail },
-    footer: global.ownername,
+    footer: `Develop By ${config.OwnerName}`,
     buttons: [
       {
         name: "Donasi Sekarang",
