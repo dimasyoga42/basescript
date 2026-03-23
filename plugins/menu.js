@@ -45,8 +45,8 @@ const handler = async (m, { conn }) => {
         {
           name: "cta_url",
           buttonParamsJson: JSON.stringify({
-            display_text: "Donasi Sekarang",
-            url: "https://github.com",
+            display_text: "⭐Donasi Sekarang",
+            url: "https://sociabuzz.com/neurabot/tribe",
           }),
         },
         {
