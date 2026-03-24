@@ -36,7 +36,7 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["join"];
+handler.command = ["joingb"];
 handler.category = "Menu Owner";
 
 export default handler;
