@@ -61,7 +61,7 @@ const handler = async (m, { conn }) => {
         caption,
         image: { url: thumbnail },
         footer: config.OwnerName,
-        buttons: data.slice(0, 10).map((item) => ({
+        buttons: data.map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
             display_text: `${item["Nama Skill"]}`,
