@@ -46,7 +46,7 @@ export const config = {
     "...",
   ],
   owner: ["272206605082689@lid", "179573169848377@lid"],
-  admin = "179573169848377@lid"
+  admin: "179573169848377@lid",
   pembolong: `
   *extract*: 4 - 5M
   Fairy Silk 5M
