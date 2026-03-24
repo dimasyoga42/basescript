@@ -45,7 +45,7 @@ export const config = {
     "agak ragu",
     "...",
   ],
-  owner: "179573169848377@lid",
+  owner: "179573169848377:61@lid",
   pembolong: `
   *extract*: 4 - 5M
   Fairy Silk 5M
