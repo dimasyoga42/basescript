@@ -33,7 +33,7 @@ export const isAdmin = async (conn, m) => {
     return false;
   }
 };
-const BOT_ID = config.owner;
+const BOT_ID = config.admin;
 export const isBotadmin = async (conn, m) => {
   try {
     if (!m.chat.endsWith("@g.us")) {
