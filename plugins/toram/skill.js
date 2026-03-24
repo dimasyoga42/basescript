@@ -6,10 +6,11 @@ const handler = async (m, { conn }) => {
   try {
     const parts = m.text.trim().split(/\s+/);
     const query = parts.slice(1).join(" ").trim();
+
     if (!query)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
-        body: "exempel: .skill Hard Hit",
+        body: "Contoh: .skill Hard Hit",
         thumbnail,
         text: config.message.invalid,
         msg: m,
@@ -18,7 +19,7 @@ const handler = async (m, { conn }) => {
     const { data, error } = await supa
       .from("skill")
       .select(
-        "Skill Tree, Nama Skill, Type, MP Cost, Element, Deskripsi, Deskripsi_Indo",
+        `"Skill Tree","Nama Skill","Type","MP Cost","Element","Deskripsi","Deskripsi_Indo"`,
       )
       .ilike("Nama Skill", `%${query}%`);
 
@@ -34,31 +35,32 @@ Type    : ${item["Type"] || "-"}
 MP Cost : ${item["MP Cost"] || "-"}
 Element : ${item["Element"] || "-"}
 
-*Deskripsi:*
+📖 *Deskripsi:*
 ${item["Deskripsi"] || "-"}
 
-*Terjemahan:*
+🇮🇩 *Terjemahan:*
 ${item["Deskripsi_Indo"] || "-"}`;
 
       return sendText(conn, m.chat, text, m);
     }
+    const list = data.slice(0, 30);
 
-    const mtext =
+    const listText =
       `*Hasil: ${query}*\n${"─".repeat(20)}\n\n` +
-      data
+      list
         .map(
           (item, i) =>
             `*${i + 1}.* ${item["Nama Skill"]} (${item["Skill Tree"] || "-"})`,
         )
         .join("\n") +
-      `\n\n> Pilih salah satu:`;
+      `\n\n> Pilih salah satu di bawah`;
 
-    await sendText(conn, m.chat, mtext, m);
+    // ✅ Fix: item didefinisikan dari list
     await conn.sendButton(m.chat, {
-      caption: `Ditemukan ${data.length} skill untuk: *${query}*`,
+      caption: listText,
       image: { url: thumbnail },
       footer: config.OwnerName,
-      buttons: data.slice(0, 10).map((item) => ({
+      buttons: list.map((item) => ({
         name: "quick_reply",
         buttonParamsJson: JSON.stringify({
           display_text: `${item["Nama Skill"]}`,
