@@ -27,7 +27,7 @@ export const isBan = async (conn, m) => {
 export const isOwner = (conn, m) => {
   const userId = m.key.participant || m.key.remoteJid;
   const owners = Array.isArray(config.owner) ? config.owner : [config.owner];
-
+  console.log(owners, userId)
   if (!owners.includes(userId)) {
     conn.sendMessage(m.chat, { text: "Owner only" }, { quoted: m });
     return false;
