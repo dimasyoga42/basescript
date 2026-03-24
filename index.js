@@ -80,6 +80,7 @@ const start = async () => {
     if (type !== "notify") return;
 
     const m = messages[0];
+    console.log(m)
     //console.log(m);
     if (!m?.message) return;
 
@@ -89,7 +90,6 @@ const start = async () => {
         m.message.extendedTextMessage?.text ||
         m.message.imageMessage?.caption ||
         m.message.videoMessage?.caption ||
-        // ✅ Tambah ini
         m.message.buttonsResponseMessage?.selectedButtonId ||
         m.message.listResponseMessage?.singleSelectReply?.selectedRowId ||
         "";
