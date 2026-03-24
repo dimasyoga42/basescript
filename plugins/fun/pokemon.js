@@ -11,7 +11,7 @@ const handler = async (m, { conn }) => {
       conn,
       m.chat,
       res.image,
-      `${res.name} adalah pokemon yang berhasil anda tangkap hari ini\n source: https://asia.pokemon-card.com/id/deck-build/`,
+      `${res.name} adalah kartu yang berhasil anda dapat hari ini\n source: https://asia.pokemon-card.com/id/deck-build/`,
     );
   } catch (err) {}
 };
