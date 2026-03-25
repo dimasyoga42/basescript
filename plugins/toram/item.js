@@ -20,7 +20,7 @@ const handler = async (m, { conn, text }) => {
     const { data, error } = await supa
       .from("item_v2")
       .select(
-        "ItemName, Category, SellPrice, Process, Duration, Effects, OrbtainedFrom, RecipeMaterials, Link",
+        "ItemName, Category, SellPrice, Process, Duration, Effects, ObtainedFrom, RecipeMaterials, Link",
       )
       .ilike("ItemName", `%${query}%`)
       .limit(10); // Membatasi hasil agar pesan tidak terlalu panjang
@@ -42,7 +42,7 @@ const handler = async (m, { conn, text }) => {
           `*Duration:* ${item.Duration || "-"}`,
           `*Stats:* \n${item.Effects || "-"}`,
           `*Recipe:* \n${item.RecipeMaterials || "-"}`,
-          `*Obtained From:* \n${item.OrbtainedFrom || "-"}`,
+          `*Obtained From:* \n${item.ObtainedFrom || "-"}`,
           `*Source:* ${item.Link}`,
         ].join("\n");
       })
