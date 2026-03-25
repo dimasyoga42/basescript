@@ -13,9 +13,11 @@ const handler = async (m, { conn }) => {
         m,
       );
     const { data } = await supa
-      .from("item")
-      .select("nama, jenis, stat, drop")
-      .ilike("nama", `%${name}%`);
+      .from("item_v2")
+      .select(
+        "ItemName, Category, SellPrice, Process, Duration, Effects, OrbtainedFrom, RecipeMaterials, Link",
+      )
+      .ilike("Item Name", `%${name}%`);
 
     if (!data || data.length === 0)
       return sendText(conn, m.chat, config.message.notFound, m);
@@ -23,7 +25,7 @@ const handler = async (m, { conn }) => {
     const mtext = data
       .map(
         (item) =>
-          `${item.nama}(${item.jenis})\nstat:\n${item.stat}\ndrop:\n${item.drop}\n`,
+          `Name Item: ${item.ItemName}\nCategory:${item.Category}\nSell Price: ${item.SellPrice}\nProcess: ${item.Process || "-"}\nDuration: ${item.Duration || "-"}\nstat:\n${item.Effects || "-"}\ndrops:\n${item.OrbtainedFrom}\nSource: ${item.Link}`,
       )
       .join("\n────────────────────────\n");
 
