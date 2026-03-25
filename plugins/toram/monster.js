@@ -36,10 +36,10 @@ const parseMonsters = (html) => {
   return monsters;
 };
 
-const formatDetail = (mob) => {
+const formatDetail = (mob, i, total) => {
   const s = mob.stats;
   return (
-    `*${mob.name}*\n${"─".repeat(20)}\n` +
+    `*${mob.name}* ${total > 1 ? `(${i + 1}/${total})` : ""}\n${"─".repeat(20)}\n` +
     `Lv     : ${s.lv || "-"}\n` +
     `Type   : ${s.type || "-"}\n` +
     `Mode   : ${s.mode || "-"}\n` +
@@ -54,7 +54,7 @@ const formatDetail = (mob) => {
 
 const handler = async (m, { conn }) => {
   try {
-    const query = m.text.replace(/^\.mobs|.mob\s*/i, "").trim();
+    const query = m.text.replace(/^\.mobs\s*/i, "").trim();
 
     if (!query)
       return sendFancyText(conn, m.chat, {
@@ -68,9 +68,7 @@ const handler = async (m, { conn }) => {
     await sendText(conn, m.chat, "Mencari...", m);
 
     const url = `${BASE_URL}/monster.php?name=${encodeURIComponent(query)}&type=&order=id+DESC&show=22`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
+    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -79,26 +77,15 @@ const handler = async (m, { conn }) => {
     if (!monsters.length)
       return sendText(conn, m.chat, config.message.notFound, m);
 
-    // ✅ 1 hasil → detail langsung
-    if (monsters.length === 1)
-      return sendText(conn, m.chat, formatDetail(monsters[0]), m);
+    // ✅ Langsung tampilkan semua data sekaligus
+    const result = monsters
+      .map((mob, i) => formatDetail(mob, i, monsters.length))
+      .join("\n\n" + "═".repeat(20) + "\n\n");
 
-    await conn.sendButton(m.chat, {
-      caption:
-        `*Hasil: ${query}*\n${"─".repeat(20)}\n` +
-        `Ditemukan *${monsters.length}* monster\n\nPilih untuk detail:`,
-      image: { url: thumbnail },
-      footer: config.OwnerName,
-      buttons: monsters.map((mob) => ({
-        name: "quick_reply",
-        buttonParamsJson: JSON.stringify({
-          display_text: `${mob.name}`,
-          id: `.mobs ${mob.name}`,
-        }),
-      })),
-      bottom_sheet: true,
-      bottom_name: `${monsters.length} Monster`,
-    });
+    await sendText(conn, m.chat,
+      `*Hasil: ${query}* — ${monsters.length} monster\n\n${result}`,
+      m
+    );
   } catch (err) {
     console.error("[monster]", err.message);
     await sendFancyText(conn, m.chat, {
@@ -111,8 +98,7 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = "mobs";
-handler.category = "Toram Search";
-handler.alias = ["mob"]
+handler.command = ["mobs"];
+handler.category = "Toram Info";
 handler.submenu = "Toram";
 export default handler;
