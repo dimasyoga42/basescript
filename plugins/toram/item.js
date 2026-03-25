@@ -17,7 +17,7 @@ const handler = async (m, { conn }) => {
       .select(
         "ItemName, Category, SellPrice, Process, Duration, Effects, OrbtainedFrom, RecipeMaterials, Link",
       )
-      .ilike("Item Name", `%${name}%`);
+      .ilike("ItemName", `%${name}%`);
 
     if (!data || data.length === 0)
       return sendText(conn, m.chat, config.message.notFound, m);
