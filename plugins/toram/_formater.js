@@ -51,5 +51,5 @@ export const parseMonsters = (html) => {
 
 export const formatDetail = (mob, i, total) => {
   const s = mob.stats;
-  return `*Drop:*\n- ${mob.drops.join("\n") || "-"}`;
+  return `*Drop:*\n- ${mob.drops.join("\n- ") || "-"}`;
 };
