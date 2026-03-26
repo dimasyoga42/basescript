@@ -24,7 +24,7 @@ const handler = async (m, { conn }) => {
         {
           name: "cta_url",
           buttonParamsJson: JSON.stringify({
-            display_text: "⭐Coryn Club",
+            display_text: "Coryn Club",
             url: "https://coryn.club/",
           }),
         },
@@ -33,13 +33,6 @@ const handler = async (m, { conn }) => {
           buttonParamsJson: JSON.stringify({
             display_text: "Toram-yo",
             url: "https://toramyo.blogspot.com/",
-          }),
-        },
-        {
-          name: "cta_url",
-          buttonParamsJson: JSON.stringify({
-            display_text: "Tanaka0",
-            url: "http://tanaka0.work/",
           }),
         },
         {
