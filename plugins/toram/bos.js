@@ -1,6 +1,7 @@
 import { config, thumbnail } from "../../config.js";
 import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
+import fetch from "node-fetch";
 import { formatDetail, parseMonsters } from "./_formater.js";
 const BASE_URL = "https://coryn.club";
 const handler = async (m, { conn }) => {
