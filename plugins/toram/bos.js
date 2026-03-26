@@ -19,6 +19,7 @@ const handler = async (m, { conn }) => {
     const dtail = utlis
       .slice(0, 1)
       .map((mob, i) => formatDetail(mob, i, utlis.length));
+    console.log(dtail);
     const { data } = await supa
       .from("bosdef")
       .select("name, type, image_url, spawn, element, stat")
