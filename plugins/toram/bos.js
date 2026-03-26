@@ -16,7 +16,7 @@ const handler = async (m, { conn }) => {
       );
     const url = `${BASE_URL}/monster.php?name=${encodeURIComponent(name)}&type=&order=id+DESC&show=22`;
     const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
-    const utlis = parseMonsters(res);
+    const utlis = parseMonsters(await res.text());
     const dtail = utlis
       .slice(0, 1)
       .map((mob, i) => formatDetail(mob, i, utlis.length));
