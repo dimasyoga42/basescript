@@ -51,11 +51,5 @@ export const parseMonsters = (html) => {
 
 export const formatDetail = (mob, i, total) => {
   const s = mob.stats;
-  return (
-    `*${mob.name}* ${total > 1 ? `(${i + 1}/${total})` : ""}\n${"─".repeat(20)}\n` +
-    `Lv     : ${s.lv || "-"}\n` +
-    `HP     : ${s.hp || "-"}\n` +
-    `Tamable: ${s.tamable || "-"}\n` +
-    `*Drop:*\n${mob.drops.join("\n") || "-"}`
-  );
+  return `*Drop:*\n- ${mob.drops.join("\n") || "-"}`;
 };
