@@ -28,8 +28,6 @@ DB_URL=
 DB_KEY= 
 GROQ_API_KEY=
 ```
-## Thank You
-![nodejs](https://avatars.githubusercontent.com/u/9950313?s=70&v=4)
-![beilys](https://raw.githubusercontent.com/WhiskeySockets/Baileys/refs/heads/master/Media/logo.png)
+
 ## author:
 [![Dimasyoga42](https://github.com/dimasyoga42.png?size=200)](https://github.com/dimasyoga42)
