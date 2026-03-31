@@ -14,7 +14,7 @@ export function getUserData(path) {
     return JSON.parse(data);
   } catch (err) {
     console.error("Gagal membaca file:", err);
-    return [];
+    return {};
   }
 }
 
