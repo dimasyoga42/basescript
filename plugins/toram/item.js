@@ -56,7 +56,7 @@ const handler = async (m, { conn, text }) => {
   }
 };
 
-handler.command = /^(item)$/i;
+handler.command = "item";
 handler.category = "Toram Search";
 handler.submenu = "Toram";
 

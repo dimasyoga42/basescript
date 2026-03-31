@@ -61,7 +61,7 @@ export const config = {
 
   *KNUCK*
   0-1: 20-40M
-  1-2: 80-110M
+  1-2: 100-110M
 
   *STAFF*
   0-1: 15-20M
@@ -83,9 +83,9 @@ export const config = {
   0-1 6-8M
   1-2: 50-55M
   Spirit Needle 6-8M
-  legendary needle 550M
+  legendary needle 550M - 700M
   leg ornament: 510-600M
-  leg silk: 800-1B
+  leg silk: 1-1,4B
 
   Ini hanya perkiraan, jika kalian punya info bisa PM saja ke No botnya. Terima kasih
   `,

@@ -20,6 +20,8 @@ const handler = (m, { conn }) => {
     let afkEntry = data.find((user) => user.userId === userId);
     if (!afkEntry) {
       const newAfk = {
+        grubId: m.chat,
+        mute: false,
         userId,
         note: pesan,
         time: Date.now(),
