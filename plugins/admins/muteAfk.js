@@ -12,35 +12,22 @@ const handler = async (m, { conn }) => {
     const data = getUserData(db);
     const groupId = m.chat;
 
-    const groupAfkUsers = data.filter((user) => user.grubId === groupId);
-
-    if (groupAfkUsers.length === 0) {
+    if (!data[groupId] || data[groupId].afk.length === 0)
       return sendText(
         conn,
         m.chat,
         `tidak ada user yang sedang AFK di grup ini`,
         m,
       );
-    }
 
-    // Cek status mute saat ini (ambil dari user pertama sebagai referensi)
-    const currentMute = groupAfkUsers[0].mute;
-    const newMute = !currentMute;
+    // Toggle mute grup
+    data[groupId].mute = !data[groupId].mute;
 
-    // Toggle mute untuk semua user AFK di grup ini
-    const updatedData = data.map((user) => {
-      if (user.grubId === groupId) {
-        return { ...user, mute: newMute };
-      }
-      return user;
-    });
-
-    saveUserData(db, updatedData);
-
+    saveUserData(db, data);
     sendText(
       conn,
       m.chat,
-      `notifikasi AFK untuk semua user di grup ini telah di${newMute ? "matikan (mute)" : "aktifkan (unmute)"}`,
+      `notifikasi AFK telah di${data[groupId].mute ? "matikan (mute)" : "aktifkan (unmute)"} untuk grup ini`,
       m,
     );
   } catch (err) {

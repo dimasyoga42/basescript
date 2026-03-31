@@ -3,9 +3,10 @@ import { sendFancyText, sendText } from "../../src/config/message.js";
 import path from "path";
 
 const db = path.resolve("db", "afk.json");
+
 const handler = (m, { conn }) => {
   try {
-    const pesan = m.text.replace(".afk", "");
+    const pesan = m.text.replace(".afk", "").trim();
     if (!pesan)
       return sendFancyText(conn, m.chat, {
         title: "Neura Sama",
@@ -15,34 +16,26 @@ const handler = (m, { conn }) => {
           "https://i.pinimg.com/736x/16/46/ee/1646eef2bf7003c46eb1c0ac6aa6e16e.jpg",
         msg: m,
       });
+
     const data = getUserData(db);
     const userId = m.key.participant || m.key.remoteJid;
-    let afkEntry = data.find((user) => user.userId === userId);
-    if (!afkEntry) {
-      const newAfk = {
-        grubId: m.chat,
-        mute: false,
-        userId,
-        note: pesan,
-        time: Date.now(),
-      };
-      data.push(newAfk);
-      saveUserData(db, data);
-      // sendFancyText(conn, m.chat, {
-      //   title: "Neura Afk",
-      //   body: "selalu hadir di sisi mu",
-      //   text: `anda memasuki mode afk\nPesan: ${pesan}`,
-      //   thumbnail:
-      //     "https://i.pinimg.com/736x/16/46/ee/1646eef2bf7003c46eb1c0ac6aa6e16e.jpg",
-      //   msg: m,
-      // });
-      sendText(
-        conn,
-        m.chat,
-        `anda memasuki mode afk dengan alasan: ${pesan}`,
-        m,
-      );
-    }
+    const groupId = m.chat;
+
+    // Inisialisasi grup jika belum ada
+    if (!data[groupId]) data[groupId] = { mute: false, afk: [] };
+
+    const alreadyAfk = data[groupId].afk.find((u) => u.userId === userId);
+    if (alreadyAfk)
+      return sendText(conn, m.chat, `anda sudah dalam mode afk`, m);
+
+    data[groupId].afk.push({
+      userId,
+      note: pesan,
+      time: Date.now(),
+    });
+
+    saveUserData(db, data);
+    sendText(conn, m.chat, `anda memasuki mode afk dengan alasan: ${pesan}`, m);
   } catch (err) {
     sendFancyText(conn, m.chat, {
       title: "Neura Sama",

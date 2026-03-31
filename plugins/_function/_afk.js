@@ -4,7 +4,6 @@ import path from "path";
 
 const db = path.resolve("db", "afk.json");
 
-// Helper format waktu (reusable)
 const formatTime = (ms, suffix = "") => {
   const minutes = Math.floor(ms / 60000);
   const hours = Math.floor(minutes / 60);
@@ -19,11 +18,19 @@ export const checkUnAfk = async (conn, mchat, m) => {
   try {
     const data = getUserData(db);
     const userId = m.key.participant || m.key.remoteJid;
-    const afkIndex = data.findIndex((i) => i.userId === userId);
+    const groupId = m.chat;
+
+    if (!data[groupId]) return;
+
+    const afkIndex = data[groupId].afk.findIndex((u) => u.userId === userId);
     if (afkIndex === -1) return;
 
-    const afkUser = data[afkIndex];
-    data.splice(afkIndex, 1);
+    const afkUser = data[groupId].afk[afkIndex];
+    data[groupId].afk.splice(afkIndex, 1);
+
+    // Hapus key grup jika afk sudah kosong
+    if (data[groupId].afk.length === 0) delete data[groupId];
+
     saveUserData(db, data);
 
     const timeText = formatTime(Date.now() - afkUser.time);
@@ -51,14 +58,18 @@ export const checkMentionAfk = async (conn, chatId, m) => {
     if (!contextInfo?.mentionedJid) return;
 
     const data = getUserData(db);
+    const groupId = chatId;
+
+    if (!data[groupId]) return;
+
+    // Cek mute grup — skip semua jika mute aktif
+    if (data[groupId].mute) return;
+
     const mentioned = contextInfo.mentionedJid;
 
     for (const userId of mentioned) {
-      const afkUser = data.find((u) => u.userId === userId);
+      const afkUser = data[groupId].afk.find((u) => u.userId === userId);
       if (!afkUser) continue;
-
-      // Cek mute — skip jika notif dimatikan
-      if (afkUser.mute) continue;
 
       const timeText = formatTime(Date.now() - afkUser.time, " lalu");
       const caption = `user ini sedang AFK\nSejak: ${timeText}\nCatatan: ${afkUser.note}`;
