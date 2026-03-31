@@ -12,15 +12,10 @@ const handler = async (m, { conn }) => {
     const data = getUserData(db);
     const groupId = m.chat;
 
-    if (!data[groupId] || data[groupId].afk.length === 0)
-      return sendText(
-        conn,
-        m.chat,
-        `tidak ada user yang sedang AFK di grup ini`,
-        m,
-      );
+    // Inisialisasi grup jika belum ada
+    if (!data[groupId]) data[groupId] = { mute: false, afk: [] };
 
-    // Toggle mute grup
+    // Toggle mute
     data[groupId].mute = !data[groupId].mute;
 
     saveUserData(db, data);

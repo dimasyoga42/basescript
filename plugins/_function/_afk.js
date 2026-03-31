@@ -28,9 +28,7 @@ export const checkUnAfk = async (conn, mchat, m) => {
     const afkUser = data[groupId].afk[afkIndex];
     data[groupId].afk.splice(afkIndex, 1);
 
-    // Hapus key grup jika afk sudah kosong
-    if (data[groupId].afk.length === 0) delete data[groupId];
-
+    // Grup tidak dihapus meskipun afk kosong
     saveUserData(db, data);
 
     const timeText = formatTime(Date.now() - afkUser.time);
@@ -61,8 +59,6 @@ export const checkMentionAfk = async (conn, chatId, m) => {
     const groupId = chatId;
 
     if (!data[groupId]) return;
-
-    // Cek mute grup — skip semua jika mute aktif
     if (data[groupId].mute) return;
 
     const mentioned = contextInfo.mentionedJid;
