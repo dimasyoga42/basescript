@@ -1,8 +1,8 @@
 ### Neura Sama
 <p  align="center">
   <img src="https://i.ibb.co.com/kgD1BTQZ/Chat-GPT-Image-31-Mar-2026-22-08-40.png" />
-  <small>Base on NodeJs</small>
 </p>
+<small align="center">Base on NodeJs</small>
 
 ## Peringatan
 - tidak diperbolehkan di jual belikan
