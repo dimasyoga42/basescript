@@ -33,7 +33,7 @@ const handler = async (m, { conn }) => {
       const link = $(b).find('img').attr('src');
       result.push(link);
     });
-
+    console.log({result})
     result.forEach(v => {
       if (v === undefined) return;
       hasil.push(v.replace(/236/g, '736'));
