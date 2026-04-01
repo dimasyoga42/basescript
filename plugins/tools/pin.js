@@ -40,7 +40,7 @@ const handler = async (m, { conn }) => {
     });
 
     hasil.shift();
-
+    console.log({hasil})
     if (hasil.length === 0)
       return sendText(conn, m.chat, "Gambar tidak ditemukan, coba kata kunci lain.", m);
 
