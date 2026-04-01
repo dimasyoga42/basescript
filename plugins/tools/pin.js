@@ -1,7 +1,6 @@
 import axios from "axios";
 import { sendText } from "../../src/config/message.js";
 import { config } from "../../config.js";
-import * as cheerio from "cheerio";
 
 const handler = async (m, { conn }) => {
   try {
@@ -17,42 +16,40 @@ const handler = async (m, { conn }) => {
     await sendText(conn, m.chat, "Mencari...", m);
 
     const res = await axios.get(
-      `https://id.pinterest.com/search/pins/?autologin=true&q=` + query,
-      {
-        headers: {
-          "cookie": "_auth=1; _b=\"AVna7S1p7l1C5I9u0+nR3YzijpvXOPc6d09SyCzO+DcwpersQH36SmGiYfymBKhZcGg=\"; _pinterest_sess=TWc9PSZHamJOZ0JobUFiSEpSN3Z4a2NsMk9wZ3gxL1NSc2k2NkFLaUw5bVY1cXR5alZHR0gxY2h2MVZDZlNQalNpUUJFRVR5L3NlYy9JZkthekp3bHo5bXFuaFZzVHJFMnkrR3lTbm56U3YvQXBBTW96VUgzVUhuK1Z4VURGKzczUi9hNHdDeTJ5Y2pBTmxhc2owZ2hkSGlDemtUSnYvVXh5dDNkaDN3TjZCTk8ycTdHRHVsOFg2b2NQWCtpOWxqeDNjNkk3cS85MkhhSklSb0hwTnZvZVFyZmJEUllwbG9UVnpCYVNTRzZxOXNJcmduOVc4aURtM3NtRFo3STlmWjJvSjlWTU5ITzg0VUg1NGhOTEZzME9SNFNhVWJRWjRJK3pGMFA0Q3UvcHBnWHdaYXZpa2FUNkx6Z3RNQjEzTFJEOHZoaHRvazc1c1UrYlRuUmdKcDg3ZEY0cjNtZlBLRTRBZjNYK0lPTXZJTzQ5dU8ybDdVS015bWJKT0tjTWYyRlBzclpiamdsNmtpeUZnRjlwVGJXUmdOMXdTUkFHRWloVjBMR0JlTE5YcmhxVHdoNzFHbDZ0YmFHZ1VLQXU1QnpkM1FqUTNMTnhYb3VKeDVGbnhNSkdkNXFSMXQybjRGL3pyZXRLR0ZTc0xHZ0JvbTJCNnAzQzE0cW1WTndIK0trY05HV1gxS09NRktadnFCSDR2YzBoWmRiUGZiWXFQNjcwWmZhaDZQRm1UbzNxc21pV1p5WDlabm1UWGQzanc1SGlrZXB1bDVDWXQvUis3elN2SVFDbm1DSVE5Z0d4YW1sa2hsSkZJb1h0MTFpck5BdDR0d0lZOW1Pa2RDVzNySWpXWmUwOUFhQmFSVUpaOFQ3WlhOQldNMkExeDIvMjZHeXdnNjdMYWdiQUhUSEFBUlhUVTdBMThRRmh1ekJMYWZ2YTJkNlg0cmFCdnU2WEpwcXlPOVZYcGNhNkZDd051S3lGZmo0eHV0ZE42NW8xRm5aRWpoQnNKNnNlSGFad1MzOHNkdWtER0xQTFN5Z3lmRERsZnZWWE5CZEJneVRlMDd2VmNPMjloK0g5eCswZUVJTS9CRkFweHc5RUh6K1JocGN6clc1JmZtL3JhRE1sc0NMTFlpMVErRGtPcllvTGdldz0=; _ir=0"
-        }
-      }
+      `https://api.neoxr.eu/api/pinterest-v2?q=${encodeURIComponent(query)}&show=10&type=image&apikey=${process.env.NOXER}`,
+      { timeout: 10000 },
     );
 
-    const $ = cheerio.load(res.data);
-    const result = [];
-    const hasil = [];
+    const data = res.data?.data;
+    if (!Array.isArray(data) || data.length === 0)
+      return sendText(conn, m.chat, config.message.notFound, m);
 
-    $('div > a').each((i, b) => {
-      const link = $(b).find('img').attr('src');
-      result.push(link);
-    });
-    console.log({result})
-    result.forEach(v => {
-      if (v === undefined) return;
-      hasil.push(v.replace(/236/g, '736'));
-    });
+    const valid = data
+      .filter((item) => item?.content?.[0]?.url && !item.is_video)
+      .slice(0, 10);
 
-    hasil.shift();
-    console.log({hasil})
-    if (hasil.length === 0)
-      return sendText(conn, m.chat, "Gambar tidak ditemukan, coba kata kunci lain.", m);
+    if (valid.length === 0)
+      return sendText(conn, m.chat, config.message.notFound, m);
 
-    const images = hasil.slice(0, 5).map((imgUrl, i) => ({
-      image: { url: imgUrl },
+    const images = valid.map((item, i) => ({
+      image: { url: item.content[0].url },
       caption: i === 0 ? `🖼️ *${query}*\nPinterest` : "",
     }));
 
     await conn.sendAlbum(m.chat, images, { quoted: m });
   } catch (err) {
     console.error("[pinterest]", err.message);
-    await sendText(conn, m.chat, config.message.error, m);
+
+    const msg =
+      err.code === "ECONNABORTED"
+        ? "Request timeout, coba lagi."
+        : err.response?.status === 401
+          ? "API key tidak valid."
+          : err.response?.status === 404
+            ? "API tidak ditemukan."
+            : config.message.error;
+
+    await sendText(conn, m.chat, msg, m);
   }
 };
 
