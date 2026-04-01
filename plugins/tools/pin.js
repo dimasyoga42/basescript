@@ -16,7 +16,7 @@ const handler = async (m, { conn }) => {
     await sendText(conn, m.chat, "Mencari...", m);
 
     const res = await axios.get(
-      `https://api.neoxr.eu/api/pinterest-v2?q=${encodeURIComponent(query)}&show=10&type=image&apikey=${process.env.NOXER}`,
+      `https://api.neoxr.eu/api/pinterest-v2?q=${encodeURIComponent(query)}&show=20&type=image&apikey=${process.env.NOXER}`,
       { timeout: 10000 },
     );
 
