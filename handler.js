@@ -46,7 +46,7 @@ export async function runCommand(conn, m, plugins) {
   // Cek apakah body dimulai dengan prefix
   // Button response langsung pakai id seperti ".menu" jadi tetap perlu prefix
   if (!body.startsWith(prefix)) return;
-
+  if (!m.chat?.endsWith("@g.us")) return;
   if (isMuted(m)) return;
   if (await isBan(conn, m)) return;
   cleanExpiredVip();
