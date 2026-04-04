@@ -17,3 +17,7 @@ const handler = async (m, { conn }) => {
     console.log(db);
   } catch (err) {}
 };
+handler.command = "bos";
+handler.alias = ["boss"];
+handler.category = "Toram Search";
+export default handler;
