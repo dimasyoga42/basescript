@@ -14,6 +14,23 @@ const handler = async (m, { conn }) => {
         m.chat,
         `${config.message.invalid}, use: .bosdef namebos`,
       );
+    if (name === "--all") {
+      const db = await supa.from("bosdef").select("name");
+      await conn.sendButton(m.chat, {
+        image: thumbnail,
+        caption: "Pilih Boss yang tersedia",
+        footer: config.OwnerName,
+        buttons: db.map((item) => ({
+          name: "quick_reply",
+          buttonParamsJson: JSON.stringify({
+            display_text: item.name,
+            id: `.bosdef ${item.name}`,
+          }),
+        })),
+        bottom_sheet: true,
+        bottom_name: "Bosdef",
+      });
+    }
     const url = `${BASE_URL}/monster.php?name=${encodeURIComponent(name)}&type=&order=id+DESC&show=22`;
     const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
     const utlis = parseMonsters(await res.text());
