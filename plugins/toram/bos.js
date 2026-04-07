@@ -3,20 +3,29 @@ import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 import fetch from "node-fetch";
 import { formatDetail, parseMonsters } from "./_formater.js";
+
 const BASE_URL = "https://coryn.club";
+
 const handler = async (m, { conn }) => {
   try {
     const arg = m.text.split(" ");
-    const name = arg[1];
+
+    // ✅ slice(1).join() supaya nama dengan spasi tetap terbaca
+    const name = arg.slice(1).join(" ").trim();
+
     if (!name)
       return sendText(
         conn,
         m.chat,
         `${config.message.invalid}, use: .bosdef namebos`,
       );
+
     if (name === "--all") {
-      const db = await supa.from("bosdef").select("name");
-      await conn.sendButton(m.chat, {
+      const { data: db, error } = await supa.from("bosdef").select("name");
+
+      if (error || !db) return sendText(conn, m.chat, config.message.error, m);
+
+      return await conn.sendButton(m.chat, {
         image: thumbnail,
         caption: "Pilih Boss yang tersedia",
         footer: config.OwnerName,
@@ -31,19 +40,23 @@ const handler = async (m, { conn }) => {
         bottom_name: "Bosdef",
       });
     }
+
     const url = `${BASE_URL}/monster.php?name=${encodeURIComponent(name)}&type=&order=id+DESC&show=22`;
     const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
     const utlis = parseMonsters(await res.text());
-    const dtail = utlis
-      .slice(0, 1)
-      .map((mob, i) => formatDetail(mob, i, utlis.length));
-    console.log(dtail);
+
+    const dtail =
+      utlis
+        .slice(0, 1)
+        .map((mob, i) => formatDetail(mob, i, utlis.length))[0] ?? "";
+
     const { data } = await supa
       .from("bosdef")
       .select("name, type, image_url, spawn, element, stat")
       .ilike("name", `%${name}%`)
       .limit(1)
       .maybeSingle();
+
     if (!data)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
@@ -52,9 +65,10 @@ const handler = async (m, { conn }) => {
         text: config.message.notFound ?? "Data tidak ditemukan.",
         quoted: m,
       });
-    const parser = `
-      Element:\n${data.element}\nType:${data.type}\n${dtail}\n\n Stat Info:\n${data.stat}
-      `.trim();
+
+    const parser =
+      `Element:\n${data.element}\nType: ${data.type}\n${dtail}\n\nStat Info:\n${data.stat}`.trim();
+
     sendFancyText(conn, m.chat, {
       title: data.name,
       body: `loc: ${data.spawn}`,
