@@ -4,7 +4,7 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const name = m.text.replace(/\.appview|.app/, "").trim();
+    const name = m.text.replace(/\.appview|\.app/, "").trim();
     if (!name) return sendText(conn, m.chat, config.message.invalid, m);
 
     const { data, error } = await supa
@@ -12,12 +12,13 @@ const handler = async (m, { conn }) => {
       .select("name, image_url")
       .ilike("name", `%${name}%`);
 
-    if (data.length === 1) {
-      sendImage(conn, m.chat, data.image_url, `${data.name}`, m);
-    }
-
-    if (!data || error)
+    // ✅ Cek error duluan
+    if (error || !data || data.length === 0)
       return sendText(conn, m.chat, config.message.notFound, m);
+
+    if (data.length === 1) {
+      return sendImage(conn, m.chat, data[0].image_url, data[0].name, m);
+    }
 
     await conn.sendButton(m.chat, {
       image: thumbnail,
@@ -37,6 +38,7 @@ const handler = async (m, { conn }) => {
     sendText(conn, m.chat, config.message.error, m);
   }
 };
+
 handler.command = "appview";
 handler.alias = ["app"];
 handler.category = "Toram Search";
