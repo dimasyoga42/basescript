@@ -1,4 +1,4 @@
-import { config } from "../../config.js";
+import { config, thumbnail } from "../../config.js";
 import { sendImage, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
