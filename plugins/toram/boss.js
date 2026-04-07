@@ -1,3 +1,4 @@
+import { thumbnail } from "../../config.js";
 import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
@@ -9,6 +10,23 @@ const handler = async (m, { conn }) => {
         { text: "Contoh: .boss scrader" },
         { quoted: m },
       );
+    if (text === "--all") {
+      const { data: db, err } = await supa.from("bosv22").select("name");
+      return await conn.sendButton(m.chat, {
+        image: thumbnail, // ❗ jangan pakai { url: thumbnail }
+        caption: "Boss yang tersedia" + db.length,
+        footer: config.OwnerName,
+        buttons: db.map((item) => ({
+          name: "quick_reply",
+          buttonParamsJson: JSON.stringify({
+            display_text: item.name,
+            id: `.boss ${item.name}`,
+          }),
+        })),
+        bottom_sheet: true, //kalau mau button dalam button
+        bottom_name: "boss name",
+      });
+    }
 
     const { data, error } = await supa
       .from("bosv22")
