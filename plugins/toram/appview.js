@@ -12,11 +12,26 @@ const handler = async (m, { conn }) => {
       .select("name, image_url")
       .ilike("name", `%${name}%`);
 
+    if (data.length === 1) {
+      sendImage(conn, m.chat, data.image_url, `${data.name}`, m);
+    }
+
     if (!data || error)
       return sendText(conn, m.chat, config.message.notFound, m);
 
-    data.map((item) => {
-      sendImage(conn, m.chat, item.image_url, `${item.name}`, m);
+    await conn.sendButton(m.chat, {
+      image: thumbnail,
+      caption: "Pilih Appview yang tersedia",
+      footer: config.OwnerName,
+      buttons: data.map((item) => ({
+        name: "quick_reply",
+        buttonParamsJson: JSON.stringify({
+          display_text: item.name,
+          id: `.appview ${item.name}`,
+        }),
+      })),
+      bottom_sheet: true,
+      bottom_name: "menu Appview",
     });
   } catch (err) {
     sendText(conn, m.chat, config.message.error, m);
