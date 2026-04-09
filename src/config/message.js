@@ -28,7 +28,7 @@ export const editText = async (sock, jid, message, text) => {
   ensure(jid, "jid");
   ensure(text, "text");
   await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 1000));
   await sock.sendMessage(jid, { text, edit: message.key });
   return await sock.sendPresenceUpdate("paused", jid);
 };
@@ -50,7 +50,7 @@ export const sendImage = async (
 ) => {
   ensure(jid, "jid");
   await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 100));
   await sock.sendMessage(
     jid,
     {
@@ -71,7 +71,7 @@ export const sendVideo = async (
 ) => {
   ensure(jid, "jid");
   await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 100));
   await sock.sendMessage(
     jid,
     {
@@ -92,7 +92,7 @@ export const sendAudio = async (
 ) => {
   ensure(jid, "jid");
   await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 100));
   await sock.sendMessage(
     jid,
     {
@@ -210,7 +210,7 @@ export const sendFancyText = async (
     }
   }
   await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 100));
   await sock.sendMessage(
     jid,
     {
@@ -252,7 +252,7 @@ export const sendFancyTextModif = async (
     }
   }
   await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 100));
   await sock.sendMessage(
     jid,
     {
@@ -281,3 +281,7 @@ export const downloadMedia = async (message, type = "buffer") => {
   if (type === "buffer") return buffer;
   return fs.writeFileSync("./downloaded_media", buffer);
 };
+
+export const sendbtn = () => {
+
+}
