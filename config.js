@@ -48,16 +48,16 @@ export const config = {
   owner: ["272206605082689@lid", "179573169848377@lid"],
   admin: "179573169848377@lid",
   pembolong: `
-  *extract*: 4 - 5M
-  Fairy Silk 5M
+  *extract*: 3 - 5M
+  Fairy Silk 4-5M
 
   *OHS*
-  0-1: 16-25M
+  0-1: 27-38M
   1-2: 60-70M
 
   *BWG*
   0-1: 10-15M
-  0-2: 70-80M
+  0-2: 72-80M
 
   *KNUCK*
   0-1: 20-40M
@@ -69,7 +69,7 @@ export const config = {
 
   *MD*
   0-1 10-15M
-  1-2 30-40M
+  1-2 40-50M
 
   *KTN*
   0-1: 10-15M
@@ -83,9 +83,11 @@ export const config = {
   0-1 6-8M
   1-2: 50-55M
   Spirit Needle 6-8M
-  legendary needle 550M - 700M
-  leg ornament: 510-600M
-  leg silk: 1-1,4B
+  leg Piercer 75M
+  High-Grade Ornament 2M+
+  legendary needle 410M - 700M
+  leg ornament: 511-600M
+  leg silk: 1,2,4B
 
   Ini hanya perkiraan, jika kalian punya info bisa PM saja ke No botnya. Terima kasih
   `,
