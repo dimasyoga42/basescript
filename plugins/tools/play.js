@@ -108,6 +108,12 @@ const handler = async (m, { conn }) => {
         audio: fixedBuffer,
         mimetype: "audio/mpeg",
         fileName: `${data.title}.mp3`,
+        contextInfo: {
+          title: `${data.title}`,
+          body: `${config.BotName}`,
+          mediaType: 1,
+
+        }
       },
       { quoted: m },
     );
