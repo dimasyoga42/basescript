@@ -24,7 +24,7 @@ const handler = async (m, { conn }) => {
     if (error || !data || data.length === 0)
       return sendText(conn, m.chat, config.message.notFound, m);
 
-    if (data.length === 1) {
+    if (data.length >=  2 || data.length === 1) {
       const item = data[0];
       return sendText(conn, m.chat, `*${item.name}*\n\n${item.stat_effect}`, m);
     }
