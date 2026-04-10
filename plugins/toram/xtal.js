@@ -84,7 +84,7 @@ const handler = async (m, { conn }) => {
       });
 
     // ✅ Hasil tepat 1, langsung tampilkan detail
-    if (result.length >= 2 || result.length === 1) {
+    if (result.length === 1) {
       return sendText(conn, m.chat, formatXtal(result[0]), m);
     }
 
