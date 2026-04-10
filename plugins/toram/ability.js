@@ -6,7 +6,7 @@ const handler = async (m, { conn }) => {
   try {
     const parts = m.text.trim().split(/\s+/);
     const query = parts.slice(1).join(" ").trim();
-    console.log(query);
+
     if (!query)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
@@ -16,6 +16,19 @@ const handler = async (m, { conn }) => {
         msg: m,
       });
 
+    // Prioritas 1: exact match (nama persis sama, case-insensitive)
+    const { data: exactData, error: exactError } = await supa
+      .from("ability")
+      .select("*")
+      .ilike("name", query)
+      .limit(1);
+
+    if (!exactError && exactData && exactData.length === 1) {
+      const item = exactData[0];
+      return sendText(conn, m.chat, `*${item.name}*\n\n${item.stat_effect}`, m);
+    }
+
+    // Prioritas 2: partial match
     const { data, error } = await supa
       .from("ability")
       .select("*")
@@ -24,14 +37,16 @@ const handler = async (m, { conn }) => {
     if (error || !data || data.length === 0)
       return sendText(conn, m.chat, config.message.notFound, m);
 
+    // Tepat 1 hasil
     if (data.length === 1) {
       const item = data[0];
       return sendText(conn, m.chat, `*${item.name}*\n\n${item.stat_effect}`, m);
     }
 
+    // Lebih dari 1: tampilkan button pilihan
     await conn.sendButton(m.chat, {
-      image: thumbnail, // ❗ jangan pakai { url: thumbnail }
-      caption: "Pilih ability untuk melihat detail:",
+      image: thumbnail,
+      caption: `Ditemukan *${data.length}* ability untuk: _${query}_\nPilih salah satu:`,
       footer: config.OwnerName,
       buttons: data.map((item) => ({
         name: "quick_reply",
@@ -40,8 +55,8 @@ const handler = async (m, { conn }) => {
           id: `.trait ${item.name}`,
         }),
       })),
-      bottom_sheet: true, //kalau mau button dalam button
-      bottom_name: "menu Ability",
+      bottom_sheet: true,
+      bottom_name: "Menu Ability",
     });
   } catch (err) {
     console.error("[ability]", err.message);
@@ -59,5 +74,4 @@ handler.command = "trait";
 handler.alias = ["ability"];
 handler.category = "Toram Search";
 handler.submenu = "Toram";
-
 export default handler;
