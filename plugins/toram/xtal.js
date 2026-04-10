@@ -41,6 +41,7 @@ const formatXtal = (xtall) => {
 const handler = async (m, { conn }) => {
   try {
     const query = m.text.split(" ").slice(1).join(" ").trim();
+
     if (!query)
       return sendText(
         conn,
@@ -51,7 +52,7 @@ const handler = async (m, { conn }) => {
 
     const data = await fetchXtalData();
 
-    // ✅ --all: tampilkan semua sebagai button tanpa batas
+    // --all: tampilkan semua sebagai button
     if (query === "--all") {
       return await conn.sendButton(m.chat, {
         image: thumbnail,
@@ -69,12 +70,21 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    // ✅ Filter by name
+    const queryLower = query.toLowerCase();
+
+    // Prioritas 1: exact match (nama persis sama)
+    const exactMatch = data.find((x) => x?.name?.toLowerCase() === queryLower);
+    if (exactMatch) {
+      return sendText(conn, m.chat, formatXtal(exactMatch), m);
+    }
+
+    // Prioritas 2: partial match
     const result = data.filter((x) =>
-      x?.name?.toLowerCase().includes(query.toLowerCase()),
+      x?.name?.toLowerCase().includes(queryLower),
     );
 
-    if (!result.length)
+    // Tidak ditemukan
+    if (!result.length) {
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
         body: `Developer By ${config.OwnerName}`,
@@ -82,13 +92,14 @@ const handler = async (m, { conn }) => {
         text: config.message.notFound ?? "Data tidak ditemukan.",
         quoted: m,
       });
+    }
 
-    // ✅ Hasil tepat 1, langsung tampilkan detail
+    // Tepat 1 hasil: langsung tampilkan detail
     if (result.length === 1) {
       return sendText(conn, m.chat, formatXtal(result[0]), m);
     }
 
-    // ✅ Hasil lebih dari 1, tampilkan semua sebagai button tanpa batas
+    // Lebih dari 1 hasil: tampilkan sebagai button pilihan
     return await conn.sendButton(m.chat, {
       image: thumbnail,
       caption: `Ditemukan *${result.length}* xtal untuk: _${query}_\nPilih salah satu:`,
