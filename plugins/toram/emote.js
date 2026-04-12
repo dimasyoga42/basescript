@@ -14,12 +14,14 @@ const handler = async (m, { conn }) => {
         text: config.message.invalid,
         quoted: m,
       });
+
     const { data } = await supa
       .from("emot")
       .select("name, url")
       .ilike("name", `%${name}%`)
       .limit(1)
       .maybeSingle();
+
     if (!data)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
@@ -28,37 +30,42 @@ const handler = async (m, { conn }) => {
         text: config.message.notFound ?? "Data tidak ditemukan.",
         quoted: m,
       });
+
     const res = await axios.get(data.url, {
       responseType: "arraybuffer",
       timeout: 15000,
-    })
+    });
+
     const buffer = Buffer.from(res.data);
     const contentType = res.headers["content-type"] || "";
-    const isGif = contentType.includes("gif") || url.toLowerCase().endsWith(".gif");
 
+    // ─── CEK GIF: dari content-type ATAU ekstensi URL ─────
+    const isGif =
+      contentType.includes("gif") || data.url.toLowerCase().endsWith(".gif");
 
     if (isGif) {
       await conn.sendMessage(
-        chatId,
+        m.chat,
         {
           video: buffer,
           mimetype: "image/gif",
           gifPlayback: true,
           caption: data.name,
         },
-        { quoted }
+        { quoted: m },
       );
     } else {
       await conn.sendMessage(
-        chatId,
+        m.chat,
         {
           image: buffer,
           caption: data.name,
         },
-        { quoted }
+        { quoted: m },
       );
     }
   } catch (err) {
+    console.error("emot error:", err.message);
     sendFancyText(conn, m.chat, {
       title: config.BotName,
       body: `Developer By ${config.OwnerName}`,
