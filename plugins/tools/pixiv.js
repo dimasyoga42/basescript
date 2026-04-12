@@ -25,7 +25,7 @@ const header = async (m, { conn }) => {
         { quoted: m },
       );
 
-    const images = res.map((item, i) => ({
+    const images = res.data.map((item, i) => ({
       image: { url: `${baseUrl}${item.proxy}` },
       caption: i === 0 ? `🖼️ *${name}*\nPixiv` : "", // ✅ fix: 'query' → 'name'
     }));
