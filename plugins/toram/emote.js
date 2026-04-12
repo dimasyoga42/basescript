@@ -6,14 +6,16 @@ import axios from "axios";
 const handler = async (m, { conn }) => {
   try {
     const name = m.text.replace(".emot", "").trim();
-    if (!name)
+
+    if (!name) {
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
-        body: "exemple: .emot name",
-        thumbnail: thumbnail,
+        body: "example: .emot dance",
+        thumbnail,
         text: config.message.invalid,
         quoted: m,
       });
+    }
 
     const { data } = await supa
       .from("emot")
@@ -22,27 +24,55 @@ const handler = async (m, { conn }) => {
       .limit(1)
       .maybeSingle();
 
-    if (!data)
+    if (!data) {
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
         body: `Developer By ${config.OwnerName}`,
-        thumbnail: thumbnail,
+        thumbnail,
         text: config.message.notFound ?? "Data tidak ditemukan.",
         quoted: m,
       });
+    }
 
-    const res = await axios.get(data.url, {
-      responseType: "arraybuffer",
-      timeout: 15000,
-    });
+    // ─── FETCH IMAGE/GIF ───────────────────────────────
+    let res;
+
+    try {
+      res = await axios.get(data.url, {
+        responseType: "arraybuffer",
+        timeout: 20000,
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          Accept: "image/*,*/*",
+        },
+        validateStatus: () => true,
+      });
+
+      if (res.status !== 200) throw new Error("Bad status");
+    } catch {
+      // 🔥 fallback (kalau github raw error)
+      const fallback = data.url.replace(
+        "raw.githubusercontent.com",
+        "cdn.jsdelivr.net/gh",
+      );
+
+      res = await axios.get(fallback, {
+        responseType: "arraybuffer",
+        timeout: 20000,
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+        },
+      });
+    }
 
     const buffer = Buffer.from(res.data);
     const contentType = res.headers["content-type"] || "";
 
-    // ─── CEK GIF: dari content-type ATAU ekstensi URL ─────
+    // ─── DETECT GIF ───────────────────────────────────
     const isGif =
-      contentType.includes("gif") || data.url.toLowerCase().endsWith(".gif");
+      contentType.includes("gif") || data.url.toLowerCase().includes(".gif");
 
+    // ─── SEND ─────────────────────────────────────────
     if (isGif) {
       await conn.sendMessage(
         m.chat,
@@ -66,10 +96,11 @@ const handler = async (m, { conn }) => {
     }
   } catch (err) {
     console.error("emot error:", err.message);
+
     sendFancyText(conn, m.chat, {
       title: config.BotName,
       body: `Developer By ${config.OwnerName}`,
-      thumbnail: thumbnail,
+      thumbnail,
       text: config.message.error,
       quoted: m,
     });
@@ -79,4 +110,5 @@ const handler = async (m, { conn }) => {
 handler.command = ["emot"];
 handler.category = "Toram Search";
 handler.submenu = "Toram";
+
 export default handler;
