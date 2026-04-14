@@ -1,28 +1,31 @@
 import fs from "fs";
-import path from "path";
 
-const ensureDir = (dbPath) => {
-  const dir = path.dirname(dbPath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+export const getUserData = async (file) => {
+  try {
+    if (!fs.existsSync(file)) {
+      fs.writeFileSync(file, "[]");
+      return [];
+    }
+
+    const raw = fs.readFileSync(file, "utf-8");
+
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed;
+  } catch (err) {
+    console.error("Gagal membaca file:", err);
+    return [];
   }
 };
 
-export function getUserData(path) {
+export const saveUserData = async (file, data) => {
   try {
-    const data = fs.readFileSync(path, "utf-8");
-    return JSON.parse(data);
+    fs.writeFileSync(file, JSON.stringify(data, null, 2));
   } catch (err) {
-    console.error("Gagal membaca file:", err);
-    return {};
-  }
-}
-
-export const saveUserData = (dbPath, data) => {
-  try {
-    ensureDir(dbPath);
-    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
-  } catch (err) {
-    console.error(`Error writing to ${dbPath}:`, err);
+    console.error("Gagal menyimpan file:", err);
   }
 };
