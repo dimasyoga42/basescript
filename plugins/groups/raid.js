@@ -26,14 +26,13 @@ const handler = async (m, { conn }) => {
       return conn.sendMessage(
         m.chat,
         {
-          text:
-            "Jobs tidak valid!\nGunakan:\n- DPS\n- TANK\n- SUPPORT",
+          text: "Jobs tidak valid!\nGunakan:\n- DPS\n- TANK\n- SUPPORT",
         },
         { quoted: m }
       );
     }
 
-    const data = (await getUserData(db)) || [];
+    const data = (getUserData(db)) || [];
 
     let dataValid = data.find((item) => item.grubId === m.chat);
 
@@ -45,26 +44,41 @@ const handler = async (m, { conn }) => {
       data.push(dataValid);
     }
 
-    const memberExist = dataValid.member.find(
-      (item) => item.name.toLowerCase() === name.toLowerCase()
+    const userExist = dataValid.member.find(
+      (item) => item.id === m.sender
     );
 
-    if (memberExist) {
+    if (userExist) {
       return conn.sendMessage(
         m.chat,
         {
-          text: `${name} sudah terdaftar sebagai ${memberExist.job}!`,
+          text: `Kamu sudah terdaftar sebagai ${userExist.name} (${userExist.job})`,
+        },
+        { quoted: m }
+      );
+    }
+
+    const nameExist = dataValid.member.find(
+      (item) => item.name.toLowerCase() === name.toLowerCase()
+    );
+
+    if (nameExist) {
+      return conn.sendMessage(
+        m.chat,
+        {
+          text: `Nama ${name} sudah digunakan oleh member lain!`,
         },
         { quoted: m }
       );
     }
 
     dataValid.member.push({
+      id: m.sender,
       name,
       job: jobUpper,
     });
 
-    await saveUserData(db, data);
+    saveUserData(db, data);
 
     return conn.sendMessage(
       m.chat,

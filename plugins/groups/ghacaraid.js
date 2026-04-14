@@ -75,7 +75,7 @@ const handler = async (m, { conn }) => {
     }
 
     // FORMAT OUTPUT
-    let text = `*PARTY TELAH DI TENTUKAN*\n`;
+    let text = `*PARTY TELAH DI TENTUKAN*\n\n`;
 
     parties.forEach((party, i) => {
       text += `*PARTY ${i + 1}*\n`;
