@@ -19,7 +19,7 @@ const handler = async (m, { conn }) => {
     }
 
     const data = await getUserData(db);
-    let dataValid = data.find(item => item.grubId === m.chat);
+    let dataValid = data.find((item) => item.grubId === m.chat);
 
     if (!dataValid) {
       const newRaidme = {
