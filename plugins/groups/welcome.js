@@ -1,5 +1,6 @@
 import axios from "axios";
 import { config } from "../../config.js";
+import { supa } from "../../src/config/supa.js";
 
 const getProfilePicture = async (conn, jid) => {
   try {
@@ -9,54 +10,114 @@ const getProfilePicture = async (conn, jid) => {
   }
 };
 
+const getName = async (conn, jid) => {
+  try {
+    const contact = await conn.onWhatsApp(jid);
+    return contact?.[0]?.notify || jid.split("@")[0];
+  } catch {
+    return jid.split("@")[0];
+  }
+};
+
 const handler = async (m, { conn }) => {
   try {
-    const { action, participants, id } = m;
-    if (!action || !participants) return;
+    const { id, participants, action } = m;
+    if (!id || !participants) return;
 
-    const groupMeta = await conn.groupMetadata(id);
-    const groupName = groupMeta.subject;
-    const totalMember = groupMeta.participants.length;
+    const meta = await conn.groupMetadata(id);
+    const groupName = meta.subject;
+    const memberCount = meta.participants.length;
+    const groupDesc = meta.desc?.toString() || "Tidak ada deskripsi";
+
+    const { data } = await supa
+      .from("wellcome")
+      .select("message")
+      .eq("id_grub", id)
+      .maybeSingle();
 
     for (const participant of participants) {
-      // ✅ pastikan jid adalah string
       const jid =
         typeof participant === "string"
           ? participant
-          : participant.id || participant.jid || String(participant);
-      const name = jid.split("@")[0];
+          : participant.id || participant.jid;
+
+      const number = jid.split("@")[0];
+      const username = await getName(conn, jid);
       const avatar = await getProfilePicture(conn, jid);
 
+      // ================= WELCOME =================
       if (action === "add") {
-        const url = `https://api.siputzx.my.id/api/canvas/welcomev5?username=petualang&guildName=${encodeURIComponent(groupName)}&memberCount=${totalMember}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(config.welcomeBg || "")}&quality=90`;
+        const rawText = data?.message || "@user selamat datang di @group";
 
-        const res = await axios.get(url, { responseType: "arraybuffer" });
+        const caption = rawText
+          .replace(/@user/g, `@${number}`)
+          .replace(/@nama/g, username)
+          .replace(/@group/g, groupName)
+          .replace(/@count/g, memberCount.toString())
+          .replace(/@desc/g, groupDesc);
 
-        await conn.sendMessage(id, {
-          image: Buffer.from(res.data),
-          caption: `Selamat datang @${name} di *${groupName}*!\nMember ke-${totalMember}`,
-          mentions: [jid],
-        });
+        const url = `https://api.siputzx.my.id/api/canvas/welcomev5?username=${encodeURIComponent(username)}&guildName=${encodeURIComponent(groupName)}&memberCount=${memberCount}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(config.welcomeBg || "")}&quality=90`;
+
+        let image;
+        try {
+          const res = await axios.get(url, {
+            responseType: "arraybuffer",
+          });
+          image = Buffer.from(res.data);
+        } catch {
+          image = null;
+        }
+
+        if (image) {
+          await conn.sendMessage(id, {
+            image,
+            caption,
+            mentions: [jid],
+          });
+        } else {
+          await conn.sendMessage(id, {
+            text: caption,
+            mentions: [jid],
+          });
+        }
       }
 
+      // ================= GOODBYE =================
       if (action === "remove") {
-        const url = `https://api.siputzx.my.id/api/canvas/goodbyev4?avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(config.goodbyeBg || "")}&title=Goodbye&description=${encodeURIComponent(`${name} telah meninggalkan ${groupName}`)}&border=%232a2e35&avatarBorder=%232a2e35&overlayOpacity=0.3`;
+        const caption = `Selamat tinggal @${number} 👋`;
 
-        const res = await axios.get(url, { responseType: "arraybuffer" });
+        const url = `https://api.siputzx.my.id/api/canvas/goodbyev4?avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(config.goodbyeBg || "")}&title=Goodbye&description=${encodeURIComponent(`${username} keluar dari ${groupName}`)}&border=%232a2e35&avatarBorder=%232a2e35&overlayOpacity=0.3`;
 
-        await conn.sendMessage(id, {
-          image: Buffer.from(res.data),
-          caption: `Sampai jumpa @${name}!\nMember: ${totalMember}`,
-          mentions: [jid],
-        });
+        let image;
+        try {
+          const res = await axios.get(url, {
+            responseType: "arraybuffer",
+          });
+          image = Buffer.from(res.data);
+        } catch {
+          image = null;
+        }
+
+        if (image) {
+          await conn.sendMessage(id, {
+            image,
+            caption,
+            mentions: [jid],
+          });
+        } else {
+          await conn.sendMessage(id, {
+            text: caption,
+            mentions: [jid],
+          });
+        }
       }
     }
   } catch (err) {
-    console.error("[welcome]", err.message);
+    console.error("WELCOME HANDLER ERROR:", err);
   }
 };
 
 handler.on = "group_participants_update";
 handler.category = "Grup";
-handler.submenu = "Welcome";
+
 export default handler;

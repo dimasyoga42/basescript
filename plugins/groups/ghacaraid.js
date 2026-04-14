@@ -1,5 +1,6 @@
 import path from "path";
 import { getUserData } from "../../src/config/func.js";
+import { isAdmin } from "../_function/_admin.js";
 
 const db = path.resolve("db", "raidmem.json");
 
@@ -13,6 +14,7 @@ const shuffle = (arr) => {
 
 const handler = async (m, { conn }) => {
   try {
+    if (!(await isAdmin(conn, m))) return;
     const args = m.text.split(" ");
     const totalTank = parseInt(args[1]) || 0;
 
@@ -20,7 +22,7 @@ const handler = async (m, { conn }) => {
       return conn.sendMessage(
         m.chat,
         { text: "Jumlah tank tidak valid" },
-        { quoted: m }
+        { quoted: m },
       );
     }
 
@@ -31,7 +33,7 @@ const handler = async (m, { conn }) => {
       return conn.sendMessage(
         m.chat,
         { text: "Minimal 4 member untuk gacha party." },
-        { quoted: m }
+        { quoted: m },
       );
     }
 
@@ -75,11 +77,7 @@ const handler = async (m, { conn }) => {
     });
 
     // 🔥 SISA MEMBER (DPS + TANK SISA + SUPPORT SISA)
-    let remaining = [
-      ...tanks.slice(totalTank),
-      ...supports.slice(),
-      ...dps,
-    ];
+    let remaining = [...tanks.slice(totalTank), ...supports.slice(), ...dps];
 
     remaining = shuffle(remaining);
 
@@ -112,17 +110,13 @@ const handler = async (m, { conn }) => {
       text += `\n`;
     });
 
-    return conn.sendMessage(
-      m.chat,
-      { text },
-      { quoted: m }
-    );
+    return conn.sendMessage(m.chat, { text }, { quoted: m });
   } catch (err) {
     console.error("GACHA RAID ERROR:", err);
     return conn.sendMessage(
       m.chat,
       { text: "Terjadi kesalahan saat gacha party." },
-      { quoted: m }
+      { quoted: m },
     );
   }
 };
