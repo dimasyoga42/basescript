@@ -1,6 +1,5 @@
 import path from "path";
 import { getUserData } from "../../src/config/func.js";
-import { isAdmin } from "../_function/_admin.js";
 
 const db = path.resolve("db", "raidmem.json");
 
@@ -14,8 +13,18 @@ const shuffle = (arr) => {
 
 const handler = async (m, { conn }) => {
   try {
-    if (!(await isAdmin(conn, m))) return;
-    const data =  getUserData(db);
+    const args = m.text.split(" ");
+    const tankPerParty = parseInt(args[1]) || 1;
+
+    if (tankPerParty < 0 || tankPerParty > 4) {
+      return conn.sendMessage(
+        m.chat,
+        { text: "Jumlah tank per party harus antara 0 - 4" },
+        { quoted: m }
+      );
+    }
+
+    const data = await getUserData(db);
     const dataValid = data.find((item) => item.grubId === m.chat);
 
     if (!dataValid || dataValid.member.length < 4) {
@@ -26,39 +35,33 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    let members = [...dataValid.member];
+    let members = shuffle([...dataValid.member]);
 
-    // Shuffle biar random
-    members = shuffle(members);
-
-    const tanks = members.filter((m) => m.job === "TANK");
-    const supports = members.filter((m) => m.job === "SUPPORT");
-    const dps = members.filter((m) => m.job === "DPS");
+    let tanks = members.filter((m) => m.job === "TANK");
+    let supports = members.filter((m) => m.job === "SUPPORT");
+    let dps = members.filter((m) => m.job === "DPS");
 
     const parties = [];
     const maxParty = 4;
 
     for (let i = 0; i < maxParty; i++) {
-      if (
-        tanks.length === 0 &&
-        supports.length === 0 &&
-        dps.length === 0
-      )
-        break;
+      if (members.length === 0) break;
 
       const party = [];
 
-      // PRIORITAS: TANK
-      if (tanks.length > 0) {
-        party.push(tanks.shift());
+      // 🔥 AMBIL TANK SESUAI INPUT
+      for (let t = 0; t < tankPerParty; t++) {
+        if (tanks.length > 0 && party.length < 4) {
+          party.push(tanks.shift());
+        }
       }
 
-      // PRIORITAS: SUPPORT
-      if (supports.length > 0) {
+      // 🔥 1 SUPPORT (kalau ada)
+      if (supports.length > 0 && party.length < 4) {
         party.push(supports.shift());
       }
 
-      // ISI SISA SLOT
+      // 🔥 ISI SISANYA
       while (party.length < 4) {
         if (dps.length > 0) {
           party.push(dps.shift());
@@ -75,7 +78,8 @@ const handler = async (m, { conn }) => {
     }
 
     // FORMAT OUTPUT
-    let text = `*PARTY TELAH DI TENTUKAN*\n\n`;
+    let text = `*HASIL GACHA PARTY*\n`;
+    text += `Tank per party: ${tankPerParty}\n\n`;
 
     parties.forEach((party, i) => {
       text += `*PARTY ${i + 1}*\n`;
