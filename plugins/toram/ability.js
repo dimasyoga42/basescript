@@ -15,7 +15,23 @@ const handler = async (m, { conn }) => {
         text: config.message.invalid,
         msg: m,
       });
+    if (query === "--all") {
+      const select = supa.from("ability").select("*");
 
+      return await conn.sendButton(m.chat, {
+        text: `Pilih salah satu:`,
+        footer: config.OwnerName,
+        buttons: select.map((item) => ({
+          name: "quick_reply",
+          buttonParamsJson: JSON.stringify({
+            display_text: item.name,
+            id: `.trait ${item.name}`,
+          }),
+        })),
+        bottom_sheet: true,
+        bottom_name: "List Ability",
+      });
+    }
     // Prioritas 1: exact match (nama persis sama, case-insensitive)
     const { data: exactData, error: exactError } = await supa
       .from("ability")
