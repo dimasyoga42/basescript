@@ -16,12 +16,12 @@ const handler = async (m, { conn }) => {
         msg: m,
       });
     if (query === "--all") {
-      const select = supa.from("ability").select("*");
+      const { data: db, error: dbError } = supa.from("ability").select("*");
 
       return await conn.sendButton(m.chat, {
         text: `Pilih salah satu:`,
         footer: config.OwnerName,
-        buttons: select.map((item) => ({
+        buttons: db.map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
             display_text: item.name,
