@@ -4,67 +4,89 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const arg = m.text.split(" ");
-    const name = arg[1];
-    if (!name)
+    const text = m.text || "";
+    const arg = text.split(" ");
+    const name = arg.slice(1).join(" ").trim();
+
+    if (!name) {
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
         body: `Develop by ${config.OwnerName}`,
-        thumbnail: thumbnail,
+        thumbnail,
         text: config.message.notFound,
         quoted: m,
       });
+    }
+
+    // ================= LIST ALL =================
     if (name === "--all") {
-      const { data: db, err: errdb } = await supa
-        .from("hdb")
-        .select("bossname");
+      const { data: db, error } = await supa.from("hdb").select("bosname");
+
+      if (error || !db || db.length === 0) {
+        return sendFancyText(conn, m.chat, {
+          title: config.BotName,
+          body: `Develop by ${config.OwnerName}`,
+          thumbnail,
+          text: "Data kosong",
+          quoted: m,
+        });
+      }
 
       return await conn.sendButton(m.chat, {
-        text: `Pilih salah satu:`,
+        text: `Pilih salah satu boss:`,
         footer: config.OwnerName,
         buttons: db.map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
-            display_text: item.bossname,
-            id: `.hdb ${item.bossname}`,
+            display_text: item.bosname,
+            id: `.hdb ${item.bosname}`,
           }),
         })),
         bottom_sheet: true,
-        bottom_name: "List Ability",
+        bottom_name: "HDB LIST",
       });
     }
-    const { data } = await supa
+
+    // ================= SEARCH =================
+    const { data, error } = await supa
       .from("hdb")
       .select("bosname, stat")
       .ilike("bosname", `%${name}%`)
       .limit(1)
       .maybeSingle();
-    if (!data)
+
+    if (error || !data) {
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
         body: `Develop by ${config.OwnerName}`,
-        thumbnail: thumbnail,
+        thumbnail,
         text: config.message.notFound,
         quoted: m,
       });
-    sendFancyText(conn, m.chat, {
+    }
+
+    return sendFancyText(conn, m.chat, {
       title: data.bosname,
       body: `Develop by ${config.OwnerName}`,
-      thumbnail: thumbnail,
+      thumbnail,
       text: data.stat,
       quoted: m,
     });
   } catch (err) {
-    sendFancyText(conn, m.chat, {
+    console.error("HDB ERROR:", err);
+
+    return sendFancyText(conn, m.chat, {
       title: config.BotName,
       body: `Develop by ${config.OwnerName}`,
-      thumbnail: thumbnail,
+      thumbnail,
       text: config.message.error,
       quoted: m,
     });
   }
 };
+
 handler.command = ["hdb"];
 handler.category = "Toram Search";
 handler.submenu = "Toram";
+
 export default handler;
