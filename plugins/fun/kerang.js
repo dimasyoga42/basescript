@@ -15,7 +15,7 @@ const handler = (m, { conn }) => {
     const key = Math.floor(Math.random() * config.kerang.length);
     const valueMessage = config.kerang[key];
 
-    sendText(conn, m.text, valueMessage, m);
+    conn.sendMessage(m.chat, { text: valueMessage }, { quoted: m });
   } catch (err) {
     sendFancyText(conn, m.chat, {
       title: config.BotName,
