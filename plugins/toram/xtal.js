@@ -55,8 +55,7 @@ const handler = async (m, { conn }) => {
     // --all: tampilkan semua sebagai button
     if (query === "--all") {
       return await conn.sendButton(m.chat, {
-        image: thumbnail,
-        caption: `Total *${data.length}* xtal tersedia.\nPilih salah satu:`,
+        text: `Total *${data.length}* xtal tersedia.\nPilih salah satu:`,
         footer: config.OwnerName,
         buttons: data.map((item) => ({
           name: "quick_reply",
@@ -101,8 +100,7 @@ const handler = async (m, { conn }) => {
 
     // Lebih dari 1 hasil: tampilkan sebagai button pilihan
     return await conn.sendButton(m.chat, {
-      image: thumbnail,
-      caption: `Ditemukan *${result.length}* xtal untuk: _${query}_\nPilih salah satu:`,
+      text: `Ditemukan *${result.length}* xtal untuk: _${query}_\nPilih salah satu:`,
       footer: config.OwnerName,
       buttons: result.map((item) => ({
         name: "quick_reply",

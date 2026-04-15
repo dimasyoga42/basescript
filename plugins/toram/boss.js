@@ -26,8 +26,7 @@ const handler = async (m, { conn }) => {
         );
 
       return await conn.sendButton(m.chat, {
-        image: thumbnail,
-        caption: "Boss yang tersedia: " + db.length, // ✅ tambah spasi sebelum angka
+        text: "Boss yang tersedia: " + db.length, // ✅ tambah spasi sebelum angka
         footer: config.OwnerName,
         buttons: db.map((item) => ({
           name: "quick_reply",

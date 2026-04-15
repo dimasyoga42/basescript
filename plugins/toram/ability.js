@@ -63,8 +63,7 @@ const handler = async (m, { conn }) => {
 
     // Lebih dari 1: tampilkan button pilihan
     await conn.sendButton(m.chat, {
-      image: thumbnail,
-      caption: `Ditemukan *${data.length}* ability untuk: _${query}_\nPilih salah satu:`,
+      text: `Ditemukan *${data.length}* ability untuk: _${query}_\nPilih salah satu:`,
       footer: config.OwnerName,
       buttons: data.map((item) => ({
         name: "quick_reply",
