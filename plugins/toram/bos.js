@@ -26,8 +26,7 @@ const handler = async (m, { conn }) => {
       if (error || !db) return sendText(conn, m.chat, config.message.error, m);
 
       return await conn.sendButton(m.chat, {
-        image: thumbnail,
-        caption: "Pilih Boss yang tersedia",
+        text: "Pilih Boss yang tersedia",
         footer: config.OwnerName,
         buttons: db.map((item) => ({
           name: "quick_reply",
