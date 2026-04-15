@@ -16,7 +16,9 @@ const handler = async (m, { conn }) => {
         msg: m,
       });
     if (query === "--all") {
-      const { data: db, error: dbError } = supa.from("ability").select("*");
+      const { data: db, error: dbError } = await supa
+        .from("ability")
+        .select("*");
 
       return await conn.sendButton(m.chat, {
         text: `Pilih salah satu:`,
