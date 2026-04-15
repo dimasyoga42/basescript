@@ -25,8 +25,8 @@ const handler = async (m, { conn }) => {
         buttons: db.map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
-            display_text: item.name,
-            id: `.hdb ${item.name}`,
+            display_text: item.bossname,
+            id: `.hdb ${item.bossname}`,
           }),
         })),
         bottom_sheet: true,
