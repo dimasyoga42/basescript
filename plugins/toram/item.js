@@ -24,7 +24,7 @@ const handler = async (m, { conn }) => {
     // PRIORITAS 1: exact match
     const { data: exactData, error: exactError } = await supa
       .from("item_v2")
-      .select("ItemName, Category, Process, Duration, Effects")
+      .select("ItemName, Category, Process, Duration, Effects, ObtainedFrom")
       .ilike("ItemName", query)
       .limit(1);
 
@@ -44,7 +44,7 @@ proses:
     // PRIORITAS 2: partial match
     const { data, error } = await supa
       .from("item_v2")
-      .select("ItemName, Category, Process, Duration, Effects")
+      .select("ItemName, Category, Process, Duration, Effects, ObtainedFrom")
       .ilike("ItemName", `%${query}%`)
       .limit(20);
 
@@ -65,7 +65,8 @@ ${formatStats(item.Effects)}
 
 proses:
 - ${item.Process || "-"}
-- ${item.Duration || "-"}`.trim();
+- ${item.Duration || "-"}
+- ${item.ObtainedFrom || "-"}`.trim();
 
       return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
