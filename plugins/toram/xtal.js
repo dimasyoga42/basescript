@@ -41,7 +41,7 @@ const handler = async (m, { conn }) => {
       const { data: xtall, err } = await supa
         .from("xtal")
         .select("name, type, upgrade_route, stats, max_upgrade_route")
-        .ilike("name", `${name}`)
+        .ilike("name", name)
         .limit(1);
       const item = xtall[0];
       const text = `*${item.name}* ${item.type || "-"}
