@@ -1,7 +1,7 @@
 import { downloadMediaMessage } from "@whiskeysockets/baileys";
 import axios from "axios";
 import FormData from "form-data";
-import { sendText } from "../../src/config/message.js";
+import { reactMessage, sendText } from "../../src/config/message.js";
 import { config } from "../../config.js";
 
 const ENHANCE_API = "https://api.neoxr.eu/api/remini";
@@ -19,7 +19,7 @@ const handler = async (m, { conn }) => {
     if (!mediaMsg)
       return sendText(conn, m.chat, "Kirim/reply gambar dengan .remini", m);
 
-    await sendText(conn, m.chat, "Sedang diproses...", m);
+    await reactMessage(conn, m.chat, m, "🕛");
 
     const buffer = await downloadMediaMessage(
       mediaMsg,
