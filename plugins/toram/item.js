@@ -23,7 +23,7 @@ const handler = async (m, { conn }) => {
 
     // PRIORITAS 1: exact match
     const { data: exactData, error: exactError } = await supa
-      .from("item")
+      .from("item_v2")
       .select("ItemName, Category, Process, Duration, Effects")
       .ilike("ItemName", query)
       .limit(1);
@@ -43,7 +43,7 @@ proses:
 
     // PRIORITAS 2: partial match
     const { data, error } = await supa
-      .from("item")
+      .from("item_v2")
       .select("ItemName, Category, Process, Duration, Effects")
       .ilike("ItemName", `%${query}%`)
       .limit(20);
