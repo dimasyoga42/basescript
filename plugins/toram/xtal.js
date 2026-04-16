@@ -39,14 +39,27 @@ const handler = async (m, { conn }) => {
 
     // ✅ kalau cuma 1 → langsung tampil (tanpa query ulang)
     if (dataXtal.length === 1) {
-      const item = dataXtal[0];
+      const { data: xtall, error: err } = await supa
+        .from("xtal")
+        .select("name, type, upgrade_route, stats, max_upgrade_route")
+        .eq("name", dataXtal[0].name)
+        .limit(1);
 
+      if (err || !xtall || xtall.length === 0) {
+        return conn.sendMessage(
+          m.chat,
+          { text: "detail xtal tidak ditemukan" },
+          { quoted: m },
+        );
+      }
+
+      const item = xtall[0];
       const text = `*${item.name}* ${item.type || "-"}
-${item.stats || "-"}
+    ${item.stats || "-"}
 
-rute:
-- ${item.upgrade_route || "-"}
-- ${item.max_upgrade_route || "-"}`.trim();
+    rute:
+    - ${item.upgrade_route || "-"}
+    - ${item.max_upgrade_route || "-"}`.trim();
 
       return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
