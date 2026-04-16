@@ -16,7 +16,7 @@ const handler = async (m, { conn }) => {
     const { data: dataXtal, error } = await supa
       .from("xtal")
       .select("name, type, upgrade_route, stats, max_upgrade_route")
-      .ilike("name", `%${name}%`)
+      .ilike("name", `${name}`)
       .limit(20);
 
     if (error) {
