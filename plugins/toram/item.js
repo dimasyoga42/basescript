@@ -36,7 +36,9 @@ ${formatStats(item.Effects)}
 
 proses:
 - ${item.Process || "-"}
-- ${item.Duration || "-"}`.trim();
+- ${item.Duration || "-"}
+- ${item.ObtainedFrom || "-"}
+`.trim();
 
       return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
