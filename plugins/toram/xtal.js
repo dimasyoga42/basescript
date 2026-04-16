@@ -1,5 +1,5 @@
+import { config } from "../../config.js";
 import { supa } from "../../src/config/supa.js";
-import { config } from "../../src/config.js";
 
 const handler = async (m, { conn }) => {
   try {
