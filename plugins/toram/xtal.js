@@ -3,12 +3,13 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const name = m.text.replace(/^\.xtal|.xtall\s*/i, "").trim();
+    const text = m.text || "";
+    const name = text.replace(/^\.xtal(l)?\s*/i, "").trim();
 
     if (!name) {
       return conn.sendMessage(
         m.chat,
-        { text: "masukan nama xtall setelah .xtal nama" },
+        { text: "masukan nama xtal setelah .xtal nama" },
         { quoted: m },
       );
     }
@@ -36,14 +37,10 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    // ✅ kalau cuma 1 → tampil detail
+    // ✅ kalau cuma 1 → langsung tampil (tanpa query ulang)
     if (dataXtal.length === 1) {
-      const { data: xtall, err } = await supa
-        .from("xtal")
-        .select("name, type, upgrade_route, stats, max_upgrade_route")
-        .ilike("name", name)
-        .limit(1);
-      const item = xtall[0];
+      const item = dataXtal[0];
+
       const text = `*${item.name}* ${item.type || "-"}
 ${item.stats || "-"}
 
@@ -54,7 +51,7 @@ rute:
       return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
 
-    // ✅ kalau banyak → button
+    // ✅ kalau banyak → tampilkan button
     return await conn.sendButton(m.chat, {
       text: `xtal yang tersedia sebanyak ${dataXtal.length}`,
       footer: config.OwnerName,
