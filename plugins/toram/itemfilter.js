@@ -25,7 +25,7 @@ const handler = async (m, { conn }) => {
       return conn.sendMessage(
         m.chat,
         {
-          text: "Contoh: .itemfilter atk speed --wep\n\nCategory:\n--wep\n--add\n--ring",
+          text: "Contoh: .itemfilter atk --wep\n\nCategory yang tersedia:\n--wep\n--add\n--ring",
         },
         { quoted: m },
       );
@@ -49,19 +49,13 @@ const handler = async (m, { conn }) => {
       query = query.replace(/--ring/gi, "").trim();
     }
 
-    // 🔥 split keyword (biar sensitif)
-    const keywords = query.toLowerCase().split(/\s+/).filter(Boolean);
-
+    // 🔥 build query
     let db = supa
       .from("item_v2")
-      .select("ItemName, Category, Process, Duration, Effects, ObtainedFrom");
+      .select("ItemName, Category, Process, Duration, Effects, ObtainedFrom")
+      .ilike("Effects", `%${query}%`);
 
-    // 🔥 apply multi keyword (AND)
-    keywords.forEach((k) => {
-      db = db.ilike("Effects", `%${k}%`);
-    });
-
-    // 🔥 category filter
+    // apply filter category kalau ada
     if (categoryFilter) {
       db = db.eq("Category", categoryFilter);
     }
@@ -96,7 +90,7 @@ const handler = async (m, { conn }) => {
 
     // ✅ kalau banyak → button
     return await conn.sendButton(m.chat, {
-      text: `Ditemukan ${data.length} item untuk: "${query}"${
+      text: `Ditemukan ${data.length} item dengan stat: "${query}"${
         categoryFilter ? ` (${categoryFilter})` : ""
       }\nPilih salah satu:`,
       footer: config.OwnerName,
