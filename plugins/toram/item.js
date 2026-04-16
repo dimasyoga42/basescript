@@ -3,10 +3,9 @@ import { supa } from "../../src/config/supa.js";
 
 const formatStats = (stats = "") =>
   stats
-    .replace(/Amount\s*\|?\s*/gi, "")
     .split("|")
     .map((s) => s.trim())
-    .filter(Boolean)
+    .filter((s) => s && !/^amount$/i.test(s))
     .join("\n");
 
 const handler = async (m, { conn }) => {
@@ -22,9 +21,9 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    // ✅ PRIORITAS 1: exact match
+    // PRIORITAS 1: exact match
     const { data: exactData, error: exactError } = await supa
-      .from("item_v2")
+      .from("item")
       .select("ItemName, Category, Process, Duration, Effects")
       .ilike("ItemName", query)
       .limit(1);
@@ -42,9 +41,9 @@ proses:
       return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
 
-    // ✅ PRIORITAS 2: partial match
+    // PRIORITAS 2: partial match
     const { data, error } = await supa
-      .from("item_v2")
+      .from("item")
       .select("ItemName, Category, Process, Duration, Effects")
       .ilike("ItemName", `%${query}%`)
       .limit(20);
@@ -57,7 +56,7 @@ proses:
       );
     }
 
-    // ✅ kalau cuma 1
+    // kalau cuma 1 hasil
     if (data.length === 1) {
       const item = data[0];
 
@@ -71,7 +70,7 @@ proses:
       return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
 
-    // ✅ kalau banyak → button
+    // kalau banyak → button
     return await conn.sendButton(m.chat, {
       text: `Ditemukan ${data.length} item untuk: "${query}"\nPilih salah satu:`,
       footer: config.OwnerName,
