@@ -33,8 +33,7 @@ const handler = async (m, { conn }) => {
     const { data, error } = await supa
       .from("item_v2")
       .select("ItemName, Category, Process, Duration, Effects, ObtainedFrom")
-      .ilike("Effects", `%${query}%`)
-      .limit(20);
+      .ilike("Effects", `%${query}%`);
 
     if (error) {
       console.log("ERR ITEM FILTER:", error.message);
