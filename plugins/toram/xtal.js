@@ -40,11 +40,10 @@ const handler = async (m, { conn }) => {
     if (dataXtal.length === 1) {
       const item = dataXtal[0];
 
-      const text = `
- *${item.name}* (${item.type || "-"})\n\n${item.stats || "-"}\n
+      const text = `*${item.name}* ${item.type || "-"}\n\n${item.stats || "-"}\n
 rute:
 - ${item.upgrade_route || "-"}
-- ${item.max_upgrade_route || "-"}`;
+- ${item.max_upgrade_route || "-"}\n`.trim();
 
       return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
