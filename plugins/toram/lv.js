@@ -52,7 +52,7 @@ const handler = async (m, { conn }) => {
     //   text: mtext,
     //   quoted: m,
     // });
-    client.set(`${level}`, mtext);
+    client.set(`${level}`, `${mtext}`);
     const valueLevel = client.get(level);
     if (valueLevel) {
       return sendText(conn, m.text, valueLevel, m);
