@@ -44,7 +44,7 @@ proses:
 
     // ✅ PRIORITAS 2: partial match
     const { data, error } = await supa
-      .from("item")
+      .from("item_v2")
       .select("ItemName, Category, Process, Duration, Effects")
       .ilike("ItemName", `%${query}%`)
       .limit(20);
