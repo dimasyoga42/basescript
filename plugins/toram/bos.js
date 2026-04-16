@@ -10,7 +10,6 @@ const handler = async (m, { conn }) => {
   try {
     const arg = m.text.split(" ");
 
-    // ✅ slice(1).join() supaya nama dengan spasi tetap terbaca
     const name = arg.slice(1).join(" ").trim();
 
     if (!name)

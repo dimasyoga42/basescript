@@ -1,131 +1,78 @@
-import axios from "axios";
-import { config, thumbnail } from "../../config.js";
-import { sendFancyText, sendText } from "../../src/config/message.js";
-
-const XTAL_URL =
-  "https://raw.githubusercontent.com/dimasyoga42/dataset/refs/heads/main/xtal_data.json";
-
-let cache = { data: null, fetchedAt: 0 };
-const CACHE_TTL = 5 * 60 * 1000;
-
-const fetchXtalData = async () => {
-  const now = Date.now();
-  if (cache.data && now - cache.fetchedAt < CACHE_TTL) return cache.data;
-  const { data } = await axios.get(XTAL_URL);
-  if (!Array.isArray(data)) throw new Error("Format data tidak valid");
-  cache = { data, fetchedAt: now };
-  return data;
-};
-
-const formatXtal = (xtall) => {
-  const statsText = Object.entries(xtall.stats || {})
-    .map(([key, val]) => {
-      const cleanKey = key.replace(/\s+/g, " ").trim();
-      const cleanVal = String(val)
-        .replace(/\n+/g, " ")
-        .replace(/\s{2,}/g, " ")
-        .trim();
-      return `- ${cleanKey} : ${cleanVal}`;
-    })
-    .join("\n");
-
-  return (
-    `*${xtall.name} - ${xtall.type}*\n` +
-    `${statsText}\n` +
-    `Upgrade Route :\n- ${xtall.upgrade_route || "-"}\n` +
-    `Max Upgrade Route :\n- ${xtall.max_upgrade_route || "-"}\n` +
-    `────────────`
-  );
-};
+import { supa } from "../../src/config/supa.js";
+import { config } from "../../src/config.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const query = m.text.split(" ").slice(1).join(" ").trim();
+    const name = m.text.replace(/^\.xtal\s*/i, "").trim();
 
-    if (!query)
-      return sendText(
-        conn,
+    if (!name) {
+      return conn.sendMessage(
         m.chat,
-        `${config.message.invalid}, use: .xtal name\n.xtal --all`,
-        m,
+        { text: "masukan nama xtall setelah .xtal nama" },
+        { quoted: m },
       );
-
-    const data = await fetchXtalData();
-
-    // --all: tampilkan semua sebagai button
-    if (query === "--all") {
-      return await conn.sendButton(m.chat, {
-        text: `Total *${data.length}* xtal tersedia.\nPilih salah satu:`,
-        footer: config.OwnerName,
-        buttons: data.map((item) => ({
-          name: "quick_reply",
-          buttonParamsJson: JSON.stringify({
-            display_text: `${item.name} (${item.type})`,
-            id: `.xtal ${item.name}`,
-          }),
-        })),
-        bottom_sheet: true,
-        bottom_name: "Xtal List",
-      });
     }
 
-    const queryLower = query.toLowerCase();
+    const { data: dataXtal, error } = await supa
+      .from("xtal")
+      .select("name, type, upgrade_route, stats, max_upgrade_route")
+      .ilike("name", `%${name}%`)
+      .limit(20);
 
-    // Prioritas 1: exact match (nama persis sama)
-    const exactMatch = data.find((x) => x?.name?.toLowerCase() === queryLower);
-    if (exactMatch) {
-      return sendText(conn, m.chat, formatXtal(exactMatch), m);
+    if (error) {
+      console.log("ERR XTAL QUERY:", error.message);
+      return conn.sendMessage(
+        m.chat,
+        { text: "terjadi kesalahan saat mengambil data xtal" },
+        { quoted: m },
+      );
     }
 
-    // Prioritas 2: partial match
-    const result = data.filter((x) =>
-      x?.name?.toLowerCase().includes(queryLower),
-    );
-
-    // Tidak ditemukan
-    if (!result.length) {
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Developer By ${config.OwnerName}`,
-        thumbnail,
-        text: config.message.notFound ?? "Data tidak ditemukan.",
-        quoted: m,
-      });
+    if (!dataXtal || dataXtal.length === 0) {
+      return conn.sendMessage(
+        m.chat,
+        { text: "xtal tidak ditemukan" },
+        { quoted: m },
+      );
     }
 
-    // Tepat 1 hasil: langsung tampilkan detail
-    if (result.length === 1) {
-      return sendText(conn, m.chat, formatXtal(result[0]), m);
+    // kalau cuma 1 → tampil raw
+    if (dataXtal.length === 1) {
+      const item = dataXtal[0];
+
+      const text = `
+ *${item.name}* (${item.type || "-"})\n\n${item.stats || "-"}\n
+rute:
+- ${item.upgrade_route || "-"}
+- ${item.max_upgrade_route || "-"}`;
+
+      return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
 
-    // Lebih dari 1 hasil: tampilkan sebagai button pilihan
-    return await conn.sendButton(m.chat, {
-      text: `Ditemukan *${result.length}* xtal untuk: _${query}_\nPilih salah satu:`,
+    await conn.sendButton(m.chat, {
+      text: `xtal yang tersedia sebanyak ${dataXtal.length}`,
       footer: config.OwnerName,
-      buttons: result.map((item) => ({
+      buttons: dataXtal.map((item) => ({
         name: "quick_reply",
         buttonParamsJson: JSON.stringify({
-          display_text: `${item.name} (${item.type})`,
+          display_text: item.name,
           id: `.xtal ${item.name}`,
         }),
       })),
       bottom_sheet: true,
-      bottom_name: "Xtal List",
+      bottom_name: "daftar xtal",
     });
   } catch (err) {
-    console.error("[xtal]", err);
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail,
-      text: config.message.error,
-      quoted: m,
-    });
+    console.log("ERR XTAL:", err.message);
+    await conn.sendMessage(
+      m.chat,
+      { text: "terjadi error tidak terduga" },
+      { quoted: m },
+    );
   }
 };
 
-handler.command = "xtal";
-handler.alias = ["xtall"];
+handler.command = "xtall";
+handler.alias = ["xtal"];
 handler.category = "Toram Search";
-handler.submenu = "Toram";
 export default handler;

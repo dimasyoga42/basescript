@@ -18,13 +18,11 @@ const handler = async (m, { conn }) => {
 
     const cacheKey = `toram:level:${level}`;
 
-    // ─── GET CACHE FIRST ─────────────────────────────────────
     const cached = await client.get(cacheKey);
     if (cached) {
       return sendText(conn, m.chat, cached, m);
     }
 
-    // ─── FETCH DATA ──────────────────────────────────────────
     const res = await fetch(
       `https://coryn.club/leveling.php?lv=${encodeURIComponent(level)}&gap=7&bonusEXP=0`,
     );
@@ -65,7 +63,6 @@ const handler = async (m, { conn }) => {
       mtext += config.message.notFound;
     }
 
-    // ─── SAVE CACHE (TTL 5 menit) ────────────────────────────
     await client.set(cacheKey, mtext, {
       EX: 300,
     });
