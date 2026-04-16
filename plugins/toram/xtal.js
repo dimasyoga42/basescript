@@ -38,7 +38,7 @@ const handler = async (m, { conn }) => {
     }
 
     // ✅ kalau cuma 1 → langsung tampil (tanpa query ulang)
-    if (dataXtal.length === 1) {
+    if (dataXtal.length > 1) {
       const { data: xtall, error: err } = await supa
         .from("xtal")
         .select("name, type, upgrade_route, stats, max_upgrade_route")
