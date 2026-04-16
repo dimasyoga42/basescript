@@ -5,7 +5,11 @@ import { join } from "path";
 import { tmpdir } from "os";
 import ffmpeg from "fluent-ffmpeg";
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText, sendText } from "../../src/config/message.js";
+import {
+  reactMessage,
+  sendFancyText,
+  sendText,
+} from "../../src/config/message.js";
 
 try {
   const path = execSync("which ffmpeg").toString().trim();
@@ -83,7 +87,7 @@ const handler = async (m, { conn }) => {
         msg: m,
       });
 
-    await sendText(conn, m.chat, "⏳ Memproses audio...", m);
+    await reactMessage(conn, m.chat, m, "⌛");
 
     const buffer = await downloadMediaMessage(
       audioMsg,

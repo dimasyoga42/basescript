@@ -4,7 +4,11 @@ import { execSync } from "child_process";
 import { writeFileSync, readFileSync, unlinkSync, existsSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
-import { sendFancyText, sendText } from "../../src/config/message.js";
+import {
+  reactMessage,
+  sendFancyText,
+  sendText,
+} from "../../src/config/message.js";
 import { config, thumbnail } from "../../config.js";
 
 try {
@@ -61,7 +65,7 @@ const handler = async (m, { conn }) => {
         m,
       );
 
-    await sendText(conn, m.chat, "🔍 Mencari lagu...", m);
+    await reactMessage(conn, m.chat, m, "🔍");
 
     const res = await axios.get(
       `https://api.neoxr.eu/api/play?q=${encodeURIComponent(query)}&apikey=${process.env.NOXER}`,
@@ -112,8 +116,7 @@ const handler = async (m, { conn }) => {
           title: `${data.title}`,
           body: `${config.BotName}`,
           mediaType: 1,
-
-        }
+        },
       },
       { quoted: m },
     );

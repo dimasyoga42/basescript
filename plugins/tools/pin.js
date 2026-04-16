@@ -1,5 +1,5 @@
 import axios from "axios";
-import { sendText } from "../../src/config/message.js";
+import { reactMessage, sendText } from "../../src/config/message.js";
 import { config } from "../../config.js";
 
 const handler = async (m, { conn }) => {
@@ -13,7 +13,7 @@ const handler = async (m, { conn }) => {
         m,
       );
 
-    await sendText(conn, m.chat, "Mencari...", m);
+    await reactMessage(conn, m.chat, m, "⌛");
 
     const res = await axios.get(
       `https://api.neoxr.eu/api/pinterest-v2?q=${encodeURIComponent(query)}&show=20&type=image&apikey=${process.env.NOXER}`,
