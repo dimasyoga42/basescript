@@ -19,21 +19,48 @@ proses:
 const handler = async (m, { conn }) => {
   try {
     const text = m.text || "";
-    const query = text.replace(/^\.itemfilter\s*/i, "").trim();
+    let query = text.replace(/^\.itemfilter\s*/i, "").trim();
 
     if (!query) {
       return conn.sendMessage(
         m.chat,
-        { text: "Contoh: .itemfilter atk / motion speed" },
+        {
+          text: "Contoh: .itemfilter atk --wep\n\nCategory yang tersedia:\n--wep\n--add\n--ring",
+        },
         { quoted: m },
       );
     }
 
-    // ✅ search berdasarkan Effects
-    const { data, error } = await supa
+    // 🔥 detect flag
+    let categoryFilter = null;
+
+    if (/--add/i.test(query)) {
+      categoryFilter = "Additional";
+      query = query.replace(/--add/gi, "").trim();
+    }
+
+    if (/--wep/i.test(query)) {
+      categoryFilter = "Weapon";
+      query = query.replace(/--wep/gi, "").trim();
+    }
+
+    if (/--ring/i.test(query)) {
+      categoryFilter = "Ring";
+      query = query.replace(/--ring/gi, "").trim();
+    }
+
+    // 🔥 build query
+    let db = supa
       .from("item_v2")
       .select("ItemName, Category, Process, Duration, Effects, ObtainedFrom")
       .ilike("Effects", `%${query}%`);
+
+    // apply filter category kalau ada
+    if (categoryFilter) {
+      db = db.eq("Category", categoryFilter);
+    }
+
+    const { data, error } = await db.limit(20);
 
     if (error) {
       console.log("ERR ITEM FILTER:", error.message);
@@ -52,7 +79,7 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    // ✅ kalau cuma 1 → tampil detail
+    // ✅ kalau cuma 1
     if (data.length === 1) {
       return conn.sendMessage(
         m.chat,
@@ -63,7 +90,9 @@ const handler = async (m, { conn }) => {
 
     // ✅ kalau banyak → button
     return await conn.sendButton(m.chat, {
-      text: `Ditemukan ${data.length} item dengan stat: "${query}"\nPilih salah satu:`,
+      text: `Ditemukan ${data.length} item dengan stat: "${query}"${
+        categoryFilter ? ` (${categoryFilter})` : ""
+      }\nPilih salah satu:`,
       footer: config.OwnerName,
       buttons: data.map((item) => ({
         name: "quick_reply",
