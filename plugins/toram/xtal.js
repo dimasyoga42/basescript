@@ -3,33 +3,72 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const text = m.text || "";
-    const name = text.replace(/^\.xtal(l)?\s*/i, "").trim();
+    const parts = (m.text || "").trim().split(/\s+/);
+    const query = parts.slice(1).join(" ").trim();
 
-    if (!name) {
+    if (!query) {
       return conn.sendMessage(
         m.chat,
-        { text: "masukan nama xtal setelah .xtal nama" },
+        { text: "Contoh: .xtal nama" },
         { quoted: m },
       );
     }
 
-    const { data: dataXtal, error } = await supa
+    // ✅ mode --all
+    if (query === "--all") {
+      const { data: db, error } = await supa.from("xtal").select("name");
+
+      if (error || !db || db.length === 0) {
+        return conn.sendMessage(
+          m.chat,
+          { text: "data xtal kosong / error" },
+          { quoted: m },
+        );
+      }
+
+      return await conn.sendButton(m.chat, {
+        text: `Pilih salah satu:`,
+        footer: config.OwnerName,
+        buttons: db.map((item) => ({
+          name: "quick_reply",
+          buttonParamsJson: JSON.stringify({
+            display_text: item.name,
+            id: `.xtal ${item.name}`,
+          }),
+        })),
+        bottom_sheet: true,
+        bottom_name: "List Xtal",
+      });
+    }
+
+    // ✅ PRIORITAS 1: exact match
+    const { data: exactData, error: exactError } = await supa
       .from("xtal")
       .select("name, type, upgrade_route, stats, max_upgrade_route")
-      .ilike("name", `%${name}%`)
-      .limit(20);
+      .ilike("name", query)
+      .limit(1);
 
-    if (error) {
-      console.log("ERR XTAL QUERY:", error.message);
-      return conn.sendMessage(
-        m.chat,
-        { text: "terjadi kesalahan saat mengambil data xtal" },
-        { quoted: m },
-      );
+    if (!exactError && exactData && exactData.length === 1) {
+      const item = exactData[0];
+
+      const text = `*${item.name}* ${item.type || "-"}
+${item.stats || "-"}
+
+rute:
+- ${item.upgrade_route || "-"}
+- ${item.max_upgrade_route || "-"}`.trim();
+
+      return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
 
-    if (!dataXtal || dataXtal.length === 0) {
+    // ✅ PRIORITAS 2: partial match
+    const { data, error } = await supa
+      .from("xtal")
+      .select("name, type, upgrade_route, stats, max_upgrade_route")
+      .ilike("name", `%${query}%`)
+      .limit(20);
+
+    if (error || !data || data.length === 0) {
       return conn.sendMessage(
         m.chat,
         { text: "xtal tidak ditemukan" },
@@ -37,38 +76,25 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    // ✅ kalau cuma 1 → langsung tampil (tanpa query ulang)
-    if (dataXtal.length >= 1) {
-      const { data: xtall, error: err } = await supa
-        .from("xtal")
-        .select("name, type, upgrade_route, stats, max_upgrade_route")
-        .eq("name", name)
-        .limit(1);
+    // ✅ kalau cuma 1 hasil
+    if (data.length === 1) {
+      const item = data[0];
 
-      if (err || !xtall || xtall.length === 0) {
-        return conn.sendMessage(
-          m.chat,
-          { text: "detail xtal tidak ditemukan" },
-          { quoted: m },
-        );
-      }
-
-      const item = xtall[0];
       const text = `*${item.name}* ${item.type || "-"}
-    ${item.stats || "-"}
+${item.stats || "-"}
 
-    rute:
-    - ${item.upgrade_route || "-"}
-    - ${item.max_upgrade_route || "-"}`.trim();
+rute:
+- ${item.upgrade_route || "-"}
+- ${item.max_upgrade_route || "-"}`.trim();
 
       return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
 
-    // ✅ kalau banyak → tampilkan button
+    // ✅ kalau banyak → button
     return await conn.sendButton(m.chat, {
-      text: `xtal yang tersedia sebanyak ${dataXtal.length}`,
+      text: `Ditemukan *${data.length}* xtal untuk: _${query}_\nPilih salah satu:`,
       footer: config.OwnerName,
-      buttons: dataXtal.map((item) => ({
+      buttons: data.map((item) => ({
         name: "quick_reply",
         buttonParamsJson: JSON.stringify({
           display_text: item.name,
@@ -76,7 +102,7 @@ const handler = async (m, { conn }) => {
         }),
       })),
       bottom_sheet: true,
-      bottom_name: "daftar xtal",
+      bottom_name: "Menu Xtal",
     });
   } catch (err) {
     console.log("ERR XTAL:", err.message);
