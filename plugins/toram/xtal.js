@@ -42,7 +42,7 @@ const handler = async (m, { conn }) => {
       const { data: xtall, error: err } = await supa
         .from("xtal")
         .select("name, type, upgrade_route, stats, max_upgrade_route")
-        .eq("name", dataXtal[0].name)
+        .eq("name", name)
         .limit(1);
 
       if (err || !xtall || xtall.length === 0) {
