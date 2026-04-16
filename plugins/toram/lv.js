@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
 import { sendFancyText, sendText } from "../../src/config/message.js";
 import { config, thumbnail } from "../../config.js";
+import { client } from "../../src/config/redis.js";
 //import fetch from "node-fetch";
 const handler = async (m, { conn }) => {
   try {
@@ -51,6 +52,11 @@ const handler = async (m, { conn }) => {
     //   text: mtext,
     //   quoted: m,
     // });
+    client.set(`${level}`, mtext);
+    const valueLevel = client.get(level);
+    if (valueLevel) {
+      return sendText(conn, m.text, valueLevel, m);
+    }
     sendText(conn, m.chat, mtext, m);
   } catch (err) {
     sendFancyText(conn, m.chat, {
