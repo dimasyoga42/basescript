@@ -18,10 +18,7 @@ const messagetxt = (name) => {
 export const sendText = async (sock, jid, text, quoted = null) => {
   ensure(jid, "jid");
   ensure(text, "text");
-  await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 2000));
   await sock.sendMessage(jid, { text }, { quoted });
-  return await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const editText = async (sock, jid, message, text) => {
