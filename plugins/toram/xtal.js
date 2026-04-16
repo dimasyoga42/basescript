@@ -3,7 +3,7 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const name = m.text.replace(/^\.xtal|.xtall/i, "").trim();
+    const name = m.text.replace(/^\.xtal|.xtall\s*/i, "").trim();
 
     if (!name) {
       return conn.sendMessage(
@@ -36,19 +36,26 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    // kalau cuma 1 → tampil raw
+    // ✅ kalau cuma 1 → tampil detail
     if (dataXtal.length === 1) {
-      const item = dataXtal[0];
+      const { data: xtall, err } = await supa
+        .from("xtal")
+        .select("name, type, upgrade_route, stats, max_upgrade_route")
+        .ilike("name", `${name}`)
+        .limit(1);
+      const item = xtall[0];
+      const text = `*${item.name}* ${item.type || "-"}
+${item.stats || "-"}
 
-      const text = `*${item.name}* ${item.type || "-"}\n\n${item.stats || "-"}\n
 rute:
 - ${item.upgrade_route || "-"}
-- ${item.max_upgrade_route || "-"}\n`.trim();
+- ${item.max_upgrade_route || "-"}`.trim();
 
       return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
 
-    await conn.sendButton(m.chat, {
+    // ✅ kalau banyak → button
+    return await conn.sendButton(m.chat, {
       text: `xtal yang tersedia sebanyak ${dataXtal.length}`,
       footer: config.OwnerName,
       buttons: dataXtal.map((item) => ({
@@ -61,16 +68,6 @@ rute:
       bottom_sheet: true,
       bottom_name: "daftar xtal",
     });
-    const { data: exXtal, error: err } = await supa
-      .from("xtal")
-      .select("name, type, upgrade_route, stats, max_upgrade_route")
-      .ilike("name", `${name}`)
-      .limit(20);
-    const textex = `*${item.name}* ${item.type || "-"}\n\n${item.stats || "-"}\n
-rute:
-- ${item.upgrade_route || "-"}
-- ${item.max_upgrade_route || "-"}\n`.trim();
-    return conn.sendMessage(m.chat, { textex }, { quoted: m });
   } catch (err) {
     console.log("ERR XTAL:", err.message);
     await conn.sendMessage(
@@ -84,4 +81,5 @@ rute:
 handler.command = "xtall";
 handler.alias = ["xtal"];
 handler.category = "Toram Search";
+
 export default handler;
