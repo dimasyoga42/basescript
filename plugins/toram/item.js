@@ -1,63 +1,101 @@
 import { config } from "../../config.js";
-import { sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
-const handler = async (m, { conn, text }) => {
+const formatStats = (stats = "") =>
+  stats
+    .replace(/Amount\s*\|?\s*/gi, "")
+    .split("|")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join("\n");
+
+const handler = async (m, { conn }) => {
   try {
-    // Menggunakan parameter 'text' bawaan handler agar lebih bersih
-    const query = text ? text.trim() : "";
+    const parts = (m.text || "").trim().split(/\s+/);
+    const query = parts.slice(1).join(" ").trim();
 
     if (!query) {
-      return sendText(
-        conn,
+      return conn.sendMessage(
         m.chat,
-        `*Format Salah*\n\nGunakan: .item [nama item]\nContoh: .item salt`,
-        m,
+        { text: "Contoh: .item nama item" },
+        { quoted: m },
       );
     }
 
-    // Query ke database Supabase
-    const { data, error } = await supa
-      .from("item_v2")
-      .select(
-        "ItemName, Category, SellPrice, Process, Duration, Effects, ObtainedFrom, RecipeMaterials, Link",
-      )
-      .ilike("ItemName", `%${query}%`)
-      .limit(10); // Membatasi hasil agar pesan tidak terlalu panjang
+    // ✅ PRIORITAS 1: exact match
+    const { data: exactData, error: exactError } = await supa
+      .from("item")
+      .select("ItemName, Category, Process, Duration, Effects")
+      .ilike("ItemName", query)
+      .limit(1);
 
-    if (error) throw error;
+    if (!exactError && exactData && exactData.length === 1) {
+      const item = exactData[0];
 
-    if (!data || data.length === 0) {
-      return sendText(conn, m.chat, config.message.notFound, m);
+      const text = `*${item.ItemName}* ${item.Category || "-"}
+${formatStats(item.Effects)}
+
+proses:
+- ${item.Process || "-"}
+- ${item.Duration || "-"}`.trim();
+
+      return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
 
-    // Mapping data ke format pesan yang lebih rapi
-    const mtext = data
-      .map((item) => {
-        return [
-          `*Name Item:* ${item.ItemName}`,
-          `*Category:* ${item.Category}`,
-          `*Sell Price:* ${item.SellPrice}`,
-          `*Process:* ${item.Process || "-"}`,
-          `*Duration:* ${item.Duration || "-"}`,
-          `*Stats:* \n${item.Effects || "-"}`,
-          `*Recipe:* \n${item.RecipeMaterials || "-"}`,
-          `*Obtained From:* \n${item.ObtainedFrom || "-"}`,
-          `*Source:* ${item.Link}`,
-        ].join("\n");
-      })
-      .join("\n\n────────────────────────\n\n");
+    // ✅ PRIORITAS 2: partial match
+    const { data, error } = await supa
+      .from("item")
+      .select("ItemName, Category, Process, Duration, Effects")
+      .ilike("ItemName", `%${query}%`)
+      .limit(20);
 
-    const header = `*Toram Item Search*\nFound: ${data.length} results\n\n`;
-    sendText(conn, m.chat, header + mtext, m);
+    if (error || !data || data.length === 0) {
+      return conn.sendMessage(
+        m.chat,
+        { text: "item tidak ditemukan" },
+        { quoted: m },
+      );
+    }
+
+    // ✅ kalau cuma 1
+    if (data.length === 1) {
+      const item = data[0];
+
+      const text = `*${item.ItemName}* ${item.Category || "-"}
+${formatStats(item.Effects)}
+
+proses:
+- ${item.Process || "-"}
+- ${item.Duration || "-"}`.trim();
+
+      return conn.sendMessage(m.chat, { text }, { quoted: m });
+    }
+
+    // ✅ kalau banyak → button
+    return await conn.sendButton(m.chat, {
+      text: `Ditemukan ${data.length} item untuk: "${query}"\nPilih salah satu:`,
+      footer: config.OwnerName,
+      buttons: data.map((item) => ({
+        name: "quick_reply",
+        buttonParamsJson: JSON.stringify({
+          display_text: item.ItemName,
+          id: `.item ${item.ItemName}`,
+        }),
+      })),
+      bottom_sheet: true,
+      bottom_name: "Menu Item",
+    });
   } catch (err) {
-    console.error(err);
-    sendText(conn, m.chat, `*Error:* ${err.message}`, m);
+    console.log("ERR ITEM:", err.message);
+    await conn.sendMessage(
+      m.chat,
+      { text: "terjadi error tidak terduga" },
+      { quoted: m },
+    );
   }
 };
 
 handler.command = "item";
 handler.category = "Toram Search";
-handler.submenu = "Toram";
 
 export default handler;
