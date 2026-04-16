@@ -55,25 +55,25 @@ export async function runCommand(conn, m, plugins) {
   //   return conn.sendMessage(m.chat, {
   //     text: "Grub anda belum terdaftar hubungi owner di bawah ini\n085664393331(dimas)",
   //   });
-  const noLimitCmd = ["cekvip", "menu"]; // command yang bebas limit
+  // const noLimitCmd = ["cekvip", "menu"]; // command yang bebas limit
 
-  // di dalam handler utama
-  if (m.chat?.endsWith("@g.us") && body.startsWith(prefix)) {
-    if (!config.OwnerName.includes(m.sender)) {
-      if (!noLimitCmd.includes(m.text)) {
-        const limit = await checkGroupLimit(m.chat);
-        if (!limit.ok) {
-          return conn.sendMessage(
-            m.chat,
-            {
-              text: `limit grup habis\nupgrade premium untuk unlimited`,
-            },
-            { quoted: m },
-          );
-        }
-      }
-    }
-  }
+  // // di dalam handler utama
+  // if (m.chat?.endsWith("@g.us") && body.startsWith(prefix)) {
+  //   if (!config.OwnerName.includes(m.sender)) {
+  //     if (!noLimitCmd.includes(m.text)) {
+  //       const limit = await checkGroupLimit(m.chat);
+  //       if (!limit.ok) {
+  //         return conn.sendMessage(
+  //           m.chat,
+  //           {
+  //             text: `limit grup habis\nupgrade premium untuk unlimited`,
+  //           },
+  //           { quoted: m },
+  //         );
+  //       }
+  //     }
+  //   }
+  // }
 
   const input = body.slice(prefix.length).trim();
   const [command, ...args] = input.split(/\s+/);
