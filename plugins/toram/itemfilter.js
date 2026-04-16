@@ -91,7 +91,7 @@ const handler = async (m, { conn }) => {
       db = db.eq("Category", categoryFilter);
     }
 
-    const { data, error } = await db.limit(20);
+    const { data, error } = await db;
 
     if (error) {
       console.log("ERR ITEM FILTER:", error.message);
