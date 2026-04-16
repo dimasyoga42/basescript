@@ -1,30 +1,24 @@
-import { config } from "../../config.js";
+import { config, thumbnail } from "../../config.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const parts = (m.text || "").trim().split(/\s+/);
+    const parts = m.text.trim().split(/\s+/);
     const query = parts.slice(1).join(" ").trim();
 
-    if (!query) {
-      return conn.sendMessage(
-        m.chat,
-        { text: "Contoh: .xtal nama" },
-        { quoted: m },
-      );
-    }
-
-    // ✅ mode --all
+    if (!query)
+      return sendFancyText(conn, m.chat, {
+        title: config.BotName,
+        body: "Contoh: .ability nama",
+        thumbnail,
+        text: config.message.invalid,
+        msg: m,
+      });
     if (query === "--all") {
-      const { data: db, error } = await supa.from("xtal").select("name");
-
-      if (error || !db || db.length === 0) {
-        return conn.sendMessage(
-          m.chat,
-          { text: "data xtal kosong / error" },
-          { quoted: m },
-        );
-      }
+      const { data: db, error: dbError } = await supa
+        .from("ability")
+        .select("*");
 
       return await conn.sendButton(m.chat, {
         text: `Pilih salah satu:`,
@@ -33,89 +27,68 @@ const handler = async (m, { conn }) => {
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
             display_text: item.name,
-            id: `.xtal ${item.name}`,
+            id: `.trait ${item.name}`,
           }),
         })),
         bottom_sheet: true,
-        bottom_name: "List Xtal",
+        bottom_name: "List Ability",
       });
     }
-
-    // ✅ PRIORITAS 1: exact match
+    // Prioritas 1: exact match (nama persis sama, case-insensitive)
     const { data: exactData, error: exactError } = await supa
-      .from("xtal")
-      .select("name, type, upgrade_route, stats, max_upgrade_route")
+      .from("ability")
+      .select("*")
       .ilike("name", query)
       .limit(1);
 
     if (!exactError && exactData && exactData.length === 1) {
       const item = exactData[0];
-
-      const text = `*${item.name}* ${item.type || "-"}
-${item.stats || "-"}
-
-rute:
-- ${item.upgrade_route || "-"}
-- ${item.max_upgrade_route || "-"}`.trim();
-
-      return conn.sendMessage(m.chat, { text }, { quoted: m });
+      return sendText(conn, m.chat, `*${item.name}*\n\n${item.stat_effect}`, m);
     }
 
-    // ✅ PRIORITAS 2: partial match
+    // Prioritas 2: partial match
     const { data, error } = await supa
-      .from("xtal")
-      .select("name, type, upgrade_route, stats, max_upgrade_route")
-      .ilike("name", `%${query}%`)
-      .limit(20);
+      .from("ability")
+      .select("*")
+      .ilike("name", `%${query}%`);
 
-    if (error || !data || data.length === 0) {
-      return conn.sendMessage(
-        m.chat,
-        { text: "xtal tidak ditemukan" },
-        { quoted: m },
-      );
-    }
+    if (error || !data || data.length === 0)
+      return sendText(conn, m.chat, config.message.notFound, m);
 
-    // ✅ kalau cuma 1 hasil
+    // Tepat 1 hasil
     if (data.length === 1) {
       const item = data[0];
-
-      const text = `*${item.name}* ${item.type || "-"}
-${item.stats || "-"}
-
-rute:
-- ${item.upgrade_route || "-"}
-- ${item.max_upgrade_route || "-"}`.trim();
-
-      return conn.sendMessage(m.chat, { text }, { quoted: m });
+      return sendText(conn, m.chat, `*${item.name}*\n\n${item.stat_effect}`, m);
     }
 
-    // ✅ kalau banyak → button
-    return await conn.sendButton(m.chat, {
-      text: `Ditemukan *${data.length}* xtal untuk: _${query}_\nPilih salah satu:`,
+    // Lebih dari 1: tampilkan button pilihan
+    await conn.sendButton(m.chat, {
+      text: `Ditemukan *${data.length}* ability untuk: _${query}_\nPilih salah satu:`,
       footer: config.OwnerName,
       buttons: data.map((item) => ({
         name: "quick_reply",
         buttonParamsJson: JSON.stringify({
           display_text: item.name,
-          id: `.xtal ${item.name}`,
+          id: `.trait ${item.name}`,
         }),
       })),
       bottom_sheet: true,
-      bottom_name: "Menu Xtal",
+      bottom_name: "Menu Ability",
     });
   } catch (err) {
-    console.log("ERR XTAL:", err.message);
-    await conn.sendMessage(
-      m.chat,
-      { text: "terjadi error tidak terduga" },
-      { quoted: m },
-    );
+    console.error("[ability]", err.message);
+    await sendFancyText(conn, m.chat, {
+      title: config.BotName,
+      body: `Developer By ${config.OwnerName}`,
+      thumbnail,
+      text: config.message.error,
+      msg: m,
+    });
   }
 };
 
-handler.command = "xtall";
-handler.alias = ["xtal"];
+handler.command = "trait";
+handler.alias = ["ability"];
 handler.category = "Toram Search";
-
+handler.submenu = "Toram";
 export default handler;
