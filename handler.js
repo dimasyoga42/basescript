@@ -3,6 +3,7 @@ import { checkUnAfk } from "./plugins/_function/_afk.js";
 import { isBan } from "./plugins/_function/_ban.js";
 import { isMuted } from "./plugins/_function/_muted.js";
 import { checkVip, cleanExpiredVip } from "./plugins/_function/_vip.js";
+import { checkGroupLimit } from "./src/config/limit.js";
 
 function isMatch(pattern, command) {
   if (!pattern) return false;
@@ -54,6 +55,25 @@ export async function runCommand(conn, m, plugins) {
   //   return conn.sendMessage(m.chat, {
   //     text: "Grub anda belum terdaftar hubungi owner di bawah ini\n085664393331(dimas)",
   //   });
+  const noLimitCmd = ["cekvip", "menu"]; // command yang bebas limit
+
+  // di dalam handler utama
+  if (m.chat?.endsWith("@g.us") && body.startsWith(prefix)) {
+    if (!config.OwnerName.includes(m.sender)) {
+      if (!noLimitCmd.includes(m.text)) {
+        const limit = await checkGroupLimit(m.chat);
+        if (!limit.ok) {
+          return conn.sendMessage(
+            m.chat,
+            {
+              text: `limit grup habis\nupgrade premium untuk unlimited`,
+            },
+            { quoted: m },
+          );
+        }
+      }
+    }
+  }
 
   const input = body.slice(prefix.length).trim();
   const [command, ...args] = input.split(/\s+/);
