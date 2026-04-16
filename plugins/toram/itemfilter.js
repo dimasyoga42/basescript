@@ -25,7 +25,7 @@ const handler = async (m, { conn }) => {
       return conn.sendMessage(
         m.chat,
         {
-          text: "Contoh: .itemfilter atk --wep\n\nCategory yang tersedia:\n--wep\n--add\n--ring",
+          text: "Contoh: .itemfilter atk --wep\n\nCategory yang tersedia:\n--ohs\n--bwg\n--hb\n--ths\n--staff\n--knuck\n--bow\n--dagger\n--arrow\n--add\n--ring",
         },
         { quoted: m },
       );
@@ -39,13 +39,44 @@ const handler = async (m, { conn }) => {
       query = query.replace(/--add/gi, "").trim();
     }
 
-    if (/--wep/i.test(query)) {
-      categoryFilter = "Weapon";
-      query = query.replace(/--wep/gi, "").trim();
+    if (/--ohs/i.test(query)) {
+      categoryFilter = "1 Handed Sword";
+      query = query.replace(/--ohs/gi, "").trim();
     }
-
+    if (/--ths/i.test(query)) {
+      categoryFilter = "2 Handed Sword";
+      query = query.replace(/--ths/gi, "").trim();
+    }
+    if (/--bow/i.test(query)) {
+      categoryFilter = "Bow";
+      query = query.replace(/--bow/gi, "").trim();
+    }
+    if (/--bwg/i.test(query)) {
+      categoryFilter = "Bowgun";
+      query = query.replace(/--bwg/gi, "").trim();
+    }
+    if (/--hb/i.test(query)) {
+      categoryFilter = "Halberd";
+      query = query.replace(/--hb/gi, "").trim();
+    }
+    if (/--staff/i.test(query)) {
+      categoryFilter = "Staff";
+      query = query.replace(/--staff/gi, "").trim();
+    }
+    if (/--knuck/i.test(query)) {
+      categoryFilter = "Knuckles";
+      query = query.replace(/--knuck/gi, "").trim();
+    }
+    if (/--dagger/i.test(query)) {
+      categoryFilter = "Dagger";
+      query = query.replace(/--dagger/gi, "").trim();
+    }
+    if (/--arrow/i.test(query)) {
+      categoryFilter = "Arrow";
+      query = query.replace(/--arrow/gi, "").trim();
+    }
     if (/--ring/i.test(query)) {
-      categoryFilter = "Ring";
+      categoryFilter = "Special";
       query = query.replace(/--ring/gi, "").trim();
     }
 
