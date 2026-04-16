@@ -8,6 +8,14 @@ const formatStats = (stats = "") =>
     .filter((s) => s && !/^amount$/i.test(s))
     .join("\n");
 
+const formatItem = (item) => `*${item.ItemName}* ${item.Category || "-"}
+${formatStats(item.Effects)}
+
+proses:
+- ${item.Process || "-"}
+- ${item.Duration || "-"}
+- ${item.ObtainedFrom || "-"}`;
+
 const handler = async (m, { conn }) => {
   try {
     const parts = (m.text || "").trim().split(/\s+/);
@@ -21,29 +29,29 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    // PRIORITAS 1: exact match
+    // ✅ EXACT MATCH (ambil semua kemungkinan duplicate)
     const { data: exactData, error: exactError } = await supa
       .from("item_v2")
       .select("ItemName, Category, Process, Duration, Effects, ObtainedFrom")
-      .ilike("ItemName", query)
-      .limit(1);
+      .ilike("ItemName", query);
 
-    if (!exactError && exactData && exactData.length === 1) {
-      const item = exactData[0];
+    if (!exactError && exactData && exactData.length > 0) {
+      // kalau cuma 1
+      if (exactData.length === 1) {
+        return conn.sendMessage(
+          m.chat,
+          { text: formatItem(exactData[0]).trim() },
+          { quoted: m },
+        );
+      }
 
-      const text = `*${item.ItemName}* ${item.Category || "-"}
-${formatStats(item.Effects)}
-
-proses:
-- ${item.Process || "-"}
-- ${item.Duration || "-"}
-- ${item.ObtainedFrom || "-"}
-`.trim();
+      // ✅ kalau duplicate (>1) → tampilkan semua
+      const text = exactData.map((item) => formatItem(item)).join("\n\n");
 
       return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
 
-    // PRIORITAS 2: partial match
+    // ✅ PARTIAL MATCH
     const { data, error } = await supa
       .from("item_v2")
       .select("ItemName, Category, Process, Duration, Effects, ObtainedFrom")
@@ -58,19 +66,13 @@ proses:
       );
     }
 
-    // kalau cuma 1 hasil
+    // kalau cuma 1
     if (data.length === 1) {
-      const item = data[0];
-
-      const text = `*${item.ItemName}* ${item.Category || "-"}
-${formatStats(item.Effects)}
-
-proses:
-- ${item.Process || "-"}
-- ${item.Duration || "-"}
-- ${item.ObtainedFrom || "-"}`.trim();
-
-      return conn.sendMessage(m.chat, { text }, { quoted: m });
+      return conn.sendMessage(
+        m.chat,
+        { text: formatItem(data[0]).trim() },
+        { quoted: m },
+      );
     }
 
     // kalau banyak → button
