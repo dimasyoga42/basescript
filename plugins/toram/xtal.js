@@ -16,7 +16,7 @@ const handler = async (m, { conn }) => {
     const { data: dataXtal, error } = await supa
       .from("xtal")
       .select("name, type, upgrade_route, stats, max_upgrade_route")
-      .ilike("name", `${name}`)
+      .ilike("name", `%${name}%`)
       .limit(20);
 
     if (error) {
@@ -61,6 +61,16 @@ rute:
       bottom_sheet: true,
       bottom_name: "daftar xtal",
     });
+    const { data: exXtal, error: err } = await supa
+      .from("xtal")
+      .select("name, type, upgrade_route, stats, max_upgrade_route")
+      .ilike("name", `${name}`)
+      .limit(20);
+    const textex = `*${item.name}* ${item.type || "-"}\n\n${item.stats || "-"}\n
+rute:
+- ${item.upgrade_route || "-"}
+- ${item.max_upgrade_route || "-"}\n`.trim();
+    return conn.sendMessage(m.chat, { textex }, { quoted: m });
   } catch (err) {
     console.log("ERR XTAL:", err.message);
     await conn.sendMessage(
