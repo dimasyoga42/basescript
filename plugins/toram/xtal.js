@@ -3,7 +3,7 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const name = m.text.replace(/^\.xtal\s*/i, "").trim();
+    const name = m.text.replace(/^\.xtal|.xtall\s*/i, "").trim();
 
     if (!name) {
       return conn.sendMessage(
