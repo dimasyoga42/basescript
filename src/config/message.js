@@ -301,19 +301,6 @@ export const sendMenu = async (
         externalAdReply,
         ...messagetxt(name),
       },
-      buttons: [
-        {
-          buttonId: "donasi",
-          buttonText: { displayText: "⭐Donasi Sekarang" },
-          type: 1,
-        },
-        {
-          buttonId: "github",
-          buttonText: { displayText: "Follow Github" },
-          type: 1,
-        },
-      ],
-      headerType: 1,
     },
     { quoted },
   );
