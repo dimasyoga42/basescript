@@ -270,10 +270,9 @@ export const sendMenu = async (
   {
     title = "Bot",
     body = "Message",
-    name = "neura",
     text = "",
     thumbnail = null,
-    renderLargerThumbnail = false,
+    renderLargerThumbnail = true,
     quoted = null,
   } = {},
 ) => {
@@ -299,12 +298,11 @@ export const sendMenu = async (
       text,
       contextInfo: {
         externalAdReply,
-        ...messagetxt(name),
       },
     },
     { quoted },
   );
-  await sock.sendPresenceUpdate("paused", jid);
+  return await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const downloadMedia = async (message, type = "buffer") => {
