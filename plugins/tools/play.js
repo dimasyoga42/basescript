@@ -98,28 +98,46 @@ const handler = async (m, { conn }) => {
       fixedBuffer = mp3Buffer;
     }
 
-    await sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail: data.thumbnail || thumbnail,
-      text: `${data.title}\nChannel: ${data.channel}\nDurasi: ${data.fduration}\nViews: ${data.views}\nSize: ${data.data.size}`,
-      msg: m,
-    });
+    // await sendFancyText(conn, m.chat, {
+    //   title: config.BotName,
+    //   body: `Developer By ${config.OwnerName}`,
+    //   thumbnail: data.thumbnail || thumbnail,
+    //   text: `${data.title}\nChannel: ${data.channel}\nDurasi: ${data.fduration}\nViews: ${data.views}\nSize: ${data.data.size}`,
+    //   msg: m,
+    // });
 
-    await conn.sendMessage(
-      m.chat,
-      {
-        audio: fixedBuffer,
-        mimetype: "audio/mpeg",
-        fileName: `${data.title}.mp3`,
-        contextInfo: {
-          title: `${data.title}`,
-          body: `${config.BotName}`,
+    // await conn.sendMessage(
+    //   m.chat,
+    //   {
+    //     audio: fixedBuffer,
+    //     mimetype: "audio/mpeg",
+    //     fileName: `${data.title}.mp3`,
+    //     contextInfo: {
+    //       title: `${data.title}`,
+    //       body: `${config.BotName}`,
+    //       mediaType: 1,
+    //     },
+    //   },
+    //   { quoted: m },
+    // );
+    await conn.sendMessage(m.chat, {
+      audio: fixedBuffer,
+      mimetype: "audio/mpeg",
+      ptt: true,
+      contextInfo: {
+        mentionedJid: [m.sender], // mention user
+        forwardingScore: 1,
+        isForwarded: true,
+        externalAdReply: {
+          title: data.title,
+          body: "Audio Response",
+          thumbnailUrl: data.thumbnail,
+          sourceUrl: "-",
           mediaType: 1,
+          renderLargerThumbnail: true,
         },
       },
-      { quoted: m },
-    );
+    });
     // conn.sendOrder(
     //   m.chat,
     //   {
