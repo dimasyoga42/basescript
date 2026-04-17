@@ -35,12 +35,19 @@ const handler = async (m, { conn }) => {
   await conn.sendMessage(
     m.chat,
     {
-      image: { url: thumbnail },
-      caption: result.trim(),
-      title: config.BotName,
-      subtitle: `Developer: ${config.OwnerName}`,
+      text: result.trim(),
       footer: `Develope By ${config.OwnerName}`,
       viewOnce: true,
+      contextInfo: {
+        externalAdReply: {
+          title: m.pushName,
+          body: "selamat menikmati fitur yang tersedia",
+          thumbnailUrl: thumbnail,
+          mediaType: 1,
+          renderLargerThumbnail: true, // 🔥 kecil di samping
+          showAdAttribution: false,
+        },
+      },
       buttons: [
         {
           name: "cta_url",
