@@ -11,11 +11,12 @@ export const config = {
     neura: "https://neuraapi.vercel.app/api/toram",
   },
   thumbnail: [
-    "https://i.pinimg.com/736x/16/46/ee/1646eef2bf7003c46eb1c0ac6aa6e16e.jpg",
+    "https://i.pinimg.com/736x/f6/b0/b8/f6b0b8a38a80933f683afdebb1a6fa0b.jpg",
     "https://i.pinimg.com/736x/f5/37/29/f5372928b53a4f87fc59ef26503c78e3.jpg",
     "https://i.pinimg.com/736x/8b/af/cf/8bafcf125c91b32e1acd6fabd7ce880c.jpg",
     "https://i.pinimg.com/736x/79/58/df/7958df7914871b93ee70516e678d5dd4.jpg",
     "https://i.pinimg.com/1200x/5d/73/6b/5d736b28582176b1e7f023c4c615b0b5.jpg",
+    "https://i.pinimg.com/736x/25/16/7c/25167ce5b579347fd41a8345415ca1ae.jpg",
   ],
   message: {
     notAdmin: "Admin Only",
