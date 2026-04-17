@@ -61,9 +61,9 @@ const handler = async (m, { conn }) => {
       ],
       headerType: 1,
     },
-    { quoted: m }
+    { quoted: m },
   );
-
+};
 handler.command = ["menu", "help"];
 handler.category = "main";
 export default handler;
