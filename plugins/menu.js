@@ -35,35 +35,34 @@ const handler = async (m, { conn }) => {
   await conn.sendMessage(
     m.chat,
     {
-      text: result.trim(),
+      image: { url: thumbnail },
+      caption: result.trim(),
+      title: config.BotName,
+      subtitle: `Developer: ${config.OwnerName}`,
       footer: `Develope By ${config.OwnerName}`,
-      contextInfo: {
-        externalAdReply: {
-          title: m.pushName,
-          body: "selamat menikmati fitur yang tersedia",
-          thumbnailUrl: thumbnail,
-          mediaType: 1,
-          renderLargerThumbnail: false, // ✅ kecil di samping
-          showAdAttribution: false,
-        },
-      },
+      viewOnce: true,
+
       buttons: [
         {
-          buttonId: "donasi",
-          buttonText: { displayText: "⭐Donasi Sekarang" },
-          type: 1,
+          name: "cta_url",
+          buttonParamsJson: JSON.stringify({
+            display_text: "⭐Donasi Sekarang",
+            url: "https://sociabuzz.com/neurabot/tribe",
+          }),
         },
         {
-          buttonId: "github",
-          buttonText: { displayText: "Follow Github" },
-          type: 1,
+          name: "cta_url",
+          buttonParamsJson: JSON.stringify({
+            display_text: "Follow Github",
+            url: "https://github.com/dimasyoga42",
+          }),
         },
       ],
-      headerType: 1,
     },
     { quoted: m },
   );
 };
+
 handler.command = ["menu", "help"];
 handler.category = "main";
 export default handler;
