@@ -123,7 +123,7 @@ const handler = async (m, { conn }) => {
     await conn.sendMessage(m.chat, {
       audio: fixedBuffer,
       mimetype: "audio/mpeg",
-      ptt: true,
+      ptt: false,
       contextInfo: {
         mentionedJid: [m.sender], // mention user
         forwardingScore: 1,
