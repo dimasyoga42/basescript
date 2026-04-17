@@ -18,22 +18,35 @@ function extractBody(m) {
   const msg = m.message;
   if (!msg) return "";
 
+  // 🔥 ambil paramsJson kalau ada
+  let interactiveId = "";
+  const params =
+    msg.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson;
+
+  if (params) {
+    try {
+      const parsed = JSON.parse(params);
+      interactiveId = parsed.id || "";
+    } catch {
+      interactiveId = "";
+    }
+  }
+
   return (
     msg.conversation ||
     msg.extendedTextMessage?.text ||
     msg.imageMessage?.caption ||
     msg.videoMessage?.caption ||
     msg.documentMessage?.caption ||
-    // ✅ Button quick_reply response
+    // ✅ quick reply
     msg.buttonsResponseMessage?.selectedButtonId ||
     msg.buttonsResponseMessage?.selectedDisplayText ||
-    // ✅ Interactive button response (nativeFlowMessage)
-    msg.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson ||
-    "" ||
-    // ✅ List response
+    // ✅ list
     msg.listResponseMessage?.singleSelectReply?.selectedRowId ||
-    // ✅ Template button response
+    // ✅ template
     msg.templateButtonReplyMessage?.selectedId ||
+    // ✅ interactive (FIXED)
+    interactiveId ||
     ""
   );
 }

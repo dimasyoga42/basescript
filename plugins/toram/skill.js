@@ -17,10 +17,10 @@ ${item.info || "-"}`.trim();
 
 const handler = async (m, { conn }) => {
   try {
-    const parts = (m.text || "").trim().split(/\s+/);
-    const query = parts.slice(1).join(" ").trim();
+    const text = (m.text || "").trim();
+    const query = text.replace(/^\.skill\s*/i, "").trim();
 
-    // 🔥 .skill → tampil skilltree pakai single_select
+    // 🔥 .skill → list tree
     if (!query) {
       const { data, error } = await supa.from("skill_v2").select("skilltree");
 
@@ -54,14 +54,14 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    // 🔥 filter by skilltree
-    if (query.startsWith("--tree")) {
-      const treeName = query.replace("--tree", "").trim();
+    // 🔥 detect tree (FIX lebih fleksibel)
+    if (/^--tree/i.test(query)) {
+      const treeName = query.replace(/^--tree/i, "").trim();
 
       const { data, error } = await supa
-        .from("skilv2")
+        .from("skill_v2") // ✅ FIX
         .select("name")
-        .ilike("skilltree", treeName);
+        .ilike("skilltree", `%${treeName}%`);
 
       if (error || !data || data.length === 0)
         return sendText(conn, m.chat, "skill tidak ditemukan", m);
@@ -93,7 +93,7 @@ const handler = async (m, { conn }) => {
 
     // 🔥 exact match
     const { data: exactData } = await supa
-      .from("skilv2")
+      .from("skill_v2") // ✅ FIX
       .select(
         "name,desc,skilltree,Tier,mpcost,range,Skill Type,combo,Motion Speed,Proration Used,Proration Inflicted,info",
       )
@@ -106,7 +106,7 @@ const handler = async (m, { conn }) => {
 
     // 🔥 partial match
     const { data } = await supa
-      .from("skilv2")
+      .from("skill_v2") // ✅ FIX
       .select("name")
       .ilike("name", `%${query}%`);
 
@@ -115,7 +115,7 @@ const handler = async (m, { conn }) => {
 
     if (data.length === 1) {
       const { data: detail } = await supa
-        .from("skilv2")
+        .from("skill_v2") // ✅ FIX
         .select(
           "name,desc,skilltree,Tier,mpcost,range,Skill Type,combo,Motion Speed,Proration Used,Proration Inflicted,info",
         )
@@ -125,7 +125,7 @@ const handler = async (m, { conn }) => {
       return sendText(conn, m.chat, formatSkill(detail[0]), m);
     }
 
-    // 🔥 banyak → single_select juga
+    // 🔥 banyak → picker
     return await conn.sendButton(m.chat, {
       text: `Ditemukan ${data.length} skill`,
       footer: config.OwnerName,
