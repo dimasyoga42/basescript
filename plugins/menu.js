@@ -37,37 +37,32 @@ const handler = async (m, { conn }) => {
     {
       text: result.trim(),
       footer: `Develope By ${config.OwnerName}`,
-      viewOnce: true,
       contextInfo: {
         externalAdReply: {
           title: m.pushName,
           body: "selamat menikmati fitur yang tersedia",
           thumbnailUrl: thumbnail,
           mediaType: 1,
-          renderLargerThumbnail: true, // 🔥 kecil di samping
+          renderLargerThumbnail: false, // ✅ kecil di samping
           showAdAttribution: false,
         },
       },
       buttons: [
         {
-          name: "cta_url",
-          buttonParamsJson: JSON.stringify({
-            display_text: "⭐Donasi Sekarang",
-            url: "https://sociabuzz.com/neurabot/tribe",
-          }),
+          buttonId: "donasi",
+          buttonText: { displayText: "⭐Donasi Sekarang" },
+          type: 1,
         },
         {
-          name: "cta_url",
-          buttonParamsJson: JSON.stringify({
-            display_text: "Follow Github",
-            url: "https://github.com/dimasyoga42",
-          }),
+          buttonId: "github",
+          buttonText: { displayText: "Follow Github" },
+          type: 1,
         },
       ],
+      headerType: 1,
     },
-    { quoted: m },
+    { quoted: m }
   );
-};
 
 handler.command = ["menu", "help"];
 handler.category = "main";
