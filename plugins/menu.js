@@ -66,7 +66,7 @@ const handler = async (m, { conn }) => {
     title: m.pushName,
     body: "Selamat Menikmati fitur yang tersedia",
     text: result.trim(),
-    thumbnails,
+    thumbnail: thumbnails,
     quoted: m,
   });
 };
