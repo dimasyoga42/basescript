@@ -2,135 +2,147 @@ import { config, thumbnail } from "../../config.js";
 import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
-// 🔥 format output
+// ─── Format output detail skill ───────────────────────────────────────────────
 const formatSkill = (item) =>
-  `*${item.name}* (Tier ${item.Tier || "-"})
-${item.desc || "-"}
+  [
+    `*${item.name}* (Tier ${item.Tier || "-"})`,
+    `${item.desc || "-"}`,
+    ``,
+    `MP       : ${item.mpcost || "-"}`,
+    `Range    : ${item.range || "-"}`,
+    `Type     : ${item["Skill Type"] || "-"}`,
+    `Combo    : ${item.combo || "-"}`,
+    `Motion   : ${item["Motion Speed"] || "-"}`,
+    `Proration: ${item["Proration Used"] || "-"} / ${item["Proration Inflicted"] || "-"}`,
+    ``,
+    `${item.info || ""}`,
+  ]
+    .join("\n")
+    .trim();
 
-MP: ${item.mpcost || "-"}
-Range: ${item.range || "-"}
-Type: ${item["Skill Type"] || "-"}
-Combo: ${item.combo || "-"}
-Motion: ${item["Motion Speed"] || "-"}
-Proration: ${item["Proration Used"] || "-"} / ${item["Proration Inflicted"] || "-"}
+// ─── Helper build single_select button ────────────────────────────────────────
+const buildSelectButton = (title, sectionTitle, rows) => ({
+  name: "single_select",
+  buttonParamsJson: JSON.stringify({
+    title,
+    sections: [
+      {
+        title: sectionTitle,
+        rows,
+      },
+    ],
+  }),
+});
 
-${item.info || "-"}`.trim();
-
+// ─── Handler ──────────────────────────────────────────────────────────────────
 const handler = async (m, { conn }) => {
   try {
-    const text = extractBody(m).trim();
-    const query = text.replace(/^\.skill\s*/i, "").trim();
+    const query = (m.text || "").replace(/^\.skill\s*/i, "").trim();
 
-    // 🔥 .skill → tampil skilltree
+    // ── Tanpa query → tampilkan daftar skill tree ────────────────────────────
     if (!query) {
       const { data, error } = await supa.from("skilv2").select("skilltree");
 
       if (error || !data)
         return sendText(conn, m.chat, config.message.error, m);
 
-      const trees = [...new Set(data.map((v) => v.skilltree).filter(Boolean))];
+      const trees = [
+        ...new Set(data.map((v) => v.skilltree).filter(Boolean)),
+      ].sort();
 
-      return await conn.sendButton(m.chat, {
-        text: "Pilih Skill Tree:",
+      if (trees.length === 0)
+        return sendText(conn, m.chat, "Tidak ada skill tree tersedia.", m);
+
+      return conn.sendButton(m.chat, {
+        text: "Pilih skill tree yang ingin kamu lihat:",
         footer: config.OwnerName,
         buttons: [
-          {
-            name: "single_select",
-            buttonParamsJson: JSON.stringify({
-              title: "Skill Tree",
-              sections: [
-                {
-                  title: "Daftar Skill Tree",
-                  rows: trees.map((tree) => ({
-                    header: "Tree",
-                    title: tree,
-                    description: `Lihat skill dari ${tree}`,
-                    id: `.skill --tree ${tree}`,
-                  })),
-                },
-              ],
-            }),
-          },
+          buildSelectButton(
+            "Skill Tree",
+            "Daftar Skill Tree",
+            trees.map((tree) => ({
+              title: tree,
+              description: `Lihat skill dari ${tree}`,
+              id: `.skill --tree ${tree}`,
+            })),
+          ),
         ],
       });
     }
 
-    // 🔥 filter skilltree
-    if (/^--tree/i.test(query)) {
-      const treeName = query.replace(/^--tree/i, "").trim();
+    // ── --tree <nama> → tampilkan skill dalam tree ───────────────────────────
+    if (/^--tree\s+/i.test(query)) {
+      const treeName = query.replace(/^--tree\s+/i, "").trim();
+
+      if (!treeName)
+        return sendText(
+          conn,
+          m.chat,
+          "Masukan nama skill tree setelah `--tree`.",
+          m,
+        );
 
       const { data, error } = await supa
         .from("skilv2")
-        .select("name")
-        .ilike("skilltree", `%${treeName}%`);
+        .select("name, Tier")
+        .ilike("skilltree", `%${treeName}%`)
+        .order("Tier", { ascending: true });
 
       if (error || !data || data.length === 0)
-        return sendText(conn, m.chat, "skill tidak ditemukan", m);
+        return sendText(
+          conn,
+          m.chat,
+          `Skill tree *"${treeName}"* tidak ditemukan.`,
+          m,
+        );
 
-      return await conn.sendButton(m.chat, {
-        text: `Skill Tree: *${treeName}*`,
+      return conn.sendButton(m.chat, {
+        text: `Skill Tree: *${treeName}*\nTotal: ${data.length} skill`,
         footer: config.OwnerName,
         buttons: [
-          {
-            name: "single_select",
-            buttonParamsJson: JSON.stringify({
-              title: "List Skill",
-              sections: [
-                {
-                  title: treeName,
-                  rows: data.map((item) => ({
-                    header: "Skill",
-                    title: item.name,
-                    description: "Lihat detail skill",
-                    id: `.skill ${item.name}`,
-                  })),
-                },
-              ],
-            }),
-          },
+          buildSelectButton(
+            "List Skill",
+            treeName,
+            data.map((item) => ({
+              title: item.name,
+              description: `Tier ${item.Tier || "-"}`,
+              id: `.skill ${item.name}`,
+            })),
+          ),
         ],
       });
     }
 
-    // 🔥 search skill
+    // ── Search skill by name ─────────────────────────────────────────────────
     const { data, error } = await supa
       .from("skilv2")
       .select(
-        "name,desc,skilltree,Tier,mpcost,range,Skill Type,combo,Motion Speed,Proration Used,Proration Inflicted,info",
+        "name, desc, skilltree, Tier, mpcost, range, Skill Type, combo, Motion Speed, Proration Used, Proration Inflicted, info",
       )
       .ilike("name", `%${query}%`)
       .limit(20);
 
     if (error || !data || data.length === 0)
-      return sendText(conn, m.chat, config.message.notFound, m);
+      return sendText(conn, m.chat, `Skill *"${query}"* tidak ditemukan.`, m);
 
-    // 🔥 kalau 1 → langsung tampil
-    if (data.length === 1) {
+    // Kalau tepat 1 hasil → langsung tampil detail
+    if (data.length === 1)
       return sendText(conn, m.chat, formatSkill(data[0]), m);
-    }
 
-    // 🔥 banyak → button
-    return await conn.sendButton(m.chat, {
-      text: `Ditemukan ${data.length} skill`,
+    // Banyak hasil → button pilihan
+    return conn.sendButton(m.chat, {
+      text: `Ditemukan *${data.length}* skill untuk "*${query}*":`,
       footer: config.OwnerName,
       buttons: [
-        {
-          name: "single_select",
-          buttonParamsJson: JSON.stringify({
-            title: "Pilih Skill",
-            sections: [
-              {
-                title: "Hasil Pencarian",
-                rows: data.map((item) => ({
-                  header: "Skill",
-                  title: item.name,
-                  description: `Tier ${item.Tier || "-"}`,
-                  id: `.skill ${item.name}`,
-                })),
-              },
-            ],
-          }),
-        },
+        buildSelectButton(
+          "Pilih Skill",
+          "Hasil Pencarian",
+          data.map((item) => ({
+            title: item.name,
+            description: `Tier ${item.Tier || "-"} · ${item.skilltree || "-"}`,
+            id: `.skill ${item.name}`,
+          })),
+        ),
       ],
     });
   } catch (err) {
