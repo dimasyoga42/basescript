@@ -25,12 +25,7 @@ const buildSelectButton = (title, sectionTitle, rows) => ({
   name: "single_select",
   buttonParamsJson: JSON.stringify({
     title,
-    sections: [
-      {
-        title: sectionTitle,
-        rows,
-      },
-    ],
+    sections: [{ title: sectionTitle, rows }],
   }),
 });
 
@@ -41,7 +36,7 @@ const handler = async (m, { conn }) => {
 
     // ── Tanpa query → tampilkan daftar skill tree ────────────────────────────
     if (!query) {
-      const { data, error } = await supa.from("skilv2").select("skilltree");
+      const { data, error } = await supa.from("skilv2").select("*");
 
       if (error || !data)
         return sendText(conn, m.chat, config.message.error, m);
@@ -84,7 +79,7 @@ const handler = async (m, { conn }) => {
 
       const { data, error } = await supa
         .from("skilv2")
-        .select("name, Tier")
+        .select("*")
         .ilike("skilltree", `%${treeName}%`)
         .order("Tier", { ascending: true });
 
@@ -116,9 +111,7 @@ const handler = async (m, { conn }) => {
     // ── Search skill by name ─────────────────────────────────────────────────
     const { data, error } = await supa
       .from("skilv2")
-      .select(
-        "name, desc, skilltree, Tier, mpcost, range, Skill Type, combo, Motion Speed, Proration Used, Proration Inflicted, info",
-      )
+      .select("*")
       .ilike("name", `%${query}%`)
       .limit(20);
 
