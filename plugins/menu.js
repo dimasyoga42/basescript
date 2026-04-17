@@ -1,4 +1,4 @@
-import { config } from "../config.js";
+import { config, thumbnail } from "../config.js";
 import {
   sendFancyText,
   sendFancyTextModif,
@@ -31,8 +31,8 @@ const handler = async (m, { conn }) => {
     result += categories[cat].map((c) => `│.${c}`).join("\n") + "\n╰────\n";
   }
 
-  const thumbnails = (config?.thumbnail ?? []).filter(Boolean);
-  const thumbnail = thumbnails[Math.floor(Math.random() * thumbnails.length)];
+  // const thumbnails = (config?.thumbnail ?? []).filter(Boolean);
+  // const thumbnail = thumbnails[Math.floor(Math.random() * thumbnails.length)];
   // await conn.sendMessage(
   //   m.chat,
   //   {
@@ -66,7 +66,7 @@ const handler = async (m, { conn }) => {
     title: m.pushName,
     body: "Selamat Menikmati fitur yang tersedia",
     text: result.trim(),
-    thumbnail: thumbnails,
+    thumbnail: thumbnail,
     quoted: m,
   });
 };
