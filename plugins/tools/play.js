@@ -134,7 +134,7 @@ const handler = async (m, { conn }) => {
           thumbnailUrl: data.thumbnail,
           sourceUrl: "-",
           mediaType: 1,
-          renderLargerThumbnail: true,
+          renderLargerThumbnail: false,
         },
       },
     });
