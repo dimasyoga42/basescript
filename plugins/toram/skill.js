@@ -60,7 +60,7 @@ const handler = async (m, { conn }) => {
       const treeName = query.replace("--tree", "").trim();
 
       const { data, error } = await supa
-        .from("skill_v2")
+        .from("skilv2")
         .select("name")
         .ilike("skilltree", treeName);
 
@@ -94,7 +94,7 @@ const handler = async (m, { conn }) => {
 
     // 🔥 exact match
     const { data: exactData } = await supa
-      .from("skill_v2")
+      .from("skilv2")
       .select(
         "name,desc,skilltree,Tier,mpcost,range,Skill Type,combo,Motion Speed,Proration Used,Proration Inflicted,info",
       )
@@ -107,7 +107,7 @@ const handler = async (m, { conn }) => {
 
     // 🔥 partial match
     const { data } = await supa
-      .from("skill_v2")
+      .from("skilv2")
       .select("name")
       .ilike("name", `%${query}%`);
 
@@ -117,7 +117,7 @@ const handler = async (m, { conn }) => {
     // 🔥 kalau 1 → langsung detail
     if (data.length === 1) {
       const { data: detail } = await supa
-        .from("skill_v2")
+        .from("skilv2")
         .select(
           "name,desc,skilltree,Tier,mpcost,range,Skill Type,combo,Motion Speed,Proration Used,Proration Inflicted,info",
         )
