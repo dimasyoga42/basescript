@@ -2,6 +2,7 @@ import { config, thumbnail } from "../../config.js";
 import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
+// 🔥 format output
 const formatSkill = (item) =>
   `*${item.name}* (Tier ${item.Tier || "-"})
 ${item.desc || "-"}
@@ -17,12 +18,12 @@ ${item.info || "-"}`.trim();
 
 const handler = async (m, { conn }) => {
   try {
-    const text = (m.text || "").trim();
+    const text = extractBody(m).trim();
     const query = text.replace(/^\.skill\s*/i, "").trim();
 
-    // 🔥 .skill → list tree
+    // 🔥 .skill → tampil skilltree
     if (!query) {
-      const { data, error } = await supa.from("skill_v2").select("skilltree");
+      const { data, error } = await supa.from("skilv2").select("skilltree");
 
       if (error || !data)
         return sendText(conn, m.chat, config.message.error, m);
@@ -54,12 +55,12 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    // 🔥 detect tree (FIX lebih fleksibel)
+    // 🔥 filter skilltree
     if (/^--tree/i.test(query)) {
       const treeName = query.replace(/^--tree/i, "").trim();
 
       const { data, error } = await supa
-        .from("skilv2") // ✅ FIX
+        .from("skilv2")
         .select("name")
         .ilike("skilltree", `%${treeName}%`);
 
@@ -91,41 +92,24 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    // 🔥 exact match
-    const { data: exactData } = await supa
-      .from("skilv2") // ✅ FIX
+    // 🔥 search skill
+    const { data, error } = await supa
+      .from("skilv2")
       .select(
         "name,desc,skilltree,Tier,mpcost,range,Skill Type,combo,Motion Speed,Proration Used,Proration Inflicted,info",
       )
-      .ilike("name", query)
-      .limit(1);
+      .ilike("name", `%${query}%`)
+      .limit(20);
 
-    if (exactData && exactData.length === 1) {
-      return sendText(conn, m.chat, formatSkill(exactData[0]), m);
-    }
-
-    // 🔥 partial match
-    const { data } = await supa
-      .from("skilv2") // ✅ FIX
-      .select("name")
-      .ilike("name", `%${query}%`);
-
-    if (!data || data.length === 0)
+    if (error || !data || data.length === 0)
       return sendText(conn, m.chat, config.message.notFound, m);
 
+    // 🔥 kalau 1 → langsung tampil
     if (data.length === 1) {
-      const { data: detail } = await supa
-        .from("skilv2") // ✅ FIX
-        .select(
-          "name,desc,skilltree,Tier,mpcost,range,Skill Type,combo,Motion Speed,Proration Used,Proration Inflicted,info",
-        )
-        .ilike("name", data[0].name)
-        .limit(1);
-
-      return sendText(conn, m.chat, formatSkill(detail[0]), m);
+      return sendText(conn, m.chat, formatSkill(data[0]), m);
     }
 
-    // 🔥 banyak → picker
+    // 🔥 banyak → button
     return await conn.sendButton(m.chat, {
       text: `Ditemukan ${data.length} skill`,
       footer: config.OwnerName,
@@ -140,7 +124,7 @@ const handler = async (m, { conn }) => {
                 rows: data.map((item) => ({
                   header: "Skill",
                   title: item.name,
-                  description: "Lihat detail",
+                  description: `Tier ${item.Tier || "-"}`,
                   id: `.skill ${item.name}`,
                 })),
               },
