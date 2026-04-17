@@ -1,6 +1,7 @@
 import { config, thumbnail } from "../../config.js";
 import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
+import { sendInteractiveMessage } from "@ryuu-reinzz/button-helper";
 
 const formatSkill = (item) =>
   `*${item.name}* (Tier ${item.Tier || "-"})
@@ -17,22 +18,22 @@ ${item.info || "-"}`.trim();
 
 const handler = async (m, { conn }) => {
   try {
-    const parts = (m.text || "").trim().split(/\s+/);
-    const query = parts.slice(1).join(" ").trim();
+    const jid = m.chat;
+    const text = (m.text || "").trim();
+    const query = text.replace(/^\.skill\s*/i, "").trim();
 
-    // 🔥 .skill → tampil skilltree pakai single_select
+    // 🔥 .skill → tampil skilltree
     if (!query) {
       const { data, error } = await supa.from("skill_v2").select("skilltree");
 
-      if (error || !data)
-        return sendText(conn, m.chat, config.message.error, m);
+      if (error || !data) return sendText(conn, jid, config.message.error, m);
 
       const trees = [...new Set(data.map((v) => v.skilltree).filter(Boolean))];
 
-      return await conn.sendButton(m.chat, {
+      return await sendInteractiveMessage(conn, jid, {
         text: "Pilih Skill Tree:",
         footer: config.OwnerName,
-        buttons: [
+        interactiveButtons: [
           {
             name: "single_select",
             buttonParamsJson: JSON.stringify({
@@ -43,7 +44,7 @@ const handler = async (m, { conn }) => {
                   rows: trees.map((tree) => ({
                     header: "Tree",
                     title: tree,
-                    description: `Lihat skill dari ${tree}`,
+                    description: `Lihat skill ${tree}`,
                     id: `.skill --tree ${tree}`,
                   })),
                 },
@@ -64,12 +65,12 @@ const handler = async (m, { conn }) => {
         .ilike("skilltree", treeName);
 
       if (error || !data || data.length === 0)
-        return sendText(conn, m.chat, "skill tidak ditemukan", m);
+        return sendText(conn, jid, "skill tidak ditemukan", m);
 
-      return await conn.sendButton(m.chat, {
-        text: `Skill Tree: *${treeName}*`,
+      return await sendInteractiveMessage(conn, jid, {
+        text: `Skill Tree: ${treeName}`,
         footer: config.OwnerName,
-        buttons: [
+        interactiveButtons: [
           {
             name: "single_select",
             buttonParamsJson: JSON.stringify({
@@ -80,7 +81,7 @@ const handler = async (m, { conn }) => {
                   rows: data.map((item) => ({
                     header: "Skill",
                     title: item.name,
-                    description: "Lihat detail skill",
+                    description: "Lihat detail",
                     id: `.skill ${item.name}`,
                   })),
                 },
@@ -101,7 +102,7 @@ const handler = async (m, { conn }) => {
       .limit(1);
 
     if (exactData && exactData.length === 1) {
-      return sendText(conn, m.chat, formatSkill(exactData[0]), m);
+      return sendText(conn, jid, formatSkill(exactData[0]), m);
     }
 
     // 🔥 partial match
@@ -111,8 +112,9 @@ const handler = async (m, { conn }) => {
       .ilike("name", `%${query}%`);
 
     if (!data || data.length === 0)
-      return sendText(conn, m.chat, config.message.notFound, m);
+      return sendText(conn, jid, config.message.notFound, m);
 
+    // 🔥 kalau 1 → langsung detail
     if (data.length === 1) {
       const { data: detail } = await supa
         .from("skill_v2")
@@ -122,14 +124,14 @@ const handler = async (m, { conn }) => {
         .ilike("name", data[0].name)
         .limit(1);
 
-      return sendText(conn, m.chat, formatSkill(detail[0]), m);
+      return sendText(conn, jid, formatSkill(detail[0]), m);
     }
 
-    // 🔥 banyak → single_select juga
-    return await conn.sendButton(m.chat, {
+    // 🔥 banyak → list picker
+    return await sendInteractiveMessage(conn, jid, {
       text: `Ditemukan ${data.length} skill`,
       footer: config.OwnerName,
-      buttons: [
+      interactiveButtons: [
         {
           name: "single_select",
           buttonParamsJson: JSON.stringify({
