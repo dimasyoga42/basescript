@@ -15,13 +15,24 @@ const handler = async (m, { conn }) => {
     const data = await getUserData(db);
     const raidReady = data.find((item) => item.id === m.chat);
     if (raidReady)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `develop by ${config.OwnerName}`,
-        thumbnail: thumbnail,
-        text: config.message.allready,
-        quoted: m,
-      });
+      return await conn.sendMessage(
+        m.chat,
+        {
+          text: "Party Raid sudah di buat harap hapus terlebih dahulu jika ingin membuatnya kembali",
+          contextInfo: {
+            externalAdReply: {
+              title: config.BotName,
+              body: "Developer By Dimas Yoga",
+              thumbnailUrl: config.thumbnail,
+              mediaType: 1,
+              renderLargerThumbnail: false, // 🔥 kecil di samping
+              showAdAttribution: false,
+            },
+          },
+        },
+        { quoted: m },
+      );
+
     const newParty = {
       id: m.chat,
       bos_ele: ele,
@@ -37,13 +48,23 @@ const handler = async (m, { conn }) => {
       `Raid Party\n- Element Bos: ${ele}\n- Hadiah: ${price}\n\n- pt1(0/4)\n- pt2(0/4)\n- pt(0/4)\n- pt4(0/4)`.trim();
     data.push(newParty);
     saveUserData(db, data);
-    sendFancyText(conn, m.chat, {
-      title: "Party Raid Is Ready",
-      body: `use .join ign pt1-pt4`,
-      thumbnail,
-      text: mtext,
-      quoted: m,
-    });
+    await conn.sendMessage(
+      m.chat,
+      {
+        text: mtext,
+        contextInfo: {
+          externalAdReply: {
+            title: config.BotName,
+            body: "Developer By Dimas Yoga",
+            thumbnailUrl: thumbnail,
+            mediaType: 1,
+            renderLargerThumbnail: false, // 🔥 kecil di samping
+            showAdAttribution: false,
+          },
+        },
+      },
+      { quoted: m },
+    );
   } catch (err) {
     sendFancyText(conn, m.chat, {
       title: config.BotName,
