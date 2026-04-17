@@ -2,6 +2,7 @@ import { config } from "../config.js";
 import {
   sendFancyText,
   sendFancyTextModif,
+  sendMenu,
   sendText,
 } from "../src/config/message.js";
 
@@ -32,35 +33,42 @@ const handler = async (m, { conn }) => {
 
   const thumbnails = (config?.thumbnail ?? []).filter(Boolean);
   const thumbnail = thumbnails[Math.floor(Math.random() * thumbnails.length)];
-  await conn.sendMessage(
-    m.chat,
-    {
-      image: { url: thumbnail },
-      caption: result.trim(),
-      title: config.BotName,
-      subtitle: `Developer: ${config.OwnerName}`,
-      footer: `Develope By ${config.OwnerName}`,
-      viewOnce: true,
+  // await conn.sendMessage(
+  //   m.chat,
+  //   {
+  //     image: { url: thumbnail },
+  //     caption: result.trim(),
+  //     title: config.BotName,
+  //     subtitle: `Developer: ${config.OwnerName}`,
+  //     footer: `Develope By ${config.OwnerName}`,
+  //     viewOnce: true,
 
-      buttons: [
-        {
-          name: "cta_url",
-          buttonParamsJson: JSON.stringify({
-            display_text: "⭐Donasi Sekarang",
-            url: "https://sociabuzz.com/neurabot/tribe",
-          }),
-        },
-        {
-          name: "cta_url",
-          buttonParamsJson: JSON.stringify({
-            display_text: "Follow Github",
-            url: "https://github.com/dimasyoga42",
-          }),
-        },
-      ],
-    },
-    { quoted: m },
-  );
+  //     buttons: [
+  //       {
+  //         name: "cta_url",
+  //         buttonParamsJson: JSON.stringify({
+  //           display_text: "⭐Donasi Sekarang",
+  //           url: "https://sociabuzz.com/neurabot/tribe",
+  //         }),
+  //       },
+  //       {
+  //         name: "cta_url",
+  //         buttonParamsJson: JSON.stringify({
+  //           display_text: "Follow Github",
+  //           url: "https://github.com/dimasyoga42",
+  //         }),
+  //       },
+  //     ],
+  //   },
+  //   { quoted: m },
+  // );
+  await sendMenu(conn, m.chat, {
+    title: m.pushName,
+    body: "Selamat Menikmati fitur yang tersedia",
+    text: result.trim(),
+    thumbnails,
+    quoted: m,
+  });
 };
 
 handler.command = ["menu", "help"];

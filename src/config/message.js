@@ -264,6 +264,62 @@ export const sendFancyTextModif = async (
   await sock.sendPresenceUpdate("paused", jid);
 };
 
+export const sendMenu = async (
+  sock,
+  jid,
+  {
+    title = "Bot",
+    body = "Message",
+    name = "neura",
+    text = "",
+    thumbnail = null,
+    renderLargerThumbnail = false,
+    quoted = null,
+  } = {},
+) => {
+  let externalAdReply = {
+    title,
+    body,
+    mediaType: 1,
+    renderLargerThumbnail,
+  };
+
+  if (thumbnail) {
+    if (Buffer.isBuffer(thumbnail)) {
+      externalAdReply.thumbnail = thumbnail;
+    } else {
+      externalAdReply.thumbnailUrl = thumbnail;
+    }
+  }
+  await sock.sendPresenceUpdate("composing", jid);
+  await new Promise((r) => setTimeout(r, 100));
+  await sock.sendMessage(
+    jid,
+    {
+      text,
+      contextInfo: {
+        externalAdReply,
+        ...messagetxt(name),
+      },
+      buttons: [
+        {
+          buttonId: "donasi",
+          buttonText: { displayText: "⭐Donasi Sekarang" },
+          type: 1,
+        },
+        {
+          buttonId: "github",
+          buttonText: { displayText: "Follow Github" },
+          type: 1,
+        },
+      ],
+      headerType: 1,
+    },
+    { quoted },
+  );
+  await sock.sendPresenceUpdate("paused", jid);
+};
+
 export const downloadMedia = async (message, type = "buffer") => {
   const stream = await downloadContentFromMessage(
     message,
@@ -279,6 +335,4 @@ export const downloadMedia = async (message, type = "buffer") => {
   return fs.writeFileSync("./downloaded_media", buffer);
 };
 
-export const sendbtn = () => {
-
-}
+export const sendbtn = () => {};
