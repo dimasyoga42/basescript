@@ -15,6 +15,7 @@ const shuffle = (arr) => {
 const handler = async (m, { conn }) => {
   try {
     if (!(await isAdmin(conn, m))) return;
+
     const args = m.text.split(" ");
     const totalTank = parseInt(args[1]) || 0;
 
@@ -46,59 +47,61 @@ const handler = async (m, { conn }) => {
     const maxParty = 4;
     const parties = Array.from({ length: maxParty }, () => []);
 
-    // 🔥 PILIH TANK SESUAI LIMIT
+    // =========================
+    // ✅ TANK (MAX 1 PER PARTY)
+    // =========================
     const selectedTanks = tanks.slice(0, totalTank);
 
-    // 🔥 MASUKKAN TANK KE PARTY RANDOM
-    selectedTanks.forEach((tank) => {
-      let placed = false;
-
-      while (!placed) {
-        const rand = Math.floor(Math.random() * maxParty);
-        if (parties[rand].length < 4) {
-          parties[rand].push(tank);
-          placed = true;
-        }
+    selectedTanks.forEach((tank, i) => {
+      if (parties[i % maxParty].length < 4) {
+        parties[i % maxParty].push(tank);
       }
     });
 
-    // 🔥 SEBAR SUPPORT MERATA
-    let i = 0;
-    supports.forEach((sup) => {
+    // =========================
+    // ✅ SUPPORT MERATA
+    // =========================
+    supports.forEach((sup, i) => {
       let placed = false;
+      let start = i % maxParty;
 
-      while (!placed) {
-        if (parties[i % maxParty].length < 4) {
-          parties[i % maxParty].push(sup);
+      for (let j = 0; j < maxParty; j++) {
+        let idx = (start + j) % maxParty;
+        if (parties[idx].length < 4) {
+          parties[idx].push(sup);
           placed = true;
+          break;
         }
-        i++;
       }
+
+      if (!placed) return;
     });
 
-    // 🔥 SISA MEMBER (DPS + TANK SISA + SUPPORT SISA)
-    let remaining = [...tanks.slice(totalTank), ...supports.slice(), ...dps];
+    // =========================
+    // ✅ SISA MEMBER
+    // =========================
+    let remaining = [...tanks.slice(totalTank), ...dps];
 
     remaining = shuffle(remaining);
 
-    let index = 0;
-
-    remaining.forEach((mbr) => {
+    remaining.forEach((mbr, i) => {
       let placed = false;
+      let start = i % maxParty;
 
-      while (!placed) {
-        if (parties[index % maxParty].length < 4) {
-          parties[index % maxParty].push(mbr);
+      for (let j = 0; j < maxParty; j++) {
+        let idx = (start + j) % maxParty;
+        if (parties[idx].length < 4) {
+          parties[idx].push(mbr);
           placed = true;
+          break;
         }
-        index++;
       }
+
+      if (!placed) return;
     });
 
-    // 🔥 FILTER PARTY KOSONG
     const finalParties = parties.filter((p) => p.length > 0);
 
-    // FORMAT OUTPUT
     let text = `*HASIL GACHA PARTY*\n`;
     text += `Total Tank dipakai: ${selectedTanks.length}\n\n`;
 
