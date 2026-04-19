@@ -13,12 +13,10 @@ function isMatch(pattern, command) {
   return false;
 }
 
-// ✅ Ekstrak teks dari berbagai jenis pesan termasuk button response
 function extractBody(m) {
   const msg = m.message;
   if (!msg) return "";
 
-  // 🔥 ambil paramsJson kalau ada
   let interactiveId = "";
   const params =
     msg.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson;
@@ -38,14 +36,10 @@ function extractBody(m) {
     msg.imageMessage?.caption ||
     msg.videoMessage?.caption ||
     msg.documentMessage?.caption ||
-    // ✅ quick reply
     msg.buttonsResponseMessage?.selectedButtonId ||
     msg.buttonsResponseMessage?.selectedDisplayText ||
-    // ✅ list
     msg.listResponseMessage?.singleSelectReply?.selectedRowId ||
-    // ✅ template
     msg.templateButtonReplyMessage?.selectedId ||
-    // ✅ interactive (FIXED)
     interactiveId ||
     ""
   );
@@ -56,44 +50,39 @@ export async function runCommand(conn, m, plugins) {
   const body = extractBody(m);
 
   if (!body) return;
-
-  // Cek apakah body dimulai dengan prefix
-  // Button response langsung pakai id seperti ".menu" jadi tetap perlu prefix
   if (!body.startsWith(prefix)) return;
   if (!m.chat?.endsWith("@g.us")) return;
   if (isMuted(m)) return;
   if (await isBan(conn, m)) return;
-  cleanExpiredVip();
-  const isVip = checkVip(m.chat);
-  if (!isVip)
-    return conn.sendMessage(m.chat, {
-      text: "Grub anda belum terdaftar hubungi owner di bawah ini\n085664393331 (dimas)",
-    });
-  // const noLimitCmd = ["cekvip", "menu"]; // command yang bebas limit
-
-  // // di dalam handler utama
-  // if (m.chat?.endsWith("@g.us") && body.startsWith(prefix)) {
-  //   if (!config.OwnerName.includes(m.sender)) {
-  //     if (!noLimitCmd.includes(m.text)) {
-  //       const limit = await checkGroupLimit(m.chat);
-  //       if (!limit.ok) {
-  //         return conn.sendMessage(
-  //           m.chat,
-  //           {
-  //             text: `limit grup habis\nupgrade premium untuk unlimited`,
-  //           },
-  //           { quoted: m },
-  //         );
-  //       }
-  //     }
-  //   }
-  // }
 
   const input = body.slice(prefix.length).trim();
   const [command, ...args] = input.split(/\s+/);
   const text = args.join(" ");
 
-  // Log button response untuk debug
+  // 🔥 command whitelist (tidak butuh VIP)
+  const noVipCmd = ["cekvip", "setvip", "menu"];
+
+  // 🔥 bypass owner
+  const isOwner = config.OwnerName?.includes(m.sender);
+
+  // 🔥 clean VIP (tidak setiap message)
+  if (Math.random() < 0.02) cleanExpiredVip(); // 2% chance
+
+  // 🔥 cek VIP hanya jika bukan whitelist & bukan owner
+  if (!noVipCmd.includes(command) && !isOwner) {
+    const isVip = checkVip(m.chat);
+
+    if (!isVip) {
+      return conn.sendMessage(
+        m.chat,
+        {
+          text: "Grup belum VIP.\nHubungi owner:\n085664393331 (dimas)",
+        },
+        { quoted: m }
+      );
+    }
+  }
+
   const isButtonResponse =
     m.message?.buttonsResponseMessage ||
     m.message?.interactiveResponseMessage ||
