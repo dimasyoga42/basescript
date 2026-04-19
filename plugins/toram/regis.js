@@ -5,12 +5,34 @@ import { supa } from "../../src/config/supa.js";
 const handler = async (m, { conn, text }) => {
   try {
     // Gunakan `text` dari runCommand, lebih bersih dari split manual
-    if (!text)
-      return sendText(
-        conn,
-        m.chat,
-        `${config.message.invalid}, use: .regis <name>`,
-      );
+    if (!text) {
+      const { data: db, error } = await supa
+        .from("regist")
+        .select("name")
+        .order("name", { ascending: true });
+
+      if (error || !db?.length) {
+        return conn.sendMessage(
+          m.chat,
+          { text: "Gagal mengambil data dari database." },
+          { quoted: m }
+        );
+      }
+
+      return conn.sendButton(m.chat, {
+        text: "Daftar Seluruh regist\n- gunakan .regis [nama regis yang dicari]",
+        footer: config.OwnerName,
+        buttons: db.map((item) => ({
+          name: "quick_reply",
+          buttonParamsJson: JSON.stringify({
+            display_text: item.name,
+            id: `.regist ${item.name}`,
+          }),
+        })),
+        bottom_sheet: true,
+        bottom_name: "Daftar Regist",
+      });
+    }
 
     // ✅ Destructure { data, error } dari response Supabase
     const { data, error } = await supa
