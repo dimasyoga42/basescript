@@ -58,6 +58,6 @@ Tag:
 };
 
 handler.command = "setwc";
-handler.category = "Grup";
+handler.category = "Menu Admin";
 
 export default handler;

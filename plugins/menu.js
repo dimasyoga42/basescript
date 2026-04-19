@@ -30,38 +30,6 @@ const handler = async (m, { conn }) => {
     result += `\n╭─${cat}\n`;
     result += categories[cat].map((c) => `│.${c}`).join("\n") + "\n╰────\n";
   }
-
-  // const thumbnails = (config?.thumbnail ?? []).filter(Boolean);
-  // const thumbnail = thumbnails[Math.floor(Math.random() * thumbnails.length)];
-  // await conn.sendMessage(
-  //   m.chat,
-  //   {
-  //     image: { url: thumbnail },
-  //     caption: result.trim(),
-  //     title: config.BotName,
-  //     subtitle: `Developer: ${config.OwnerName}`,
-  //     footer: `Develope By ${config.OwnerName}`,
-  //     viewOnce: true,
-
-  //     buttons: [
-  //       {
-  //         name: "cta_url",
-  //         buttonParamsJson: JSON.stringify({
-  //           display_text: "⭐Donasi Sekarang",
-  //           url: "https://sociabuzz.com/neurabot/tribe",
-  //         }),
-  //       },
-  //       {
-  //         name: "cta_url",
-  //         buttonParamsJson: JSON.stringify({
-  //           display_text: "Follow Github",
-  //           url: "https://github.com/dimasyoga42",
-  //         }),
-  //       },
-  //     ],
-  //   },
-  //   { quoted: m },
-  // );
   await sendMenu(conn, m.chat, {
     title: m.pushName,
     body: "Selamat Menikmati fitur yang tersedia",
@@ -72,5 +40,5 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = ["menu", "help"];
-handler.category = "main";
+handler.category = "Menu Grub";
 export default handler;
