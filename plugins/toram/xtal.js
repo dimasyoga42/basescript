@@ -104,7 +104,7 @@ const handler = async (m, { conn }) => {
           }),
         })),
         bottom_sheet: true,
-        bottom_name: "Daftar Xtal",
+        bottom_name: "Daftar Xtall",
       });
     }
 
