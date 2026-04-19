@@ -66,7 +66,7 @@ export async function runCommand(conn, m, plugins) {
   cleanExpiredVip();
   // if (checkVip(m.chat))
   //   return conn.sendMessage(m.chat, {
-  //     text: "Grub anda belum terdaftar hubungi owner di bawah ini\n085664393331(dimas)",
+  //     text: "Grub anda belum terdaftar hubungi owner di bawah ini\n085664393331 (dimas)",
   //   });
   // const noLimitCmd = ["cekvip", "menu"]; // command yang bebas limit
 

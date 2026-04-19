@@ -45,7 +45,7 @@ const handler = async (m, { conn }) => {
     const { data: exactData, error: exactError } = await supa
       .from("xtal")
       .select("name, type, upgrade_route, stats, max_upgrade_route")
-      .ilike("name", query)
+      .eq("name", query)
       .limit(1);
 
     if (!exactError && exactData && exactData.length === 1) {
@@ -58,7 +58,26 @@ rute:
 - ${item.upgrade_route || "-"}
 - ${item.max_upgrade_route || "-"}`.trim();
 
-      return conn.sendMessage(m.chat, { text }, { quoted: m });
+      const routes = (item.max_upgrade_route || "")
+        .split("->")
+        .map((x) => x.trim())
+        .filter(Boolean);
+
+      if (routes.length === 0) {
+        return conn.sendMessage(m.chat, { text }, { quoted: m });
+      }
+
+      return conn.sendButton(m.chat, {
+        text: text,
+        footer: config.BotName,
+        buttons: routes.map((r) => ({
+          name: "quick_reply",
+          buttonParamsJson: JSON.stringify({
+            display_text: r,
+            id: `.xtal ${r}`,
+          }),
+        })),
+      });
     }
 
     // ✅ PRIORITAS 2: partial match
@@ -87,7 +106,26 @@ rute:
 - ${item.upgrade_route || "-"}
 - ${item.max_upgrade_route || "-"}`.trim();
 
-      return conn.sendMessage(m.chat, { text }, { quoted: m });
+      const routes = (item.max_upgrade_route || "")
+        .split("->")
+        .map((x) => x.trim())
+        .filter(Boolean);
+
+      if (routes.length === 0) {
+        return conn.sendMessage(m.chat, { text }, { quoted: m });
+      }
+
+      return conn.sendButton(m.chat, {
+        text: text,
+        footer: config.BotName,
+        buttons: routes.map((r) => ({
+          name: "quick_reply",
+          buttonParamsJson: JSON.stringify({
+            display_text: r,
+            id: `.xtal ${r}`,
+          }),
+        })),
+      });
     }
 
     // ✅ kalau banyak → button
