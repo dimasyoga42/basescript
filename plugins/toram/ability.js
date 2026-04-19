@@ -4,26 +4,20 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const parts = m.text.trim().split(/\s+/);
+    const parts = (m.text || "").trim().split(/\s+/);
     const query = parts.slice(1).join(" ").trim();
 
-    if (!query)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: "Contoh: .ability nama",
-        thumbnail,
-        text: config.message.invalid,
-        msg: m,
-      });
-    if (query === "--all") {
-      const { data: db, error: dbError } = await supa
-        .from("ability")
-        .select("*");
+    // 🔥 kalau tidak ada query → tampilkan semua ability (button)
+    if (!query) {
+      const { data, error } = await supa.from("ablityv2").select("name");
+
+      if (error || !data || data.length === 0)
+        return sendText(conn, m.chat, config.message.notFound, m);
 
       return await conn.sendButton(m.chat, {
-        text: `Pilih salah satu:`,
+        text: `Pilih salah satu ability:`,
         footer: config.OwnerName,
-        buttons: db.map((item) => ({
+        buttons: data.map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
             display_text: item.name,
@@ -31,12 +25,13 @@ const handler = async (m, { conn }) => {
           }),
         })),
         bottom_sheet: true,
-        bottom_name: "List Ability",
+        bottom_name: "Menu Ability",
       });
     }
-    // Prioritas 1: exact match (nama persis sama, case-insensitive)
+
+    // 🔥 PRIORITAS 1: exact match
     const { data: exactData, error: exactError } = await supa
-      .from("ability")
+      .from("ablityv2")
       .select("*")
       .ilike("name", query)
       .limit(1);
@@ -46,23 +41,23 @@ const handler = async (m, { conn }) => {
       return sendText(conn, m.chat, `*${item.name}*\n\n${item.stat_effect}`, m);
     }
 
-    // Prioritas 2: partial match
+    // 🔥 PRIORITAS 2: partial match
     const { data, error } = await supa
-      .from("ability")
+      .from("ablityv2")
       .select("*")
       .ilike("name", `%${query}%`);
 
     if (error || !data || data.length === 0)
       return sendText(conn, m.chat, config.message.notFound, m);
 
-    // Tepat 1 hasil
+    // 🔥 kalau cuma 1 hasil
     if (data.length === 1) {
       const item = data[0];
       return sendText(conn, m.chat, `*${item.name}*\n\n${item.stat_effect}`, m);
     }
 
-    // Lebih dari 1: tampilkan button pilihan
-    await conn.sendButton(m.chat, {
+    // 🔥 kalau banyak → button
+    return await conn.sendButton(m.chat, {
       text: `Ditemukan *${data.length}* ability untuk: _${query}_\nPilih salah satu:`,
       footer: config.OwnerName,
       buttons: data.map((item) => ({
@@ -91,4 +86,5 @@ handler.command = "trait";
 handler.alias = ["ability"];
 handler.category = "Toram Search";
 handler.submenu = "Toram";
+
 export default handler;
