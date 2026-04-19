@@ -10,7 +10,7 @@ const handler = async (m, { conn }) => {
     //   text: config.pembolong,
     //   quoted: m,
     // });
-    sendText(conn, m.chat, config.pembolong, m);
+    sendText(conn, m.chat, "data masih dalam perbaikan", m);
   } catch (err) {}
 };
 
