@@ -36,34 +36,38 @@ const mergeRoutes = (normalRoutes, maxRoutes) => {
 };
 
 const sendXtalResult = (conn, chat, m, item) => {
-  const normalPath = parseRoute(item.upgrade_route);
-  const maxPath = parseRoute(item.max_upgrade_route);
-  const combinedRoutes = mergeRoutes(normalPath, maxPath);
-
   const text = `*${item.name}* [${item.type || "-"}]
 
 *Stats:*
 ${item.stats || "-"}
 
-=== RAW ===
-Normal:
-${item.upgrade_route || "-"}
+*Upgrade Path:*
+- ${item.upgrade_route || "-"}
+- ${item.max_upgrade_route || "-"}`.trim();
 
-Max:
-${item.max_upgrade_route || "-"}
+  const normalPath = parseRoute(item.upgrade_route);
+  const maxPath = parseRoute(item.max_upgrade_route);
+  const combinedRoutes = mergeRoutes(normalPath, maxPath);
 
-=== PARSED ===
-Normal:
-${normalPath.join("\n") || "-"}
+  if (combinedRoutes.length === 0) {
+    return conn.sendMessage(chat, { text }, { quoted: m });
+  }
 
-Max:
-${maxPath.join("\n") || "-"}
+  const buttons = combinedRoutes.map((name) => ({
+    name: "quick_reply",
+    buttonParamsJson: JSON.stringify({
+      display_text: name,
+      id: `.xtal ${name}`,
+    }),
+  }));
 
-=== MERGED RESULT ===
-${combinedRoutes.join("\n") || "-"}
-`.trim();
-
-  return conn.sendMessage(chat, { text }, { quoted: m });
+  return conn.sendButton(chat, {
+    text,
+    footer: config.BotName,
+    buttons,
+    bottom_sheet: true,
+    bottom_name: "Detail Rute Evolusi",
+  });
 };
 
 const handler = async (m, { conn }) => {
@@ -74,11 +78,10 @@ const handler = async (m, { conn }) => {
       return conn.sendMessage(
         m.chat,
         { text: "Format salah. Gunakan: .xtal [nama xtal]" },
-        { quoted: m },
+        { quoted: m }
       );
     }
 
-    // --all tetap sama
     if (query === "--all") {
       const { data: db, error } = await supa
         .from("xtal")
@@ -89,7 +92,7 @@ const handler = async (m, { conn }) => {
         return conn.sendMessage(
           m.chat,
           { text: "Gagal mengambil data dari database." },
-          { quoted: m },
+          { quoted: m }
         );
       }
 
@@ -104,11 +107,10 @@ const handler = async (m, { conn }) => {
           }),
         })),
         bottom_sheet: true,
-        bottom_name: "Daftar Xtall",
+        bottom_name: "Daftar Xtal",
       });
     }
 
-    // exact match
     const { data: exact, error: errExact } = await supa
       .from("xtal")
       .select("name, type, upgrade_route, stats, max_upgrade_route")
@@ -119,7 +121,6 @@ const handler = async (m, { conn }) => {
       return sendXtalResult(conn, m.chat, m, exact[0]);
     }
 
-    // partial match
     const { data, error } = await supa
       .from("xtal")
       .select("name, type, upgrade_route, stats, max_upgrade_route")
@@ -130,7 +131,7 @@ const handler = async (m, { conn }) => {
       return conn.sendMessage(
         m.chat,
         { text: `Informasi untuk *${query}* tidak ditemukan dalam database.` },
-        { quoted: m },
+        { quoted: m }
       );
     }
 
@@ -156,7 +157,7 @@ const handler = async (m, { conn }) => {
     return conn.sendMessage(
       m.chat,
       { text: "Terjadi kegagalan sistem saat memproses permintaan." },
-      { quoted: m },
+      { quoted: m }
     );
   }
 };
