@@ -1,57 +1,64 @@
 import { config } from "../../config.js";
 import { supa } from "../../src/config/supa.js";
 
-const parseRoute = (route) =>
-  (route || "")
-    .split("->")
+/**
+ * Fungsi parseRoute mengekstraksi nama individu dari string rute.
+ * Menggunakan regex pada split untuk menangani variasi spasi di sekitar delimiter.
+ */
+const parseRoute = (route) => {
+  if (!route || typeof route !== "string") return [];
+  return route
+    .split(/\s*->\s*/)
     .map((r) => r.trim())
-    .filter((r) => r);
-
-const mergeRoutes = (normalRoutes, maxRoutes) => {
-  const seen = new Set();
-  const result = [];
-
-  for (const r of [...normalRoutes, ...maxRoutes]) {
-    if (!seen.has(r)) {
-      seen.add(r);
-      result.push(r);
-    }
-  }
-
-  return result;
+    .filter((r) => r.length > 0);
 };
 
+/**
+ * Fungsi mergeRoutes menggabungkan elemen dari jalur normal dan jalur maksimal.
+ * Menggunakan struktur data Set untuk memastikan integritas data unik (deduplikasi).
+ */
+const mergeRoutes = (normalRoutes, maxRoutes) => {
+  return [...new Set([...normalRoutes, ...maxRoutes])];
+};
+
+/**
+ * Fungsi utama untuk mengirimkan hasil pencarian Xtal.
+ * Mengonversi array rute menjadi tombol interaktif (Quick Reply).
+ */
 const sendXtalResult = (conn, chat, m, item) => {
-  const text = `*${item.name}* ${item.type || "-"}
+  const text = `*${item.name}* [${item.type || "-"}]
+
+*Stats:*
 ${item.stats || "-"}
-rute:
+
+*Upgrade Path:*
 - ${item.upgrade_route || "-"}
 - ${item.max_upgrade_route || "-"}`.trim();
 
-  const normalRoutes = parseRoute(item.upgrade_route);
-  const maxRoutes = parseRoute(item.max_upgrade_route);
-  const routes = mergeRoutes(normalRoutes, maxRoutes);
+  const normalPath = parseRoute(item.upgrade_route);
+  const maxPath = parseRoute(item.max_upgrade_route);
+  const combinedRoutes = mergeRoutes(normalPath, maxPath);
 
-  console.log("upgrade_route:", item.upgrade_route);
-  console.log("max_upgrade_route:", item.max_upgrade_route);
-  console.log("routes merged:", routes);
-
-  if (!routes.length) {
+  // Jika tidak ada data rute, kirim pesan teks biasa
+  if (combinedRoutes.length === 0) {
     return conn.sendMessage(chat, { text }, { quoted: m });
   }
+
+  // Transformasi elemen rute menjadi format button WhatsApp
+  const buttons = combinedRoutes.map((name) => ({
+    name: "quick_reply",
+    buttonParamsJson: JSON.stringify({
+      display_text: name,
+      id: `.xtal ${name}`,
+    }),
+  }));
 
   return conn.sendButton(chat, {
     text,
     footer: config.BotName,
-    buttons: routes.map((r) => ({
-      name: "quick_reply",
-      buttonParamsJson: JSON.stringify({
-        display_text: r,
-        id: `.xtal ${r}`,
-      }),
-    })),
+    buttons,
     bottom_sheet: true,
-    bottom_name: "Upgrade Route",
+    bottom_name: "Detail Rute Evolusi",
   });
 };
 
@@ -62,14 +69,12 @@ const handler = async (m, { conn }) => {
     if (!query) {
       return conn.sendMessage(
         m.chat,
-        { text: "Contoh: .xtal nama" },
+        { text: "Format salah. Gunakan: .xtal [nama xtal]" },
         { quoted: m },
       );
     }
 
-    // ========================
-    // MODE --all
-    // ========================
+    // Prosedur pengambilan seluruh daftar nama (Mode --all)
     if (query === "--all") {
       const { data: db, error } = await supa
         .from("xtal")
@@ -79,15 +84,15 @@ const handler = async (m, { conn }) => {
       if (error || !db?.length) {
         return conn.sendMessage(
           m.chat,
-          { text: "Data xtal kosong / error." },
+          { text: "Gagal mengambil data dari database." },
           { quoted: m },
         );
       }
 
       return conn.sendButton(m.chat, {
-        text: "Pilih salah satu:",
+        text: "Daftar Seluruh Crysta:",
         footer: config.OwnerName,
-        buttons: db.map((item) => ({
+        buttons: db.slice(0, 20).map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
             display_text: item.name,
@@ -95,13 +100,11 @@ const handler = async (m, { conn }) => {
           }),
         })),
         bottom_sheet: true,
-        bottom_name: "List Xtal",
+        bottom_name: "Daftar Xtal",
       });
     }
 
-    // ========================
-    // EXACT MATCH
-    // ========================
+    // Pencarian dengan metode Exact Match (Kesesuaian Tepat)
     const { data: exact, error: errExact } = await supa
       .from("xtal")
       .select("name, type, upgrade_route, stats, max_upgrade_route")
@@ -112,9 +115,7 @@ const handler = async (m, { conn }) => {
       return sendXtalResult(conn, m.chat, m, exact[0]);
     }
 
-    // ========================
-    // PARTIAL MATCH
-    // ========================
+    // Pencarian dengan metode Partial Match (Kesesuaian Sebagian)
     const { data, error } = await supa
       .from("xtal")
       .select("name, type, upgrade_route, stats, max_upgrade_route")
@@ -124,17 +125,19 @@ const handler = async (m, { conn }) => {
     if (error || !data?.length) {
       return conn.sendMessage(
         m.chat,
-        { text: `*${query}* tidak ditemukan.` },
+        { text: `Informasi untuk *${query}* tidak ditemukan dalam database.` },
         { quoted: m },
       );
     }
 
+    // Jika hasil pencarian hanya satu, langsung tampilkan detail
     if (data.length === 1) {
       return sendXtalResult(conn, m.chat, m, data[0]);
     }
 
+    // Menampilkan pilihan jika ditemukan beberapa hasil yang relevan
     return conn.sendButton(m.chat, {
-      text: `Ditemukan *${data.length}* xtal untuk: _${query}_\nPilih salah satu:`,
+      text: `Ditemukan *${data.length}* hasil yang relevan untuk: _${query}_`,
       footer: config.OwnerName,
       buttons: data.map((item) => ({
         name: "quick_reply",
@@ -144,13 +147,13 @@ const handler = async (m, { conn }) => {
         }),
       })),
       bottom_sheet: true,
-      bottom_name: "Menu Xtal",
+      bottom_name: "Hasil Pencarian",
     });
   } catch (err) {
-    console.log("ERR XTAL:", err);
+    console.error("Internal Server Error (Xtal Handler):", err);
     return conn.sendMessage(
       m.chat,
-      { text: "Terjadi error tidak terduga." },
+      { text: "Terjadi kegagalan sistem saat memproses permintaan." },
       { quoted: m },
     );
   }
