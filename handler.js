@@ -60,7 +60,7 @@ export async function runCommand(conn, m, plugins) {
   const text = args.join(" ");
 
   // 🔥 command whitelist (tidak butuh VIP)
-  const noVipCmd = ["cekvip", "setvip", "menu", ".lv", ".lvl", ".xtall", ".regist"];
+  const noVipCmd = ["cekvip", "setvip", "menu", "lv", "lvl", "xtall", "regist"];
 
   // 🔥 bypass owner
   const isOwner = config.OwnerName?.includes(m.sender);
