@@ -1,10 +1,9 @@
 import { config } from "../../config.js";
 import { supa } from "../../src/config/supa.js";
 
-/**
- * Fungsi parseRoute mengekstraksi nama individu dari string rute.
- * Menggunakan regex pada split untuk menangani variasi spasi di sekitar delimiter.
- */
+const normalizeName = (str) =>
+  (str || "").toLowerCase().replace(/\s+/g, " ").trim();
+
 const parseRoute = (route) => {
   if (!route || typeof route !== "string") return [];
   return route
@@ -13,53 +12,58 @@ const parseRoute = (route) => {
     .filter((r) => r.length > 0);
 };
 
-/**
- * Fungsi mergeRoutes menggabungkan elemen dari jalur normal dan jalur maksimal.
- * Menggunakan struktur data Set untuk memastikan integritas data unik (deduplikasi).
- */
 const mergeRoutes = (normalRoutes, maxRoutes) => {
-  return [...new Set([...normalRoutes, ...maxRoutes])];
+  const seen = new Set();
+  const result = [];
+
+  for (const r of maxRoutes) {
+    const key = normalizeName(r);
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(r);
+    }
+  }
+
+  for (const r of normalRoutes) {
+    const key = normalizeName(r);
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(r);
+    }
+  }
+
+  return result;
 };
 
-/**
- * Fungsi utama untuk mengirimkan hasil pencarian Xtal.
- * Mengonversi array rute menjadi tombol interaktif (Quick Reply).
- */
 const sendXtalResult = (conn, chat, m, item) => {
+  const normalPath = parseRoute(item.upgrade_route);
+  const maxPath = parseRoute(item.max_upgrade_route);
+  const combinedRoutes = mergeRoutes(normalPath, maxPath);
+
   const text = `*${item.name}* [${item.type || "-"}]
 
 *Stats:*
 ${item.stats || "-"}
 
-*Upgrade Path:*
-- ${item.upgrade_route || "-"}
-- ${item.max_upgrade_route || "-"}`.trim();
+=== RAW ===
+Normal:
+${item.upgrade_route || "-"}
 
-  const normalPath = parseRoute(item.upgrade_route);
-  const maxPath = parseRoute(item.max_upgrade_route);
-  const combinedRoutes = mergeRoutes(normalPath, maxPath);
+Max:
+${item.max_upgrade_route || "-"}
 
-  // Jika tidak ada data rute, kirim pesan teks biasa
-  if (combinedRoutes.length === 0) {
-    return conn.sendMessage(chat, { text }, { quoted: m });
-  }
+=== PARSED ===
+Normal:
+${normalPath.join("\n") || "-"}
 
-  // Transformasi elemen rute menjadi format button WhatsApp
-  const buttons = combinedRoutes.map((name) => ({
-    name: "quick_reply",
-    buttonParamsJson: JSON.stringify({
-      display_text: name,
-      id: `.xtal ${name}`,
-    }),
-  }));
+Max:
+${maxPath.join("\n") || "-"}
 
-  return conn.sendButton(chat, {
-    text,
-    footer: config.BotName,
-    buttons,
-    bottom_sheet: true,
-    bottom_name: "Detail Rute Evolusi",
-  });
+=== MERGED RESULT ===
+${combinedRoutes.join("\n") || "-"}
+`.trim();
+
+  return conn.sendMessage(chat, { text }, { quoted: m });
 };
 
 const handler = async (m, { conn }) => {
@@ -74,7 +78,7 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    // Prosedur pengambilan seluruh daftar nama (Mode --all)
+    // --all tetap sama
     if (query === "--all") {
       const { data: db, error } = await supa
         .from("xtal")
@@ -104,7 +108,7 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    // Pencarian dengan metode Exact Match (Kesesuaian Tepat)
+    // exact match
     const { data: exact, error: errExact } = await supa
       .from("xtal")
       .select("name, type, upgrade_route, stats, max_upgrade_route")
@@ -115,7 +119,7 @@ const handler = async (m, { conn }) => {
       return sendXtalResult(conn, m.chat, m, exact[0]);
     }
 
-    // Pencarian dengan metode Partial Match (Kesesuaian Sebagian)
+    // partial match
     const { data, error } = await supa
       .from("xtal")
       .select("name, type, upgrade_route, stats, max_upgrade_route")
@@ -130,12 +134,10 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    // Jika hasil pencarian hanya satu, langsung tampilkan detail
     if (data.length === 1) {
       return sendXtalResult(conn, m.chat, m, data[0]);
     }
 
-    // Menampilkan pilihan jika ditemukan beberapa hasil yang relevan
     return conn.sendButton(m.chat, {
       text: `Ditemukan *${data.length}* hasil yang relevan untuk: _${query}_`,
       footer: config.OwnerName,
