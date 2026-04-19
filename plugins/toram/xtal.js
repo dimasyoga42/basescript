@@ -91,7 +91,7 @@ const handler = async (m, { conn }) => {
       return conn.sendButton(m.chat, {
         text: "Daftar Seluruh Crysta\n- gunakan .xtall [nama xtall yang dicari]",
         footer: config.OwnerName,
-        buttons: db.slice(0, 20).map((item) => ({
+        buttons: db.map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
             display_text: item.name,
