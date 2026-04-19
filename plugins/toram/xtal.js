@@ -75,14 +75,6 @@ const handler = async (m, { conn }) => {
     const query = (m.text || "").trim().split(/\s+/).slice(1).join(" ").trim();
 
     if (!query) {
-      return conn.sendMessage(
-        m.chat,
-        { text: "Format salah. Gunakan: .xtal [nama xtal]" },
-        { quoted: m }
-      );
-    }
-
-    if (query === "--all") {
       const { data: db, error } = await supa
         .from("xtal")
         .select("name")
@@ -97,7 +89,7 @@ const handler = async (m, { conn }) => {
       }
 
       return conn.sendButton(m.chat, {
-        text: "Daftar Seluruh Crysta:",
+        text: "Daftar Seluruh Crysta\n- gunakan .xtall [nama xtall yang dicari]",
         footer: config.OwnerName,
         buttons: db.slice(0, 20).map((item) => ({
           name: "quick_reply",
