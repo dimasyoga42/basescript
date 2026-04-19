@@ -542,6 +542,6 @@ BAHAN MQ
   goodbyeBg:
     "https://i.pinimg.com/736x/1d/3a/11/1d3a11c83a8b1885e55f92afb8ed4339.jpg",
 };
-const key = Math.floor(Math.random() * config.thumbnail.length)
+const key = Math.floor(Math.random() * config.thumbnail.length) + 1
 const thumbnails = config.thumbnail[key]
 export const thumbnail = thumbnails
