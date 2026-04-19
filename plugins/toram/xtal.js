@@ -2,14 +2,16 @@ import { config } from "../../config.js";
 import { supa } from "../../src/config/supa.js";
 
 const sendXtalResult = (conn, chat, m, item) => {
-  const routes = (item.max_upgrade_route || "")
-    .split("->")
-    .map((x) => x.trim())
-    .filter(Boolean);
-
   const text = `*${item.name}* ${item.type || "-"}
 ${item.stats || "-"}
-${item.upgrade_route ? `rute: ${item.upgrade_route}` : ""}`.trim();
+rute:
+- ${item.upgrade_route || "-"}
+- ${item.max_upgrade_route || "-"}`.trim();
+
+  const routes = (item.max_upgrade_route || "")
+    .split("->")
+    .map((r) => r.trim())
+    .filter((r) => r && r !== item.name); // buang diri sendiri
 
   if (routes.length === 0) {
     return conn.sendMessage(chat, { text }, { quoted: m });
@@ -21,7 +23,7 @@ ${item.upgrade_route ? `rute: ${item.upgrade_route}` : ""}`.trim();
     buttons: routes.map((r) => ({
       name: "quick_reply",
       buttonParamsJson: JSON.stringify({
-        display_text: r,
+        display_text: r, // ✅ r = string nama rute
         id: `.xtal ${r}`,
       }),
     })),
@@ -42,11 +44,36 @@ const handler = async (m, { conn }) => {
       );
     }
 
+    // mode --all
+    if (query === "--all") {
+      const { data: db, error } = await supa.from("xtal").select("name");
+      if (error || !db || db.length === 0) {
+        return conn.sendMessage(
+          m.chat,
+          { text: "Data xtal kosong / error." },
+          { quoted: m },
+        );
+      }
+      return conn.sendButton(m.chat, {
+        text: `Pilih salah satu:`,
+        footer: config.OwnerName,
+        buttons: db.map((item) => ({
+          name: "quick_reply",
+          buttonParamsJson: JSON.stringify({
+            display_text: item.name,
+            id: `.xtal ${item.name}`,
+          }),
+        })),
+        bottom_sheet: true,
+        bottom_name: "List Xtal",
+      });
+    }
+
     // exact match
     const { data: exact } = await supa
       .from("xtal")
       .select("name, type, upgrade_route, stats, max_upgrade_route")
-      .eq("name", query)
+      .ilike("name", query)
       .limit(1);
 
     if (exact?.length === 1) return sendXtalResult(conn, m.chat, m, exact[0]);
@@ -66,11 +93,11 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    if (data.length === 1) return sendXtalResult(conn, m.chat, m, data[0]);
+    if (data.length === 1) return sendXtalResult(conn, m.chat, m, data[0]); // ✅ fix: langsung sendXtalResult
 
     return conn.sendButton(m.chat, {
-      text: `Ditemukan *${data.length}* hasil untuk: _${query}_`,
-      footer: config.BotName,
+      text: `Ditemukan *${data.length}* xtal untuk: _${query}_\nPilih salah satu:`,
+      footer: config.OwnerName,
       buttons: data.map((item) => ({
         name: "quick_reply",
         buttonParamsJson: JSON.stringify({
@@ -79,10 +106,15 @@ const handler = async (m, { conn }) => {
         }),
       })),
       bottom_sheet: true,
-      bottom_name: "Pilih Xtal",
+      bottom_name: "Menu Xtal",
     });
   } catch (err) {
     console.log("ERR XTAL:", err.message);
+    await conn.sendMessage(
+      m.chat,
+      { text: "Terjadi error tidak terduga." },
+      { quoted: m },
+    );
   }
 };
 
