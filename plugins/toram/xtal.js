@@ -11,7 +11,10 @@ rute:
   const routes = (item.max_upgrade_route || "")
     .split("->")
     .map((r) => r.trim())
-    .filter((r) => r && r !== item.name); // buang diri sendiri
+    .filter((r) => r.length > 0);
+
+  console.log("max_upgrade_route:", item.max_upgrade_route);
+  console.log("routes parsed:", routes);
 
   if (routes.length === 0) {
     return conn.sendMessage(chat, { text }, { quoted: m });
@@ -20,13 +23,15 @@ rute:
   return conn.sendButton(chat, {
     text,
     footer: config.BotName,
-    buttons: routes.map((r) => ({
-      name: "quick_reply",
-      buttonParamsJson: JSON.stringify({
-        display_text: r, // ✅ r = string nama rute
-        id: `.xtal ${r}`,
-      }),
-    })),
+    buttons: routes
+      .filter((r) => r.length > 0)
+      .map((r) => ({
+        name: "quick_reply",
+        buttonParamsJson: JSON.stringify({
+          display_text: r,
+          id: `.xtal ${r}`,
+        }),
+      })),
     bottom_sheet: true,
     bottom_name: "Upgrade Route",
   });
@@ -47,6 +52,7 @@ const handler = async (m, { conn }) => {
     // mode --all
     if (query === "--all") {
       const { data: db, error } = await supa.from("xtal").select("name");
+
       if (error || !db || db.length === 0) {
         return conn.sendMessage(
           m.chat,
@@ -54,6 +60,7 @@ const handler = async (m, { conn }) => {
           { quoted: m },
         );
       }
+
       return conn.sendButton(m.chat, {
         text: `Pilih salah satu:`,
         footer: config.OwnerName,
@@ -93,7 +100,7 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    if (data.length === 1) return sendXtalResult(conn, m.chat, m, data[0]); // ✅ fix: langsung sendXtalResult
+    if (data.length === 1) return sendXtalResult(conn, m.chat, m, data[0]);
 
     return conn.sendButton(m.chat, {
       text: `Ditemukan *${data.length}* xtal untuk: _${query}_\nPilih salah satu:`,
