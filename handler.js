@@ -64,7 +64,8 @@ export async function runCommand(conn, m, plugins) {
   if (isMuted(m)) return;
   if (await isBan(conn, m)) return;
   cleanExpiredVip();
-  if (!checkVip(m.chat))
+  const isVip = checkVip(m.chat);
+  if (!isVip)
     return conn.sendMessage(m.chat, {
       text: "Grub anda belum terdaftar hubungi owner di bawah ini\n085664393331 (dimas)",
     });
