@@ -2,6 +2,7 @@ import * as cheerio from "cheerio";
 import { sendFancyText, sendText } from "../../src/config/message.js";
 import { config, thumbnail } from "../../config.js";
 import { client } from "../../src/config/redis.js";
+import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
@@ -16,21 +17,32 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    const cacheKey = `toram:level:${level}`;
 
+    const cacheKey = `toram:level:${level}`;
     const cached = await client.get(cacheKey);
     if (cached) {
       return sendText(conn, m.chat, cached, m);
+    }
+    const { data: lv, error: dbErr } = await supa
+      .from("lvl")
+      .select("query, stat")
+      .eq("query", level);
+
+    if (dbErr) console.error("[Supabase] select error:", dbErr);
+
+    if (lv && lv.length > 0) {
+      // Data sudah ada di DB — pakai langsung, simpan ke Redis juga
+      const mtext = lv[0].stat;
+      await client.set(cacheKey, mtext, { EX: 300 });
+      return sendText(conn, m.chat, mtext, m);
     }
 
     const res = await fetch(
       `https://coryn.club/leveling.php?lv=${encodeURIComponent(level)}&gap=7&bonusEXP=0`,
     );
-
     if (!res.ok) throw new Error(`HTTPS ${res.status}`);
 
     const $ = cheerio.load(await res.text());
-
     let mtext = `Daftar Leveling ${level}`;
     let found = false;
 
@@ -39,19 +51,15 @@ const handler = async (m, { conn }) => {
       if (title !== "Boss" && title !== "Mini Boss") return;
 
       mtext += `\n${title}\n`;
-
       $(section)
         .find("article.level-entry")
         .each((__, entry) => {
-          const lvl = $(entry).find(".level-entry-level").text().trim();
-
+          const lvl  = $(entry).find(".level-entry-level").text().trim();
           const name = $(entry)
             .find(".level-entry-main p:first-child b")
             .text()
             .trim();
-
-          const loc = $(entry).find(".level-entry-main p").eq(1).text().trim();
-
+          const loc  = $(entry).find(".level-entry-main p").eq(1).text().trim();
           if (name) {
             found = true;
             mtext += `- ${name} (${lvl}) -> ${loc}\n`;
@@ -63,14 +71,18 @@ const handler = async (m, { conn }) => {
       mtext += config.message.notFound;
     }
 
-    await client.set(cacheKey, mtext, {
-      EX: 300,
-    });
+    await client.set(cacheKey, mtext, { EX: 300 });
+
+    const { error: insertErr } = await supa
+      .from("lvl")
+      .insert({ query: level, stat: mtext });
+
+    if (insertErr) console.error("[Supabase] insert error:", insertErr);
 
     return sendText(conn, m.chat, mtext, m);
+
   } catch (err) {
     console.error(err);
-
     return sendFancyText(conn, m.chat, {
       title: config.BotName,
       body: `Develop by ${config.OwnerName}`,
@@ -81,9 +93,8 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = "lv";
-handler.alias = ["level", "lvl"];
+handler.command  = "lv";
+handler.alias    = ["level", "lvl"];
 handler.category = "Toram Search";
-handler.submenu = "Toram";
-
+handler.submenu  = "Toram";
 export default handler;
