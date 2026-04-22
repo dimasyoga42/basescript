@@ -1,5 +1,5 @@
 import { config, thumbnail } from "../../config.js";
-import { sendMenu } from "../../src/config/message";
+import { sendMenu } from "../../src/config/message.js";
 
 const handler = async (m, { conn }) => {
   try {
