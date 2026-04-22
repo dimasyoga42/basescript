@@ -41,6 +41,6 @@ const header = async (m, { conn }) => {
   }
 };
 
-header.command = "pixiv";
-header.category = "Menu Tools";
+// header.command = "pixiv";
+// header.category = "Menu Tools";
 export default header;

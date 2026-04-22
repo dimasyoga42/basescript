@@ -58,8 +58,8 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["hd"];
-handler.category = "Menu Tools";
-handler.submenu = "Tools";
+// handler.command = ["hd"];
+// handler.category = "Menu Tools";
+// handler.submenu = "Tools";
 
-export default handler;
+// export default handler;
