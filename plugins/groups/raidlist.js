@@ -53,6 +53,6 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = "raidmem";
-handler.category = "Raid Menu V2";
+handler.category = "Menu Raid";
 
 export default handler;

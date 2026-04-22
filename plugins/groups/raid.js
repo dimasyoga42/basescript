@@ -156,6 +156,6 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = "daftarraid";
-handler.category = "Raid Menu V2";
+handler.category = "Menu Raid";
 
 export default handler;

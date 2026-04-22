@@ -125,6 +125,6 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = "gacharaid";
-handler.category = "Raid Menu V2";
+handler.category = "Menu Raid";
 
 export default handler;
