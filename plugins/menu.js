@@ -25,7 +25,7 @@ const handler = async (m, { conn }) => {
   const Namemesage = m.pushName;
 
   let result =
-    "*Cara Penggunaan:\n- gunakan .menu / .help untuk menampilkan menu bot\n- pilih salah satu fitur yang anda ingin gunakan\n- jika anda tidak paham cara penggunaan ketikan saja command yang anda ingin gunakan nanti bot akan memberikan intruksi penggunaan\n- gunakan .saran untuk memberikan masukan\n\n *Aturan Penggunaan:*\n- Dilarang Keras Spam command di batas tidak wajar\n- Dilarang Menggunakan tools stiker brat pin untuk hal hal kurang etis (vulgar, rasis, dll) melanggar banned\n";
+    "*Cara Penggunaan:*\n- gunakan .menu / .help untuk menampilkan menu bot\n- pilih salah satu fitur yang anda ingin gunakan\n- jika anda tidak paham cara penggunaan ketikan saja command yang anda ingin gunakan nanti bot akan memberikan intruksi penggunaan\n- gunakan .saran untuk memberikan masukan\n\n *Aturan Penggunaan:*\n- Dilarang Keras Spam command di batas tidak wajar\n- Dilarang Menggunakan tools stiker brat pin untuk hal hal kurang etis (vulgar, rasis, dll) melanggar banned\n";
   for (const cat in categories) {
     result += `\n╭─${cat}\n`;
     result += categories[cat].map((c) => `│.${c}`).join("\n") + "\n╰────\n";
