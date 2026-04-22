@@ -9,7 +9,7 @@ const handler = async (m, { conn }) => {
     if (!name) {
       const { data } = await supa.from("buff").select("name, code");
       const mtext = data
-        .map((item) => `\n*${item.name}*\n- ${item.code}\n`)
+        .map((item) => `\n*${item.name}*\n${item.code}\n`)
         .join("\n────────────\n");
 
       // return sendFancyText(conn, m.chat, {
