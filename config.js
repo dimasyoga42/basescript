@@ -49,46 +49,46 @@ export const config = {
   owner: ["272206605082689@lid", "179573169848377@lid"],
   admin: "179573169848377@lid",
   pembolong: `
-  *extract*: 3 - 5M
+  *extract*: 3 - 4M
   Fairy Silk 4-5M
 
   *OHS*
   0-1: 27-38M
-  1-2: 60-70M
+  1-2: 85-100M
 
   *BWG*
-  0-1: 10-15M
-  0-2: 72-80M
+  0-1: 15-20M
+  0-2: 120-140M
 
   *KNUCK*
   0-1: 20-40M
-  1-2: 100-110M
+  1-2: 80-100M
 
   *STAFF*
   0-1: 15-20M
-  1-2: 100-180M
+  1-2: 80-90M
 
   *MD*
   0-1 10-15M
   1-2 40-50M
 
   *KTN*
-  0-1: 10-15M
-  1-2: 110-120M
+  0-1: 15-20M
+  1-2: 120-140M
 
   *THS*
-  0-1: 15-25M
+  0-1: 20-25M
   1-2: 110- 120m
 
   *HB*
-  0-1 6-8M
-  1-2: 50-55M
+  0-1 10-15M
+  1-2: 100M
   Spirit Needle 6-8M
   leg Piercer 75M
   High-Grade Ornament 2M+
-  legendary needle 410M - 700M
-  leg ornament: 511-600M
-  leg silk: 1,2,4B
+  legendary needle 550M - 700M
+  leg ornament: 580-600M
+  leg silk: 1,2B
 
   Ini hanya perkiraan, jika kalian punya info bisa PM saja ke No botnya. Terima kasih
   `,
@@ -542,6 +542,6 @@ BAHAN MQ
   goodbyeBg:
     "https://i.pinimg.com/736x/1d/3a/11/1d3a11c83a8b1885e55f92afb8ed4339.jpg",
 };
-const key = Math.floor(Math.random() * config.thumbnail.length) + 1
-const thumbnails = config.thumbnail[key]
-export const thumbnail = thumbnails
+const key = Math.floor(Math.random() * config.thumbnail.length) + 1;
+const thumbnails = config.thumbnail[key];
+export const thumbnail = thumbnails;
