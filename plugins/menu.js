@@ -32,7 +32,7 @@ const handler = async (m, { conn }) => {
     result += categories[cat].map((c) => `│.${c}`).join("\n") + "\n╰────\n";
   }
   const image = await axios.get(`${config.restapi.toram}etc/waifu`);
-  const img = image.data;
+  const img = image.data.result;
   await sendMenu(conn, m.chat, {
     title: m.pushName,
     body: "Neura Inc Development",
