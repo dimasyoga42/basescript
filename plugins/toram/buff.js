@@ -1,28 +1,29 @@
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText, sendText } from "../../src/config/message.js";
+import { sendFancyText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const name = m.text.split(/\s+/)[1]?.trim();
+    const text = (m.text || "").trim();
+    const args = text.split(/\s+/);
+    const name = args.slice(1).join(" ").trim();
+
+    // ambil semua buff (dipakai untuk list & fallback)
+    const { data: allBuff, error: errAll } = await supa
+      .from("buff")
+      .select("name, code");
+
+    if (errAll) throw errAll;
 
     if (!name) {
-      const { data } = await supa.from("buff").select("name, code");
-      const mtext = data
+      const mtext = (allBuff || [])
         .map((item) => `\n*${item.name}*\n${item.code}\n`)
         .join("\n────────────\n");
 
-      // return sendFancyText(conn, m.chat, {
-      //   title: config.BotName,
-      //   body: `Develop by ${config.OwnerName}`,
-      //   thumbnail,
-      //   text: mtext,
-      //   quoted: m,
-      // });
       return await conn.sendButton(m.chat, {
-        text: mtext,
+        text: mtext || "Tidak ada data buff",
         footer: config.OwnerName,
-        buttons: data.map((item) => ({
+        buttons: (allBuff || []).slice(0, 20).map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
             display_text: item.name,
@@ -34,36 +35,32 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    const { data } = await supa
+    // search buff berdasarkan nama
+    const { data, error } = await supa
       .from("buff")
       .select("name, code")
       .ilike("name", `%${name}%`);
-    const { selects } = await supa.from("buff").select("name, code");
 
-    if (!data || data.length === 0)
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
         body: `Develop by ${config.OwnerName}`,
         thumbnail,
         text: `Buff "${name}" tidak ditemukan`,
-        msg: m,
+        quoted: m,
       });
+    }
 
     const mtext = data
       .map((item) => `\n*${item.name}*\n${item.code}\n`)
-      .join("\n\n────────────");
+      .join("\n────────────\n");
 
-    // await sendFancyText(conn, m.chat, {
-    //   title: config.BotName,
-    //   body: `Develop by ${config.OwnerName}`,
-    //   thumbnail,
-    //   text: mtext,
-    //   quoted: m,
-    // });
     return await conn.sendButton(m.chat, {
       text: mtext,
       footer: config.OwnerName,
-      buttons: selects.map((item) => ({
+      buttons: data.slice(0, 20).map((item) => ({
         name: "quick_reply",
         buttonParamsJson: JSON.stringify({
           display_text: item.name,
@@ -71,7 +68,7 @@ const handler = async (m, { conn }) => {
         }),
       })),
       bottom_sheet: true,
-      bottom_name: "Daftar Buff",
+      bottom_name: "Hasil Pencarian",
     });
   } catch (err) {
     console.error(err);
@@ -88,4 +85,5 @@ const handler = async (m, { conn }) => {
 handler.command = ["buff"];
 handler.category = "Menu Toram";
 handler.submenu = "Toram";
+
 export default handler;
