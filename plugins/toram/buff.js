@@ -8,22 +8,33 @@ const handler = async (m, { conn }) => {
     const args = text.split(/\s+/);
     const name = args.slice(1).join(" ").trim();
 
-    // ambil semua buff (dipakai untuk list & fallback)
+    // ambil semua buff SEKALI
     const { data: allBuff, error: errAll } = await supa
       .from("buff")
       .select("name, code");
 
     if (errAll) throw errAll;
 
+    if (!allBuff || allBuff.length === 0) {
+      return sendFancyText(conn, m.chat, {
+        title: config.BotName,
+        body: `Develop by ${config.OwnerName}`,
+        thumbnail,
+        text: "Data buff kosong",
+        quoted: m,
+      });
+    }
+
+    // ===== LIST SEMUA =====
     if (!name) {
-      const mtext = (allBuff || [])
+      const mtext = allBuff
         .map((item) => `\n*${item.name}*\n${item.code}\n`)
         .join("\n────────────\n");
 
       return await conn.sendButton(m.chat, {
-        text: mtext || "Tidak ada data buff",
+        text: mtext,
         footer: config.OwnerName,
-        buttons: (allBuff || []).slice(0, 20).map((item) => ({
+        buttons: allBuff.slice(0, 20).map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
             display_text: item.name,
@@ -35,15 +46,12 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    // search buff berdasarkan nama
-    const { data, error } = await supa
-      .from("buff")
-      .select("name, code")
-      .ilike("name", `%${name}%`);
+    // ===== SEARCH / DETAIL =====
+    const filtered = allBuff.filter((item) =>
+      item.name.toLowerCase().includes(name.toLowerCase()),
+    );
 
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
+    if (filtered.length === 0) {
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
         body: `Develop by ${config.OwnerName}`,
@@ -53,14 +61,14 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    const mtext = data
+    const mtext = filtered
       .map((item) => `\n*${item.name}*\n${item.code}\n`)
       .join("\n────────────\n");
 
     return await conn.sendButton(m.chat, {
       text: mtext,
       footer: config.OwnerName,
-      buttons: data.slice(0, 20).map((item) => ({
+      buttons: allBuff.map((item) => ({
         name: "quick_reply",
         buttonParamsJson: JSON.stringify({
           display_text: item.name,
@@ -68,7 +76,7 @@ const handler = async (m, { conn }) => {
         }),
       })),
       bottom_sheet: true,
-      bottom_name: "Hasil Pencarian",
+      bottom_name: "Daftar Buff",
     });
   } catch (err) {
     console.error(err);
