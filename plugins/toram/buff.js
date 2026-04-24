@@ -34,7 +34,7 @@ const handler = async (m, { conn }) => {
       return await conn.sendButton(m.chat, {
         text: mtext,
         footer: config.OwnerName,
-        buttons: allBuff.slice(0, 20).map((item) => ({
+        buttons: allBuff.map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
             display_text: item.name,
