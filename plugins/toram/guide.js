@@ -16,10 +16,7 @@ const handler = async (m, { conn }) => {
         return sendText(conn, m.chat, config.message.notFound, m);
 
       await conn.sendButton(m.chat, {
-        caption:
-          `*Daftar Guide*\n${"─".repeat(20)}\n` +
-          `Total: ${data.length} guide\n\nPilih guide untuk membaca:`,
-        image: { url: thumbnail },
+        text: `Pilih guide untuk membaca:`,
         footer: config.OwnerName,
         buttons: data.map((item) => ({
           name: "quick_reply",
