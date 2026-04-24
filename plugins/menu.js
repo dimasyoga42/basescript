@@ -36,7 +36,7 @@ const handler = async (m, { conn }) => {
 
   await sendMenu(conn, m.chat, {
     title: m.pushName,
-    body: "Neura Inc Development",
+    body: config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
     text: result.trim(),
     thumbnail: randomThumb,
     quoted: m,

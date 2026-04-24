@@ -550,6 +550,17 @@ BAHAN MQ
     "https://i.pinimg.com/736x/b1/c4/31/b1c4312a666d5367b3b7df8944c61a6c.jpg",
   goodbyeBg:
     "https://i.pinimg.com/736x/1d/3a/11/1d3a11c83a8b1885e55f92afb8ed4339.jpg",
+  msgtxt: [
+    "Santai aja aku selalu untuk mu",
+    "Jangan Lupa Sarapan",
+    "Olahraga jangan lupa",
+    "aku tau kamu gabut",
+    "Slow aja",
+    "Sini ku cium",
+    "Kenapa?",
+    "Kamu bosan?",
+    "Mau ku suapin",
+  ],
 };
 const key = Math.floor(Math.random() * config.thumbnail.length);
 const thumbnails = config.thumbnail[key];
