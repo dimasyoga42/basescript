@@ -2,7 +2,6 @@ import { config, thumbnail } from "../../config.js";
 import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
-// ─── Format output detail skill ───────────────────────────────────────────────
 const formatSkill = (item) =>
   [
     `*${item.name}* (Tier ${item.Tier || "-"})`,
@@ -20,7 +19,6 @@ const formatSkill = (item) =>
     .join("\n")
     .trim();
 
-// ─── Helper build single_select button ────────────────────────────────────────
 const buildSelectButton = (title, sectionTitle, rows) => ({
   name: "single_select",
   buttonParamsJson: JSON.stringify({
@@ -29,12 +27,10 @@ const buildSelectButton = (title, sectionTitle, rows) => ({
   }),
 });
 
-// ─── Handler ──────────────────────────────────────────────────────────────────
 const handler = async (m, { conn }) => {
   try {
     const query = (m.text || "").replace(/^\.skill\s*/i, "").trim();
 
-    // ── Tanpa query → tampilkan daftar skill tree ────────────────────────────
     if (!query) {
       const { data, error } = await supa.from("skilv2").select("*");
 
@@ -65,7 +61,6 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    // ── --tree <nama> → tampilkan skill dalam tree ───────────────────────────
     if (/^--tree\s+/i.test(query)) {
       const treeName = query.replace(/^--tree\s+/i, "").trim();
 
@@ -108,7 +103,6 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    // ── Search skill by name ─────────────────────────────────────────────────
     const { data, error } = await supa
       .from("skilv2")
       .select("*")

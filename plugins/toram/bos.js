@@ -16,13 +16,14 @@ const handler = async (m, { conn }) => {
       return sendText(
         conn,
         m.chat,
-        `${config.message.invalid}, use: .bosdef namebos`,
+        `Format yang anda gunakan salah .bosdef any`,
       );
 
     if (name === "--all") {
       const { data: db, error } = await supa.from("bosdef").select("name");
 
-      if (error || !db) return sendText(conn, m.chat, config.message.error, m);
+      if (error || !db)
+        return sendText(conn, m.chat, "bos tidak ditemukan!!", m);
 
       return await conn.sendButton(m.chat, {
         text: "Pilih Boss yang tersedia",

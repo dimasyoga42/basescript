@@ -24,7 +24,7 @@ const handler = async (m, { conn }) => {
     if (!query) {
       return conn.sendMessage(
         m.chat,
-        { text: "Contoh: .item nama item" },
+        { text: "Format anda salah\nContoh: .item nama item" },
         { quoted: m },
       );
     }

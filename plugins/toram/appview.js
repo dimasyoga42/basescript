@@ -14,7 +14,7 @@ const handler = async (m, { conn }) => {
 
     // ✅ Cek error duluan
     if (error || !data || data.length === 0)
-      return sendText(conn, m.chat, config.message.notFound, m);
+      return sendText(conn, m.chat, "app tidak ditemukan!!", m);
 
     if (data.length === 1) {
       return sendImage(conn, m.chat, data[0].image_url, data[0].name, m);

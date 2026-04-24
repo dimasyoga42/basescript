@@ -12,7 +12,12 @@ const handler = async (m, { conn }) => {
       const { data, error } = await supa.from("ablityv2").select("name");
 
       if (error || !data || data.length === 0)
-        return sendText(conn, m.chat, config.message.notFound, m);
+        return sendText(
+          conn,
+          m.chat,
+          "Trait yang anda cari tidak ditemukan!",
+          m,
+        );
 
       return await conn.sendButton(m.chat, {
         text: `Pilih salah satu ability:`,

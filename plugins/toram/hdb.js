@@ -9,17 +9,6 @@ const handler = async (m, { conn }) => {
     const name = arg.slice(1).join(" ").trim();
 
     if (!name) {
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Develop by ${config.OwnerName}`,
-        thumbnail,
-        text: config.message.notFound,
-        quoted: m,
-      });
-    }
-
-    // ================= LIST ALL =================
-    if (name === "--all") {
       const { data: db, error } = await supa.from("hdb").select("bosname");
 
       if (error || !db || db.length === 0) {

@@ -11,7 +11,7 @@ const handler = async (m, { conn }) => {
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
         body: `Develop by ${config.OwnerName}`,
-        text: `${config.message.invalid}\nexample: .spamadv 120 0 315 10`,
+        text: `Format yang anda gunakan salah\ncontoh .spamadv 120 0 315 10`,
         quoted: m,
       });
 

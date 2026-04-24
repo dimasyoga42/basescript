@@ -4,7 +4,6 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn, text }) => {
   try {
-    // Gunakan `text` dari runCommand, lebih bersih dari split manual
     if (!text) {
       const { data: db, error } = await supa
         .from("regist")
@@ -15,7 +14,7 @@ const handler = async (m, { conn, text }) => {
         return conn.sendMessage(
           m.chat,
           { text: "Gagal mengambil data dari database." },
-          { quoted: m }
+          { quoted: m },
         );
       }
 
@@ -34,16 +33,13 @@ const handler = async (m, { conn, text }) => {
       });
     }
 
-    // ✅ Destructure { data, error } dari response Supabase
     const { data, error } = await supa
       .from("regist")
       .select("*")
       .ilike("name", `%${text}%`);
 
-    // ✅ Cek error Supabase
     if (error) throw error;
 
-    // ✅ Pakai `data` (bukan `res`)
     if (!data || data.length === 0)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
@@ -74,7 +70,7 @@ const handler = async (m, { conn, text }) => {
 };
 
 handler.command = "regis";
-handler.alias = ["regist"]
+handler.alias = ["regist"];
 handler.category = "Toram Search";
 handler.submenu = "Toram";
 export default handler;
