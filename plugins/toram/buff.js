@@ -49,7 +49,7 @@ const handler = async (m, { conn }) => {
       });
 
     const mtext = data
-      .map((item) => `\n*${item.name}*\n- ${item.code}\n`)
+      .map((item) => `\n*${item.name}*\n${item.code}\n`)
       .join("\n\n────────────");
 
     // await sendFancyText(conn, m.chat, {
@@ -59,7 +59,6 @@ const handler = async (m, { conn }) => {
     //   text: mtext,
     //   quoted: m,
     // });
-    sendText(conn, m.chat, mtext, m);
     return await conn.sendButton(m.chat, {
       text: mtext,
       footer: config.OwnerName,
