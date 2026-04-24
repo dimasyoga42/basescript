@@ -6,7 +6,7 @@ const handler = async (m, { conn }) => {
   try {
     const parts = m.text.trim().split(/\s+/);
     const query = parts.slice(1).join(" ").trim();
-    if (query === "--list") {
+    if (!query) {
       const { data, error } = await supa
         .from("perpus")
         .select("id, judulPerpus")
@@ -17,7 +17,7 @@ const handler = async (m, { conn }) => {
 
       await conn.sendButton(m.chat, {
         caption:
-          `📚 *Daftar Guide*\n${"─".repeat(20)}\n` +
+          `*Daftar Guide*\n${"─".repeat(20)}\n` +
           `Total: ${data.length} guide\n\nPilih guide untuk membaca:`,
         image: { url: thumbnail },
         footer: config.OwnerName,
@@ -30,31 +30,6 @@ const handler = async (m, { conn }) => {
         })),
         bottom_sheet: true,
         bottom_name: "Pilih Guide",
-      });
-
-      return;
-    }
-
-    if (!query) {
-      await conn.sendButton(m.chat, {
-        caption:
-          `*Guide Toram Online*\n${"─".repeat(20)}\n\n` +
-          `*Cara penggunaan:*\n` +
-          `• .guide Ailment → cari guide\n` +
-          `• .guide --list → semua guide`,
-        image: { url: thumbnail },
-        footer: config.OwnerName,
-        buttons: [
-          {
-            name: "quick_reply",
-            buttonParamsJson: JSON.stringify({
-              display_text: "Lihat Semua Guide",
-              id: `.guide --list`,
-            }),
-          },
-        ],
-        bottom_sheet: true,
-        bottom_name: "Guide Menu",
       });
 
       return;
@@ -74,8 +49,8 @@ const handler = async (m, { conn }) => {
         conn,
         m.chat,
         `*${item.judulPerpus}*\n${"─".repeat(20)}\n\n` +
-          `🇮🇩 *Indonesia:*\n${item.isiBuku || "-"}\n\n` +
-          `🇬🇧 *English:*\n${item.buku_en || "-"}`,
+          `*Indonesia:*\n${item.isiBuku || "-"}\n\n` +
+          `*English:*\n${item.buku_en || "-"}`,
         m,
       );
     }
