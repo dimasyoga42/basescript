@@ -38,6 +38,7 @@ const handler = async (m, { conn }) => {
       .from("buff")
       .select("name, code")
       .ilike("name", `%${name}%`);
+    const { selects } = await supa.from("buff").select("name, code");
 
     if (!data || data.length === 0)
       return sendFancyText(conn, m.chat, {
@@ -62,7 +63,7 @@ const handler = async (m, { conn }) => {
     return await conn.sendButton(m.chat, {
       text: mtext,
       footer: config.OwnerName,
-      buttons: data.map((item) => ({
+      buttons: selects.map((item) => ({
         name: "quick_reply",
         buttonParamsJson: JSON.stringify({
           display_text: item.name,
