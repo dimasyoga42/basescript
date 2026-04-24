@@ -90,7 +90,7 @@ export const config = {
   leg ornament: 580-600M
   leg silk: 1,2B
 
-  Ini hanya perkiraan, jika kalian punya info bisa PM saja ke No botnya. Terima kasih
+  Ini hanya perkiraan, jika kalian punya info bisa .saran nama pembolong + harga contoh: .saran leg silk 1,4B. Terima kasih
   `,
   leveling: `
   1-35 *shell Maks* -> Nisel montain:Montainside
