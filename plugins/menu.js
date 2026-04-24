@@ -1,3 +1,4 @@
+import axios from "axios";
 import { config, thumbnail } from "../config.js";
 import {
   sendFancyText,
@@ -30,11 +31,13 @@ const handler = async (m, { conn }) => {
     result += `\n╭─ *${cat}*\n`;
     result += categories[cat].map((c) => `│.${c}`).join("\n") + "\n╰────\n";
   }
+  const image = await axios.get("https://api.waifu.pics/sfw/waifu");
+  const img = image.data;
   await sendMenu(conn, m.chat, {
     title: m.pushName,
     body: "Neura Inc Development",
     text: result.trim(),
-    thumbnail: thumbnail,
+    thumbnail: img.url,
     quoted: m,
   });
 };
