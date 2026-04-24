@@ -43,7 +43,12 @@ const handler = async (m, { conn }) => {
 
     if (!exactError && exactData && exactData.length === 1) {
       const item = exactData[0];
-      return sendText(conn, m.chat, `*${item.name}*\n\n${item.stat_effect}`, m);
+      return sendText(
+        conn,
+        m.chat,
+        `──────────────────\n*${item.name}*\n\n${item.stat_effect}\n──────────────────`,
+        m,
+      );
     }
 
     // 🔥 PRIORITAS 2: partial match

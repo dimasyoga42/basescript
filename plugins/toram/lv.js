@@ -14,7 +14,7 @@ const handler = async (m, { conn }) => {
         conn,
         m.chat,
         `${config.message.invalid}, use: .lv 299`,
-        m
+        m,
       );
     }
 
@@ -44,7 +44,7 @@ const handler = async (m, { conn }) => {
 
     // ─── FETCH SCRAPING ────────────────────────────────────
     const res = await fetch(
-      `https://coryn.club/leveling.php?lv=${encodeURIComponent(lvNum)}&gap=7&bonusEXP=0`
+      `https://coryn.club/leveling.php?lv=${encodeURIComponent(lvNum)}&gap=7&bonusEXP=0`,
     );
 
     if (!res.ok) {
@@ -72,15 +72,11 @@ const handler = async (m, { conn }) => {
             .find(".level-entry-main p:first-child b")
             .text()
             .trim();
-          const loc = $(entry)
-            .find(".level-entry-main p")
-            .eq(1)
-            .text()
-            .trim();
+          const loc = $(entry).find(".level-entry-main p").eq(1).text().trim();
 
           if (name) {
             found = true;
-            sectionText += `- ${name} (${lvl}) -> ${loc}\n`;
+            sectionText += `- ${name} (${lvl}): ${loc}\n`;
           }
         });
 
@@ -99,15 +95,11 @@ const handler = async (m, { conn }) => {
     // ─── INSERT DATABASE (UPSERT SAFE) ─────────────────────
     const { error: insertErr } = await supa
       .from("lvl")
-      .upsert(
-        { query: lvNum, stat: mtext },
-        { onConflict: "query" }
-      );
+      .upsert({ query: lvNum, stat: mtext }, { onConflict: "query" });
 
     if (insertErr) console.error("[Supabase] upsert error:", insertErr);
 
     return sendText(conn, m.chat, mtext, m);
-
   } catch (err) {
     console.error(err);
     return sendFancyText(conn, m.chat, {
