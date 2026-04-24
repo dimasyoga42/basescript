@@ -7,9 +7,9 @@ const handler = async (m, { conn }) => {
     if (!stats)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
-        body: "exemple: .fillarm stats",
+        body: "exemple: .fillarm dte%=max, atk%=10, cd=20, cr=25, acc%=min, matk%=min, mp%=min, lv320, pot112, bs300",
         thumbnail: thumbnail,
-        text: config.message.invalid,
+        text: "gunakan .stats untuk melihat stat yang tersida",
         quoted: m,
       });
     const url = `https://neurapi.mochinime.cyou/api/toram/filarm?text=${encodeURIComponent(stats)}`;

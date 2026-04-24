@@ -19,7 +19,19 @@ const handler = async (m, { conn }) => {
       //   text: mtext,
       //   quoted: m,
       // });
-      return sendText(conn, m.chat, mtext, m);
+      return await conn.sendButton(m.chat, {
+        text: mtext,
+        footer: config.OwnerName,
+        buttons: data.map((item) => ({
+          name: "quick_reply",
+          buttonParamsJson: JSON.stringify({
+            display_text: item.name,
+            id: `.buff ${item.name}`,
+          }),
+        })),
+        bottom_sheet: true,
+        bottom_name: "Daftar Buff",
+      });
     }
 
     const { data } = await supa
@@ -48,6 +60,19 @@ const handler = async (m, { conn }) => {
     //   quoted: m,
     // });
     sendText(conn, m.chat, mtext, m);
+    return await conn.sendButton(m.chat, {
+      text: mtext,
+      footer: config.OwnerName,
+      buttons: data.map((item) => ({
+        name: "quick_reply",
+        buttonParamsJson: JSON.stringify({
+          display_text: item.name,
+          id: `.buff ${item.name}`,
+        }),
+      })),
+      bottom_sheet: true,
+      bottom_name: "Daftar Buff",
+    });
   } catch (err) {
     console.error(err);
     await sendFancyText(conn, m.chat, {

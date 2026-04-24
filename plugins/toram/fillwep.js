@@ -8,7 +8,7 @@ const handler = async (m, { conn }) => {
       return sendText(
         conn,
         m.chat,
-        `${config.message.invalid}, use: .fillwep stat`,
+        `gunakan .stats untuk melihat stat yang tersedia`,
       );
     const url = `https://neurapi.mochinime.cyou/api/toram/filwep?text=${encodeURIComponent(stats)}`;
     const { data } = await axios.get(url, { timeout: 15000 });

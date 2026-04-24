@@ -4,15 +4,7 @@ import { supa } from "../../src/config/supa.js";
 const handler = async (m, { conn }) => {
   try {
     const text = m.text.replace(/\.boss|\.bos/i, "").trim();
-    if (!text)
-      return conn.sendMessage(
-        m.chat,
-        { text: "Contoh: .boss scrader" },
-        { quoted: m },
-      );
-
-    if (text === "--all") {
-      // ✅ Pakai "error" bukan "err" (nama field Supabase)
+    if (!text) {
       const { data: db, error: dbError } = await supa
         .from("bosv22")
         .select("name");
@@ -36,7 +28,7 @@ const handler = async (m, { conn }) => {
           }),
         })),
         bottom_sheet: true,
-        bottom_name: "boss name",
+        bottom_name: "daftar Bos",
       });
     }
 
