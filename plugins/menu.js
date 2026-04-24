@@ -37,7 +37,7 @@ const handler = async (m, { conn }) => {
     title: m.pushName,
     body: "Neura Inc Development",
     text: result.trim(),
-    thumbnail: img.url,
+    thumbnail: img.Url,
     quoted: m,
   });
 };
