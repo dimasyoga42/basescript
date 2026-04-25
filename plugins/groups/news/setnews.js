@@ -8,7 +8,7 @@ const db = path.resolve("db", "News.json");
 const handler = async (m, { conn }) => {
   try {
     if (!(await isAdmin(conn, m))) return;
-    const newstxt = m.text.split(/\s+/)[1]?.trim();
+    const newstxt = m.text.replace(/\.setnews/, "").trim();
     if (!newstxt)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
@@ -17,7 +17,7 @@ const handler = async (m, { conn }) => {
         text: config.message.invalid,
         quoted: m,
       });
-    let data = await getUserData(db);
+    let data = getUserData(db);
 
     if (!Array.isArray(data)) return (data = []);
     const index = data.findIndex((item) => item.id === m.chat);
@@ -34,7 +34,7 @@ const handler = async (m, { conn }) => {
       title: config.BotName,
       body: `develop by ${config.OwnerName}`,
       thumbnail: thumbnail,
-      text: config.message.create,
+      text: "news telah dibuat",
       quoted: m,
     });
   } catch (err) {
