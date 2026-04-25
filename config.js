@@ -26,6 +26,8 @@ export const config = {
     "https://i.pinimg.com/736x/c9/5f/7a/c95f7afcde507e5023c49a49a252ba3a.jpg",
     "https://i.pinimg.com/736x/f1/81/80/f18180acdb06b96f0e14c94be313b859.jpg",
     "https://i.pinimg.com/736x/ec/c7/c8/ecc7c82a6d91c97cf3a931d2f1f16182.jpg",
+    "https://i.pinimg.com/736x/4a/7e/18/4a7e18b93ac613f57912d9c11e266436.jpg",
+    "https://i.pinimg.com/736x/d4/cd/81/d4cd8145f1d5a39ad25646d44cd2b23e.jpg"
   ],
   message: {
     notAdmin: "Admin Only",
