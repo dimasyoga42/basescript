@@ -27,7 +27,7 @@ export const config = {
     "https://i.pinimg.com/736x/f1/81/80/f18180acdb06b96f0e14c94be313b859.jpg",
     "https://i.pinimg.com/736x/ec/c7/c8/ecc7c82a6d91c97cf3a931d2f1f16182.jpg",
     "https://i.pinimg.com/736x/4a/7e/18/4a7e18b93ac613f57912d9c11e266436.jpg",
-    "https://i.pinimg.com/736x/d4/cd/81/d4cd8145f1d5a39ad25646d44cd2b23e.jpg"
+    "https://i.pinimg.com/736x/d4/cd/81/d4cd8145f1d5a39ad25646d44cd2b23e.jpg",
   ],
   message: {
     notAdmin: "Admin Only",
@@ -65,7 +65,7 @@ export const config = {
 
   *OHS*
   0-1: 27-38M
-  1-2: 85-100M
+  1-2: 140-160M
 
   *BWG*
   0-1: 15-20M
@@ -77,7 +77,7 @@ export const config = {
 
   *STAFF*
   0-1: 15-20M
-  1-2: 80-90M
+  1-2: 50-90M
 
   *MD*
   0-1 10-15M
@@ -95,7 +95,7 @@ export const config = {
   0-1 10-15M
   1-2: 100M
   Spirit Needle 6-8M
-  leg Piercer 75M
+  leg Piercer 100M+
   High-Grade Ornament 2M+
   legendary needle 550M - 700M
   leg ornament: 580-600M

@@ -6,7 +6,7 @@ const db = path.resolve("db", "News.json");
 const handler = async (m, { conn }) => {
   try {
     if (!m.chat?.endsWith("@g.us")) return;
-    let data = await getUserData(db);
+    let data = getUserData(db);
     if (!Array.isArray(data) || data.length === 0)
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
