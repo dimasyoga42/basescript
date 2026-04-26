@@ -4,15 +4,15 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const args = m.text.replace(/^\.setnote/i, "").split(",");
-    const name = args[1]?.trim();
-    const content = args.slice(2).join(",").trim();
+    const args = m.text.replace(/^\.setnote/i, "").split("|");
+    const name = args[0]?.trim();
+    const content = args.slice(1).join("|").trim();
 
     if (!name || !content)
       return sendText(
         conn,
         m.chat,
-        "Invalid format\nExample: .setnote ,Title, note content here",
+        "format Salah Gunakan: .setnote Title | note content here",
         m,
       );
 
