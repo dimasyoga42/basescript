@@ -19,7 +19,7 @@ const handler = async (m, { conn }) => {
       return conn.sendMessage(m.chat, {text: "format anda salah gunakan .ytdl <url>"}, {quoted: m});
     }
 
-    await reactMessage(conn, m.chat, "⌛", m);
+    await reactMessage(conn, m.chat, m, "⌛");
 
     // Download langsung ke folder tmp
     const outTemplate = path.join(TMP_DIR, '%(title)s.%(ext)s');
