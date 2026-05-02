@@ -128,43 +128,18 @@ export const PinSearch = async (conn, m, value, maxValue = 10) => {
       { quoted: m },
     );
 
-    const chunkSize = 10;
-    const chunks = [];
-    for (let i = 0; i < pins.length; i += chunkSize) {
-      chunks.push(pins.slice(i, i + chunkSize));
-    }
-
-    const sendChunk = async (index) => {
-      if (index >= chunks.length) return;
-
-      const chunk = chunks[index];
-
-      try {
-        const images = chunk.map((pin, i) => ({
+    for (let i = 0; i < pins.length; i++) {
+      const pin = pins[i];
+      await conn.sendMessage(
+        m.chat,
+        {
           image: { url: pin.images.orig.url },
-          caption: index === 0 && i === 0 ? `${value}\nPinterest` : "",
-        }));
-        console.log(`Mengirim album ${index + 1}/${chunks.length}`);
-        await conn.sendAlbum(m.chat, images, { quoted: m });
-      } catch (albumErr) {
-        console.log(
-          `sendAlbum gagal, fallback satu per satu: ${albumErr.message}`,
-        );
-        for (const pin of chunk) {
-          await conn.sendMessage(
-            m.chat,
-            { image: { url: pin.images.orig.url }, caption: "" },
-            { quoted: m },
-          );
-          await delay(1000);
-        }
-      }
-
-      await delay(5000);
-      await sendChunk(index + 1);
-    };
-
-    await sendChunk(0);
+          caption: i === 0 ? `${value}\nPinterest` : "",
+        },
+        { quoted: m },
+      );
+      await delay(1000);
+    }
 
     await conn.sendMessage(
       m.chat,
