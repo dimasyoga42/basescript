@@ -5,8 +5,6 @@ import { config } from "../../config.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export const PinSearchMenu = async (conn, m, value) => {
   try {
     if (!value)
@@ -114,17 +112,9 @@ export const PinSearch = async (conn, m, value, maxValue = 10) => {
       .filter((pin) => pin?.images?.orig?.url)
       .slice(0, maxValue);
 
-    if (pins.length === 0) {
-      return conn.sendMessage(
-        m.chat,
-        { text: `Tidak ada gambar yang valid untuk pencarian: ${value}` },
-        { quoted: m },
-      );
-    }
-
     await conn.sendMessage(
       m.chat,
-      { text: `Ditemukan ${pins.length} gambar, mengirim...` },
+      { text: `Ditemukan ${pins.length} gambar, mengirim satu per satu...` },
       { quoted: m },
     );
 
@@ -134,11 +124,10 @@ export const PinSearch = async (conn, m, value, maxValue = 10) => {
         m.chat,
         {
           image: { url: pin.images.orig.url },
-          caption: i === 0 ? `${value}\nPinterest` : "",
+          caption: `${pin.title || "Untitled"}\n[${i + 1}/${pins.length}]`,
         },
         { quoted: m },
       );
-      await delay(1000);
     }
 
     await conn.sendMessage(
