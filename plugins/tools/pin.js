@@ -53,7 +53,7 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["pin"];
-handler.category = "Menu Tools";
-handler.submenu = "Tools";
+// handler.command = ["pin"];
+// handler.category = "Menu Tools";
+// handler.submenu = "Tools";
 export default handler;

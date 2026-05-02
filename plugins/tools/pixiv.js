@@ -3,7 +3,7 @@ import { PinSearch, PinSearchMenu } from "../_function/_pin.js";
 const header = async (m, { conn }) => {
   try {
     const args = m.text
-      .replace(/\.pin2/, "")
+      .replace(/\.pin/, "")
       .trim()
       .split("|");
     const keyword = args[0];
@@ -24,6 +24,6 @@ const header = async (m, { conn }) => {
   }
 };
 
-header.command = "pin2";
+header.command = "pin";
 header.category = "Menu Tools";
 export default header;
