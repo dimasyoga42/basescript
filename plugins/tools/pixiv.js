@@ -1,4 +1,3 @@
-import axios from "axios";
 import { PinSearch, PinSearchMenu } from "../_function/_pin.js";
 
 const header = async (m, { conn }) => {
