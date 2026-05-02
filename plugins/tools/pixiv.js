@@ -5,7 +5,7 @@ const header = async (m, { conn }) => {
     const args = m.text
       .replace(/\.pin2/, "")
       .trim()
-      .split(" ");
+      .split("|");
     const keyword = args[0];
     const jumlah = parseInt(args[1]);
 

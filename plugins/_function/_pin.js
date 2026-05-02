@@ -23,7 +23,7 @@ export const PinSearchMenu = async (conn, m, value) => {
         name: "quick_reply",
         buttonParamsJson: JSON.stringify({
           display_text: `${jumlah} Gambar`,
-          id: `.pin2 ${value} ${jumlah}`,
+          id: `.pin2 ${value}|${jumlah}`,
         }),
       })),
       bottom_sheet: true,
