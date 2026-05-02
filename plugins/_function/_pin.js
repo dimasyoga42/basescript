@@ -1,6 +1,7 @@
 import axios from "axios";
 import path from "path";
 import { fileURLToPath } from "url";
+import { config } from "../../config.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
