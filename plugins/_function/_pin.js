@@ -126,12 +126,22 @@ export const PinSearch = async (conn, m, value, maxValue = 10) => {
       { quoted: m },
     );
 
-    const images = pins.map((pin, i) => ({
-      image: { url: pin.images.orig.url },
-      caption: i === 0 ? `${value}\nPinterest` : "",
-    }));
+    // Potong array jadi chunk isi 10
+    const chunkSize = 10;
+    const chunks = [];
+    for (let i = 0; i < pins.length; i += chunkSize) {
+      chunks.push(pins.slice(i, i + chunkSize));
+    }
 
-    await conn.sendAlbum(m.chat, images, { quoted: m });
+    // Kirim per chunk
+    for (let c = 0; c < chunks.length; c++) {
+      const chunk = chunks[c];
+      const images = chunk.map((pin, i) => ({
+        image: { url: pin.images.orig.url },
+        caption: c === 0 && i === 0 ? `${value}\nPinterest` : "",
+      }));
+      await conn.sendAlbum(m.chat, images, { quoted: m });
+    }
 
     await conn.sendMessage(
       m.chat,
