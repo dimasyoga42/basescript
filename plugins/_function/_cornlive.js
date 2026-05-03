@@ -99,8 +99,20 @@ const scrapeLiveList = async (limit = 5) => {
 
 const isToday = (dateStr) => {
   if (!dateStr) {
-    // Jika tidak ada tanggal sama sekali, lewati agar aman
     console.warn("[cronLive] Tanggal event kosong, skip.");
+    return false;
+  }
+
+  // Strip karakter fullwidth bracket Jepang ［ ］ dan karakter non-ASCII lainnya
+  // Contoh: "［2026-05-01］" → "2026-05-01"
+  const cleaned = dateStr
+    .replace(/［/g, "") // fullwidth left bracket
+    .replace(/］/g, "") // fullwidth right bracket
+    .replace(/[\[\]【】〔〕]/g, "") // bracket lainnya
+    .trim();
+
+  if (!cleaned) {
+    console.warn("[cronLive] Tanggal kosong setelah dibersihkan:", dateStr);
     return false;
   }
 
@@ -118,7 +130,7 @@ const isToday = (dateStr) => {
   ];
 
   for (const fmt of formats) {
-    const parsed = moment(dateStr, fmt, true);
+    const parsed = moment(cleaned, fmt, true);
     if (parsed.isValid()) {
       const match = parsed.isSame(today, "day");
       console.log(
@@ -129,14 +141,14 @@ const isToday = (dateStr) => {
   }
 
   // Fallback parse bebas
-  const fallback = moment(dateStr);
+  const fallback = moment(cleaned);
   if (fallback.isValid()) {
     const match = fallback.isSame(today, "day");
-    console.warn(`[cronLive] Fallback parse "${dateStr}" → match: ${match}`);
+    console.warn(`[cronLive] Fallback parse "${cleaned}" → match: ${match}`);
     return match;
   }
 
-  console.warn("[cronLive] Format tanggal tidak dikenali:", dateStr);
+  console.warn("[cronLive] Format tanggal tidak dikenali:", cleaned);
   return false;
 };
 
