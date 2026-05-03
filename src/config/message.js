@@ -321,3 +321,11 @@ export const downloadMedia = async (message, type = "buffer") => {
 };
 
 export const sendbtn = () => {};
+
+export const buildSelectButton = (title, sectionTitle, rows) => ({
+  name: "single_select",
+  buttonParamsJson: JSON.stringify({
+    title,
+    sections: [{ title: sectionTitle, rows }],
+  }),
+});

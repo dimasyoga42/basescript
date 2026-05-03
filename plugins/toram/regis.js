@@ -1,5 +1,5 @@
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText, sendText } from "../../src/config/message.js";
+import { buildSelectButton, sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn, text }) => {
@@ -59,13 +59,17 @@ const handler = async (m, { conn, text }) => {
     await conn.sendButton(m.chat, {
       text: mtext,
       footer: config.OwnerName,
-      buttons: data.map((item) => ({
-        name: "quick_reply",
-        buttonParamsJson: JSON.stringify({
-          display_text: `${item.name}`,
-          id: `.regist ${item.name}`,
-        }),
-      })),
+      buttons: [
+        buildSelectButton(
+          "Neura Sama",
+          "Registlet yang tersedia",
+          data.map((item) => ({
+            title: item.name,
+            description: `Lihat Stat dari ${item.name}`,
+            id: `.regist ${item.name}`
+          }))
+        )
+      ],
       bottom_sheet: true,
       bottom_name: "Daftar Registlet",
     });
