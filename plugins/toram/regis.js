@@ -65,7 +65,7 @@ const handler = async (m, { conn, text }) => {
       footer: config.OwnerName,
       buttons: [
         buildSelectButton(
-          "Neura Sama",
+          "Daftar Registlet",
           "Registlet yang tersedia",
           allData.map((item) => ({
             title: item.name,
