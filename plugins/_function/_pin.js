@@ -2,6 +2,7 @@ import axios from "axios";
 import path from "path";
 import { fileURLToPath } from "url";
 import { config } from "../../config.js";
+import { reactMessage } from "../../src/config/message.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -79,11 +80,7 @@ export const PinSearch = async (conn, m, value, maxValue = 10) => {
       "x-pinterest-pws-handler": "www/[username].js",
     });
 
-    await conn.sendMessage(
-      m.chat,
-      { text: `Mencari ${maxValue} gambar untuk keyword: ${value}...` },
-      { quoted: m },
-    );
+    reactMessage(conn, m.chat, m, "⌛")
 
     const { data } = await Client.get("/resource/BaseSearchResource/get/", {
       params: {
@@ -121,12 +118,6 @@ export const PinSearch = async (conn, m, value, maxValue = 10) => {
         { quoted: m },
       );
     }
-
-    await conn.sendMessage(
-      m.chat,
-      { text: `Ditemukan ${pins.length} gambar, mengirim...` },
-      { quoted: m },
-    );
 
     const chunkSize = 10;
     const chunks = [];
@@ -166,11 +157,7 @@ export const PinSearch = async (conn, m, value, maxValue = 10) => {
 
     await sendChunk(0);
 
-    await conn.sendMessage(
-      m.chat,
-      { text: `Selesai! ${pins.length} gambar berhasil dikirim.` },
-      { quoted: m },
-    );
+    reactMessage(conn, m.chat, m, "♥️")
   } catch (err) {
     console.error(err.message);
     conn.sendMessage(
