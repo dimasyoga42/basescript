@@ -10,7 +10,7 @@ const handler = async (m, { conn }) => {
     // Jika tidak ada query → tampilkan semua ability (button)
     if (!query) {
       const { data, error } = await supa
-        .from("abilityv2")
+        .from("ablityv2")
         .select("name")
         .order("name", { ascending: true });
 
@@ -40,7 +40,7 @@ const handler = async (m, { conn }) => {
 
     // PRIORITAS 1: exact match — FIX: pakai .eq() bukan .ilike() tanpa wildcard
     const { data: exactData, error: exactError } = await supa
-      .from("abilityv2")
+      .from("ablityv2")
       .select("*")
       .eq("name", query)
       .limit(1);
@@ -52,7 +52,7 @@ const handler = async (m, { conn }) => {
 
     // PRIORITAS 2: partial match
     const { data, error } = await supa
-      .from("abilityv2")
+      .from("ablityv2")
       .select("*")
       .ilike("name", `%${query}%`);
 
