@@ -12,10 +12,6 @@ const handler = async (m, { conn }) => {
       const { data, error } = await supa
         .from("abilityv2")
         .select("name");
-
-      if (error || !data || data.length === 0)
-        return sendText(conn, m.chat, config.message.notFound, m);
-
       return await conn.sendButton(m.chat, {
         text: `Pilih salah satu ability:`,
         footer: config.OwnerName,
