@@ -14,7 +14,7 @@ const handler = async (m, { conn }) => {
   } catch (err) {}
 };
 
-handler.command = ["pet"];
-handler.category = "Toram Info";
-handler.submenu = "Toram";
+// handler.command = ["pet"];
+// handler.category = "Toram Info";
+// handler.submenu = "Toram";
 export default handler;

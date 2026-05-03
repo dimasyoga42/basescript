@@ -52,11 +52,24 @@ const handler = async (m, { conn, text }) => {
     const mtext = data
       .map(
         (item) =>
-          `${item.name}\n${item.effect}\nMax Level:\n- ${item.max_lv}\nLevel Studied:\n- ${item.levels_studied}`,
-      )
-      .join("\n────────────\n");
+        `────────────\n*${item.name}*\n\n${item.effect}\n\nMax Level:\n- ${item.max_lv}\nLevel:\n- ${item.levels_studied}\n────────────`,
+      );
 
-    sendText(conn, m.chat, mtext, m);
+    // sendText(conn, m.chat, mtext, m);
+    await conn.sendButton(m.chat, {
+      text: mtext,
+      footer: config.OwnerName,
+      buttons: data.map((item) => ({
+        name: "quick_reply",
+        buttonParamsJson: JSON.stringify({
+          display_text: `${item.name}`,
+          id: `.regist ${item.name}`,
+        }),
+      })),
+      bottom_sheet: true,
+      bottom_name: "Daftar Registlet",
+    });
+
   } catch (err) {
     console.error("[regis] Error:", err);
     sendFancyText(conn, m.chat, {
