@@ -4,24 +4,26 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn, text }) => {
   try {
+    // Ambil semua nama regist sekali di awal (untuk button list)
+    const { data: allData, error: allError } = await supa
+      .from("regist")
+      .select("name")
+      .order("name", { ascending: true });
+
+    if (allError || !allData?.length) {
+      return conn.sendMessage(
+        m.chat,
+        { text: "Gagal mengambil data dari database." },
+        { quoted: m }
+      );
+    }
+
+
     if (!text) {
-      const { data: db, error } = await supa
-        .from("regist")
-        .select("name")
-        .order("name", { ascending: true });
-
-      if (error || !db?.length) {
-        return conn.sendMessage(
-          m.chat,
-          { text: "Gagal mengambil data dari database." },
-          { quoted: m },
-        );
-      }
-
       return conn.sendButton(m.chat, {
         text: "Daftar Seluruh regist\n- gunakan .regis [nama regis yang dicari]",
         footer: config.OwnerName,
-        buttons: db.map((item) => ({
+        buttons: allData.map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
             display_text: item.name,
@@ -33,6 +35,7 @@ const handler = async (m, { conn, text }) => {
       });
     }
 
+
     const { data, error } = await supa
       .from("regist")
       .select("*")
@@ -40,7 +43,7 @@ const handler = async (m, { conn, text }) => {
 
     if (error) throw error;
 
-    if (!data || data.length === 0)
+    if (!data || data.length === 0) {
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
         body: `Developer By ${config.OwnerName}`,
@@ -48,14 +51,15 @@ const handler = async (m, { conn, text }) => {
         text: config.message.notFound ?? "Data tidak ditemukan.",
         quoted: m,
       });
+    }
 
     const mtext = data
       .map(
         (item) =>
-        `────────────\n*${item.name}*\n\n${item.effect}\n\nMax Level:\n- ${item.max_lv}\nLevel:\n- ${item.levels_studied}\n────────────`,
-      );
+          `────────────\n*${item.name}*\n\n${item.effect}\n\nMax Level:\n- ${item.max_lv}\nLevel:\n- ${item.levels_studied}\n────────────`
+      )
+      .join("\n");
 
-    // sendText(conn, m.chat, mtext, m);
     await conn.sendButton(m.chat, {
       text: mtext,
       footer: config.OwnerName,
@@ -63,17 +67,16 @@ const handler = async (m, { conn, text }) => {
         buildSelectButton(
           "Neura Sama",
           "Registlet yang tersedia",
-          data.map((item) => ({
+          allData.map((item) => ({
             title: item.name,
             description: `Lihat Stat dari ${item.name}`,
-            id: `.regist ${item.name}`
+            id: `.regist ${item.name}`,
           }))
-        )
+        ),
       ],
       bottom_sheet: true,
       bottom_name: "Daftar Registlet",
     });
-
   } catch (err) {
     console.error("[regis] Error:", err);
     sendFancyText(conn, m.chat, {
