@@ -358,9 +358,12 @@ export const sendBtns = async (
       externalAdReply.thumbnailUrl = thumbnail;
     }
   }
+
   await sock.sendPresenceUpdate("composing", jid);
   await new Promise((r) => setTimeout(r, 100));
-  await sock.senButton(
+
+  // FIX: typo "senButton" → "sendButton"
+  await sock.sendButton(
     jid,
     {
       text,
@@ -372,5 +375,6 @@ export const sendBtns = async (
     },
     { quoted },
   );
+
   return await sock.sendPresenceUpdate("paused", jid);
 };
