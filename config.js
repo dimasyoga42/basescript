@@ -69,7 +69,7 @@ export const config = {
 
   *BWG*
   0-1: 15-20M
-  0-2: 120-140M
+  0-2: 80-100M
 
   *KNUCK*
   0-1: 20-40M
