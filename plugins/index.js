@@ -12,7 +12,6 @@ async function loadDir(dir) {
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
 
-    // Kalau folder, rekursi masuk ke dalamnya
     if (entry.isDirectory()) {
       await loadDir(fullPath);
       continue;
@@ -20,28 +19,24 @@ async function loadDir(dir) {
 
     if (!entry.name.endsWith(".js")) continue;
 
-    // Skip index.js di folder manapun
     if (entry.name === "index.js") continue;
 
     try {
-      // Pakai URL agar kompatibel dengan ESM dynamic import
       const fileUrl = new URL(`file://${fullPath}`).href;
       const module = await import(fileUrl);
 
       if (module.default) {
         plugins[fullPath] = module.default;
-        // Tampilkan path relatif agar lebih rapi di log
+
         const rel = path.relative(__dirname, fullPath);
-        console.log(`✅ Plugin dimuat: ${rel}`);
+        console.log(`Plugin dimuat: ${rel}`);
       } else {
         const rel = path.relative(__dirname, fullPath);
-        console.warn(
-          `⚠️ Plugin "${rel}" tidak punya export default, dilewati.`,
-        );
+        console.warn(`Plugin "${rel}" tidak punya export default, dilewati.`);
       }
     } catch (err) {
       const rel = path.relative(__dirname, fullPath);
-      console.error(`❌ Gagal load plugin "${rel}":`, err);
+      console.error(`Gagal load plugin "${rel}":`, err);
     }
   }
 }
