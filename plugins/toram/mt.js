@@ -26,19 +26,19 @@ const handler = async (m, { conn }) => {
       text: reg,
       quoted: m,
     });
-    sendBtns(conn, m.chat, {
-      title: m.pushName,
-      body: "Neura Inc",
-      text: reg,
-      thumbnail: thumbnail,
-      buttons: [
-        buildSelectButton("Reminder mt", "fitur activesion reminder", {
-          title: "reminder mt",
-          description: "aktifkan untuk notif mt otomatis",
-          id: ".cornmt",
-        }),
-      ],
-    });
+    // sendBtns(conn, m.chat, {
+    //   title: m.pushName,
+    //   body: "Neura Inc",
+    //   text: reg,
+    //   thumbnail: thumbnail,
+    //   buttons: [
+    //     buildSelectButton("Reminder mt", "fitur activesion reminder", {
+    //       title: "reminder mt",
+    //       description: "aktifkan untuk notif mt otomatis",
+    //       id: ".cornmt",
+    //     }),
+    //   ],
+    // });
   } catch (err) {
     sendFancyText(conn, m.chat, {
       title: config.BotName,
