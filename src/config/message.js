@@ -329,3 +329,48 @@ export const buildSelectButton = (title, sectionTitle, rows) => ({
     sections: [{ title: sectionTitle, rows }],
   }),
 });
+
+export const sendBtns = async (
+  sock,
+  jid,
+  {
+    title = "Bot",
+    body = "Message",
+    text = "",
+    footer = "Dimasyoga",
+    buttons = [],
+    thumbnail = null,
+    renderLargerThumbnail = true,
+    quoted = null,
+  } = {},
+) => {
+  let externalAdReply = {
+    title,
+    body,
+    mediaType: 1,
+    renderLargerThumbnail,
+  };
+
+  if (thumbnail) {
+    if (Buffer.isBuffer(thumbnail)) {
+      externalAdReply.thumbnail = thumbnail;
+    } else {
+      externalAdReply.thumbnailUrl = thumbnail;
+    }
+  }
+  await sock.sendPresenceUpdate("composing", jid);
+  await new Promise((r) => setTimeout(r, 100));
+  await sock.senButton(
+    jid,
+    {
+      text,
+      footer,
+      buttons,
+      contextInfo: {
+        externalAdReply,
+      },
+    },
+    { quoted },
+  );
+  return await sock.sendPresenceUpdate("paused", jid);
+};

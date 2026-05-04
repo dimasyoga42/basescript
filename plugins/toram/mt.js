@@ -1,6 +1,11 @@
 import axios from "axios";
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText } from "../../src/config/message.js";
+import {
+  buildSelectButton,
+  sendbtn,
+  sendBtns,
+  sendFancyText,
+} from "../../src/config/message.js";
 import * as cheerio from "cheerio";
 const handler = async (m, { conn }) => {
   try {
@@ -20,6 +25,19 @@ const handler = async (m, { conn }) => {
       thumbnail: thumbnail,
       text: reg,
       quoted: m,
+    });
+    sendBtns(conn, m.chat, {
+      title: m.pushName,
+      body: "Neura Inc",
+      text: reg,
+      thumbnail: thumbnail,
+      buttons: [
+        buildSelectButton("Reminder mt", "fitur activesion reminder", {
+          title: "reminder mt",
+          description: "aktifkan untuk notif mt otomatis",
+          id: ".cornmt",
+        }),
+      ],
     });
   } catch (err) {
     sendFancyText(conn, m.chat, {

@@ -36,7 +36,7 @@ const handler = async (m, { conn }) => {
 
   await sendMenu(conn, m.chat, {
     title: m.pushName,
-    body: config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
+    body: "Hanami Event",
     text: result.trim(),
     thumbnail: randomThumb,
     quoted: m,
