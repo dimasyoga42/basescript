@@ -84,7 +84,7 @@ export const config = {
   1-2 40-50M
 
   *KTN*
-  0-1: 15-20M
+  0-1: 20-35M
   1-2: 120-140M
 
   *THS*
