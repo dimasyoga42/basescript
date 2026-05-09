@@ -49,7 +49,7 @@ const handler = async (m, { conn }) => {
   //   text: result.trim(),
   //   thumbnail: randomThumb,
   // });
-  conn.sendMessage(m.chat, { text: result.trim() }, { quoted: m });
+  // conn.sendMessage(m.chat, { text: result.trim() }, { quoted: m });
   con.sendButton(m.chat, {
     image: randomThumb,
     caption: result.trim(),
