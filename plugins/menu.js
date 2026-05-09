@@ -1,5 +1,6 @@
 import { config, thumbnail } from "../config.js";
 import {
+  buildSelectButton,
   sendFancyText,
   sendFancyTextModif,
   sendMenu,
@@ -49,6 +50,27 @@ const handler = async (m, { conn }) => {
   //   thumbnail: randomThumb,
   // });
   conn.sendMessage(m.chat, { text: result.trim() }, { quoted: m });
+  con.sendButton(m.chat, {
+    image: randomThumb,
+    caption: result.trim(),
+    footer: `Neura Inc`,
+    button: [
+      buildSelectButton(
+        "Neura",
+        "Menu Favorit",
+        {
+          title: "Trait",
+          description: `daftar Trait`,
+          id: `.trait`,
+        },
+        {
+          title: "skill",
+          description: `daftar skill`,
+          id: `.skill`,
+        },
+      ),
+    ],
+  });
 };
 
 handler.command = ["menu", "help"];
