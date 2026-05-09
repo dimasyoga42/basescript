@@ -124,19 +124,6 @@ const handler = async (m, { conn }) => {
       audio: fixedBuffer,
       mimetype: "audio/mpeg",
       ptt: false,
-      contextInfo: {
-        mentionedJid: [m.sender], // mention user
-        forwardingScore: 1,
-        isForwarded: true,
-        externalAdReply: {
-          title: data.title,
-          body: "Audio Response",
-          thumbnailUrl: data.thumbnail,
-          sourceUrl: "-",
-          mediaType: 1,
-          renderLargerThumbnail: false,
-        },
-      },
     });
     // conn.sendOrder(
     //   m.chat,

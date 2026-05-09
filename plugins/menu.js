@@ -41,13 +41,14 @@ const handler = async (m, { conn }) => {
   //   thumbnail: randomThumb,
   //   quoted: m,
   // });
-  await sendFancyTextModif(conn, m.chat, {
-    title: "Neura Sama",
-    body: "Selalu siap Untuk mu",
-    name: `hello ${m.pushName}`,
-    text: result.trim(),
-    thumbnail: randomThumb,
-  });
+  // await sendFancyTextModif(conn, m.chat, {
+  //   title: "Neura Sama",
+  //   body: "Selalu siap Untuk mu",
+  //   name: `hello ${m.pushName}`,
+  //   text: result.trim(),
+  //   thumbnail: randomThumb,
+  // });
+  conn.sendMessage(m.chat, result.trim(), m);
 };
 
 handler.command = ["menu", "help"];
