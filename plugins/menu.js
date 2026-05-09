@@ -50,7 +50,7 @@ const handler = async (m, { conn }) => {
   //   thumbnail: randomThumb,
   // });
   // conn.sendMessage(m.chat, { text: result.trim() }, { quoted: m });
-  con.sendButton(m.chat, {
+  await conn.sendButton(m.chat, {
     image: randomThumb,
     caption: result.trim(),
     footer: `Neura Inc`,
