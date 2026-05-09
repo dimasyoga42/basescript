@@ -75,6 +75,8 @@ const handler = async (m, { conn }) => {
         },
       ),
     ],
+    bottom_sheet: true,
+    bottom_name: "Neura",
   });
 };
 
