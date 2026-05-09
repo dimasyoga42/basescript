@@ -1,5 +1,9 @@
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText, sendText } from "../../src/config/message.js";
+import {
+  buildSelectButton,
+  sendFancyText,
+  sendText,
+} from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 import fetch from "node-fetch";
 import { formatDetail, parseMonsters } from "./_formater.js";
@@ -68,12 +72,31 @@ const handler = async (m, { conn }) => {
     const parser =
       `Element:\n${data.element}\nType: ${data.type}\n${dtail}\n\nStat Info:\n${data.stat}`.trim();
 
-    sendFancyText(conn, m.chat, {
-      title: data.name,
-      body: `loc: ${data.spawn}`,
-      thumbnail: data.image_url,
+    // sendFancyText(conn, m.chat, {
+    //   title: data.name,
+    //   body: `loc: ${data.spawn}`,
+    //   thumbnail: data.image_url,
+    //   text: parser,
+    //   quoted: m,
+    // });
+    conn.sendButton(m.chat, {
       text: parser,
-      quoted: m,
+      footer: "Neura inc",
+      buttons: [
+        buildSelectButton("Bosdef", "Menu yang relevan", [
+          {
+            title: "bos",
+            description: "Daftar bos",
+            id: ".bos",
+          },
+
+          {
+            title: "bosdef",
+            description: "Daftar bosdef",
+            id: ".bosdef --all",
+          },
+        ]),
+      ],
     });
   } catch (err) {
     sendFancyText(conn, m.chat, {
