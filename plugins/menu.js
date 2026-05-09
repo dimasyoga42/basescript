@@ -54,27 +54,29 @@ const handler = async (m, { conn }) => {
     image: {
       url: randomThumb,
     },
-
     caption: result.trim(),
-
     footer: "Neura Inc",
-
-    buttons: [
+    button: [
       buildSelectButton(
         "Neura",
         "Menu Favorit",
-        {
-          title: "Trait",
-          description: "Daftar Trait",
-          id: ".trait",
-        },
-        {
-          title: "Skill",
-          description: "Daftar Skill",
-          id: ".skill",
-        },
+
+        [
+          {
+            title: "Trait",
+            description: "Daftar Trait",
+            id: ".trait",
+          },
+
+          {
+            title: "Skill",
+            description: "Daftar Skill",
+            id: ".skill",
+          },
+        ],
       ),
     ],
+
     bottom_sheet: true,
     bottom_name: "Neura",
   });
