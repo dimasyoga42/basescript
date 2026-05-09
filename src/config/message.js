@@ -248,8 +248,6 @@ export const sendFancyTextModif = async (
       externalAdReply.thumbnailUrl = thumbnail;
     }
   }
-  await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 100));
   await sock.sendMessage(
     jid,
     {
@@ -261,7 +259,6 @@ export const sendFancyTextModif = async (
     },
     { quoted },
   );
-  await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const sendMenu = async (
@@ -290,8 +287,6 @@ export const sendMenu = async (
       externalAdReply.thumbnailUrl = thumbnail;
     }
   }
-  await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 100));
   await sock.sendMessage(
     jid,
     {
@@ -302,7 +297,7 @@ export const sendMenu = async (
     },
     { quoted },
   );
-  return await sock.sendPresenceUpdate("paused", jid);
+  return;
 };
 
 export const downloadMedia = async (message, type = "buffer") => {
