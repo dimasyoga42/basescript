@@ -59,7 +59,7 @@ const handler = async (m, { conn }) => {
 
     footer: "Neura Inc",
 
-    button: [
+    buttons: [
       buildSelectButton(
         "Neura",
         "Menu Favorit",
