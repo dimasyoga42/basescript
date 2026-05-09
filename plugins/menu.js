@@ -54,9 +54,10 @@ const handler = async (m, { conn }) => {
     image: {
       url: randomThumb,
     },
+
     caption: result.trim(),
     footer: "Neura Inc",
-    button: [
+    buttons: [
       buildSelectButton(
         "Neura",
         "Menu Favorit",
