@@ -51,22 +51,27 @@ const handler = async (m, { conn }) => {
   // });
   // conn.sendMessage(m.chat, { text: result.trim() }, { quoted: m });
   await conn.sendButton(m.chat, {
-    image: randomThumb,
+    image: {
+      url: randomThumb,
+    },
+
     caption: result.trim(),
-    footer: `Neura Inc`,
+
+    footer: "Neura Inc",
+
     button: [
       buildSelectButton(
         "Neura",
         "Menu Favorit",
         {
           title: "Trait",
-          description: `daftar Trait`,
-          id: `.trait`,
+          description: "Daftar Trait",
+          id: ".trait",
         },
         {
-          title: "skill",
-          description: `daftar skill`,
-          id: `.skill`,
+          title: "Skill",
+          description: "Daftar Skill",
+          id: ".skill",
         },
       ),
     ],
