@@ -34,12 +34,19 @@ const handler = async (m, { conn }) => {
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
 
-  await sendMenu(conn, m.chat, {
-    title: m.pushName,
-    body: "Hanami Event",
+  // await sendMenu(conn, m.chat, {
+  //   title: m.pushName,
+  //   body: "Hanami Event",
+  //   text: result.trim(),
+  //   thumbnail: randomThumb,
+  //   quoted: m,
+  // });
+  await sendFancyTextModif(conn, m.chat, {
+    title: "Neura Sama",
+    body: "Selalu siap Untuk mu",
+    name: `hello ${m.pushName}`,
     text: result.trim(),
     thumbnail: randomThumb,
-    quoted: m,
   });
 };
 
