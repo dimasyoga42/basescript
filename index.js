@@ -107,8 +107,8 @@ const start = async () => {
       await jawab(sock, m);
       await messageHandler(sock, m.chat, m);
       await runCommand(sock, m, plugins);
-      await cronLive(sock);
-      await cronMt(sock);
+      // await cronLive(sock);
+      // await cronMt(sock);
     } catch (err) {
       console.error("Error saat memproses pesan:", err);
     }
