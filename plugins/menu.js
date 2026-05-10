@@ -47,6 +47,7 @@ const handler = async (m, { conn }) => {
     body: "Selalu siap Untuk mu",
     text: result.trim(),
     thumbnail: randomThumb,
+    renderLargerThumbnail: true,
     quoted: m,
   });
   // conn.sendMessage(m.chat, { text: result.trim() }, { quoted: m });
