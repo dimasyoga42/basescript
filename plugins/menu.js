@@ -42,12 +42,12 @@ const handler = async (m, { conn }) => {
   //   thumbnail: randomThumb,
   //   quoted: m,
   // });
-  await sendFancyTextModif(conn, m.chat, {
+  await sendMenu(conn, m.chat, {
     title: "Neura Sama",
     body: "Selalu siap Untuk mu",
-    name: `${m.pushName}`,
     text: result.trim(),
     thumbnail: randomThumb,
+    quoted: m,
   });
   // conn.sendMessage(m.chat, { text: result.trim() }, { quoted: m });
   // await conn.sendButton(m.chat, {
