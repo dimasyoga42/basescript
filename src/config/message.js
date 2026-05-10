@@ -1,8 +1,10 @@
 import fs from "fs";
+import { downloadContentFromMessage } from "@whiskeysockets/baileys";
 
 const ensure = (v, name) => {
   if (!v) throw new Error(`${name} is required`);
 };
+
 const messagetxt = (name) => {
   const CHANNEL = {
     forwardingScore: 999,
@@ -13,28 +15,41 @@ const messagetxt = (name) => {
       serverMessageId: 1,
     },
   };
+
   return CHANNEL;
 };
+
 export const sendText = async (sock, jid, text, quoted = null) => {
   ensure(jid, "jid");
   ensure(text, "text");
+
   await sock.sendMessage(jid, { text }, { quoted });
 };
 
 export const editText = async (sock, jid, message, text) => {
   ensure(jid, "jid");
   ensure(text, "text");
+
   await sock.sendPresenceUpdate("composing", jid);
   await new Promise((r) => setTimeout(r, 1000));
-  await sock.sendMessage(jid, { text, edit: message.key });
+
+  await sock.sendMessage(jid, {
+    text,
+    edit: message.key,
+  });
+
   return await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const reactMessage = async (sock, jid, message, emoji) => {
   ensure(jid, "jid");
   ensure(emoji, "emoji");
+
   return await sock.sendMessage(jid, {
-    react: { text: emoji, key: message.key },
+    react: {
+      text: emoji,
+      key: message.key,
+    },
   });
 };
 
@@ -46,8 +61,10 @@ export const sendImage = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
+
   await sock.sendPresenceUpdate("composing", jid);
   await new Promise((r) => setTimeout(r, 100));
+
   await sock.sendMessage(
     jid,
     {
@@ -56,6 +73,7 @@ export const sendImage = async (
     },
     { quoted },
   );
+
   return await sock.sendPresenceUpdate("paused", jid);
 };
 
@@ -67,8 +85,10 @@ export const sendVideo = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
+
   await sock.sendPresenceUpdate("composing", jid);
   await new Promise((r) => setTimeout(r, 100));
+
   await sock.sendMessage(
     jid,
     {
@@ -77,6 +97,7 @@ export const sendVideo = async (
     },
     { quoted },
   );
+
   return await sock.sendPresenceUpdate("paused", jid);
 };
 
@@ -88,8 +109,10 @@ export const sendAudio = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
+
   await sock.sendPresenceUpdate("composing", jid);
   await new Promise((r) => setTimeout(r, 100));
+
   await sock.sendMessage(
     jid,
     {
@@ -98,13 +121,16 @@ export const sendAudio = async (
     },
     { quoted },
   );
+
   return await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const sendSticker = async (sock, jid, sticker, quoted = null) => {
   ensure(jid, "jid");
+
   await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 200));
+
   await sock.sendMessage(
     jid,
     {
@@ -112,6 +138,7 @@ export const sendSticker = async (sock, jid, sticker, quoted = null) => {
     },
     { quoted },
   );
+
   return await sock.sendPresenceUpdate("paused", jid);
 };
 
@@ -124,6 +151,7 @@ export const sendDocument = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
+
   return await sock.sendMessage(
     jid,
     {
@@ -144,7 +172,8 @@ export const sendButton = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
-  return await sock.sendMessage(
+
+  return await sock.sendButton(
     jid,
     {
       text,
@@ -167,6 +196,7 @@ export const sendList = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
+
   return await sock.sendMessage(
     jid,
     {
@@ -196,7 +226,11 @@ export const sendFancyText = async (
     title,
     body,
     mediaType: 1,
+    previewType: "PHOTO",
     renderLargerThumbnail,
+    showAdAttribution: false,
+    sourceUrl: "https://whatsapp.com",
+    containsAutoReply: true,
   };
 
   if (thumbnail) {
@@ -206,8 +240,10 @@ export const sendFancyText = async (
       externalAdReply.thumbnailUrl = thumbnail;
     }
   }
+
   await sock.sendPresenceUpdate("composing", jid);
   await new Promise((r) => setTimeout(r, 100));
+
   await sock.sendMessage(
     jid,
     {
@@ -218,6 +254,7 @@ export const sendFancyText = async (
     },
     { quoted },
   );
+
   return await sock.sendPresenceUpdate("paused", jid);
 };
 
@@ -238,7 +275,11 @@ export const sendFancyTextModif = async (
     title,
     body,
     mediaType: 1,
+    previewType: "PHOTO",
     renderLargerThumbnail,
+    showAdAttribution: false,
+    sourceUrl: "https://whatsapp.com",
+    containsAutoReply: true,
   };
 
   if (thumbnail) {
@@ -248,6 +289,10 @@ export const sendFancyTextModif = async (
       externalAdReply.thumbnailUrl = thumbnail;
     }
   }
+
+  await sock.sendPresenceUpdate("composing", jid);
+  await new Promise((r) => setTimeout(r, 100));
+
   await sock.sendMessage(
     jid,
     {
@@ -259,6 +304,8 @@ export const sendFancyTextModif = async (
     },
     { quoted },
   );
+
+  return await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const sendMenu = async (
@@ -277,7 +324,11 @@ export const sendMenu = async (
     title,
     body,
     mediaType: 1,
+    previewType: "PHOTO",
     renderLargerThumbnail,
+    showAdAttribution: false,
+    sourceUrl: "https://whatsapp.com",
+    containsAutoReply: true,
   };
 
   if (thumbnail) {
@@ -287,6 +338,10 @@ export const sendMenu = async (
       externalAdReply.thumbnailUrl = thumbnail;
     }
   }
+
+  await sock.sendPresenceUpdate("composing", jid);
+  await new Promise((r) => setTimeout(r, 100));
+
   await sock.sendMessage(
     jid,
     {
@@ -297,7 +352,8 @@ export const sendMenu = async (
     },
     { quoted },
   );
-  return;
+
+  return await sock.sendPresenceUpdate("paused", jid);
 };
 
 export const downloadMedia = async (message, type = "buffer") => {
@@ -305,13 +361,17 @@ export const downloadMedia = async (message, type = "buffer") => {
     message,
     message.mimetype.split("/")[0],
   );
+
   let buffer = Buffer.from([]);
 
   for await (const chunk of stream) {
     buffer = Buffer.concat([buffer, chunk]);
   }
 
-  if (type === "buffer") return buffer;
+  if (type === "buffer") {
+    return buffer;
+  }
+
   return fs.writeFileSync("./downloaded_media", buffer);
 };
 
@@ -321,7 +381,12 @@ export const buildSelectButton = (title, sectionTitle, rows) => ({
   name: "single_select",
   buttonParamsJson: JSON.stringify({
     title,
-    sections: [{ title: sectionTitle, rows }],
+    sections: [
+      {
+        title: sectionTitle,
+        rows,
+      },
+    ],
   }),
 });
 
@@ -343,7 +408,11 @@ export const sendBtns = async (
     title,
     body,
     mediaType: 1,
+    previewType: "PHOTO",
     renderLargerThumbnail,
+    showAdAttribution: false,
+    sourceUrl: "https://whatsapp.com",
+    containsAutoReply: true,
   };
 
   if (thumbnail) {
@@ -357,13 +426,13 @@ export const sendBtns = async (
   await sock.sendPresenceUpdate("composing", jid);
   await new Promise((r) => setTimeout(r, 100));
 
-  // FIX: typo "senButton" → "sendButton"
   await sock.sendButton(
     jid,
     {
       text,
       footer,
       buttons,
+      headerType: 1,
       contextInfo: {
         externalAdReply,
       },
