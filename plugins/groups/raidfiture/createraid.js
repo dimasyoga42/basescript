@@ -52,16 +52,6 @@ const handler = async (m, { conn }) => {
       m.chat,
       {
         text: mtext,
-        contextInfo: {
-          externalAdReply: {
-            title: config.BotName,
-            body: "Developer By Dimas Yoga",
-            thumbnailUrl: thumbnail,
-            mediaType: 1,
-            renderLargerThumbnail: false, // 🔥 kecil di samping
-            showAdAttribution: false,
-          },
-        },
       },
       { quoted: m },
     );

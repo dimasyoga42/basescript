@@ -34,54 +34,37 @@ const handler = async (m, { conn }) => {
 
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
+  await conn.sendButton(m.chat, {
+    image: {
+      url: randomThumb,
+    },
 
-  // await sendMenu(conn, m.chat, {
-  //   title: m.pushName,
-  //   body: "Hanami Event",
-  //   text: result.trim(),
-  //   thumbnail: randomThumb,
-  //   quoted: m,
-  // });
-  await sendMenu(conn, m.chat, {
-    title: "Neura Sama",
-    body: "Selalu siap Untuk mu",
-    text: result.trim(),
-    thumbnail: randomThumb,
-    renderLargerThumbnail: true,
-    quoted: m,
+    caption: result.trim(),
+    footer: "Neura Inc",
+    buttons: [
+      buildSelectButton(
+        "Neura",
+        "Menu Favorit",
+
+        [
+          {
+            title: "Trait",
+            description: "Daftar Trait",
+            id: ".trait",
+          },
+
+          {
+            title: "Skill",
+            description: "Daftar Skill",
+            id: ".skill",
+          },
+        ],
+      ),
+    ],
+
+    bottom_sheet: true,
+    bottom_name: "Neura",
   });
-  // conn.sendMessage(m.chat, { text: result.trim() }, { quoted: m });
-  // await conn.sendButton(m.chat, {
-  //   image: {
-  //     url: randomThumb,
-  //   },
-
-  //   caption: result.trim(),
-  //   footer: "Neura Inc",
-  //   buttons: [
-  //     buildSelectButton(
-  //       "Neura",
-  //       "Menu Favorit",
-
-  //       [
-  //         {
-  //           title: "Trait",
-  //           description: "Daftar Trait",
-  //           id: ".trait",
-  //         },
-
-  //         {
-  //           title: "Skill",
-  //           description: "Daftar Skill",
-  //           id: ".skill",
-  //         },
-  //       ],
-  //     ),
-  //   ],
-
-  //   bottom_sheet: true,
-  //   bottom_name: "Neura",
-  // });
 };
 
 handler.command = ["menu", "help"];

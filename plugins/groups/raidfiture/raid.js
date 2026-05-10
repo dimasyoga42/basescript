@@ -38,13 +38,7 @@ Party 4 (${raid.party.pt4.length}/4)
 ${list("pt4")}
 join: .join <ign> <pt1-pt4>`;
 
-    await sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Develop by ${config.OwnerName}`,
-      thumbnail: thumbnail,
-      text: message,
-      quoted: m,
-    });
+    await sendText(conn, m.chat, message, m);
   } catch (err) {
     console.error(err);
     await sendText(conn, m.chat, config.message.error, m);

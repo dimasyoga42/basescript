@@ -21,13 +21,12 @@ const handler = async (m, { conn }) => {
       });
 
     if (!["pt1", "pt2", "pt3", "pt4"].includes(pt))
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `use .join <ign> <pt1-pt4>`,
-        thumbnail,
-        text: config.message.invalid,
-        msg: m,
-      });
+      return sendText(
+        conn,
+        m.chat,
+        "Format salah gunakan .join ign pt1-pt4",
+        m,
+      );
 
     const user = m.key.participant || m.key.remoteJid;
     const data = await getUserData(db);

@@ -12,13 +12,7 @@ const handler = async (m, { conn }) => {
       const { data: db, error } = await supa.from("hdb").select("bosname");
 
       if (error || !db || db.length === 0) {
-        return sendFancyText(conn, m.chat, {
-          title: config.BotName,
-          body: `Develop by ${config.OwnerName}`,
-          thumbnail,
-          text: "Data kosong",
-          quoted: m,
-        });
+        return sendText(conn, m.chat, "Data kosong", m);
       }
 
       return await conn.sendButton(m.chat, {
@@ -45,26 +39,19 @@ const handler = async (m, { conn }) => {
       .maybeSingle();
 
     if (error || !data) {
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Develop by ${config.OwnerName}`,
-        thumbnail,
-        text: config.message.notFound,
-        quoted: m,
-      });
+      return sendText(conn, m.chat, config.message.notFound, m);
     }
 
     return sendText(conn, m.chat, data.stat, m);
   } catch (err) {
     console.error("HDB ERROR:", err);
 
-    return sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Develop by ${config.OwnerName}`,
-      thumbnail,
-      text: config.message.error,
-      quoted: m,
-    });
+    return sendText(
+      conn,
+      m.chat,
+      "Terjadi Kesalahan Pada Saat Pengambilan data",
+      m,
+    );
   }
 };
 
