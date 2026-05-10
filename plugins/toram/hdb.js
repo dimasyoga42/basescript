@@ -1,5 +1,5 @@
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
@@ -54,13 +54,7 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    return sendFancyText(conn, m.chat, {
-      title: data.bosname,
-      body: `Develop by ${config.OwnerName}`,
-      thumbnail,
-      text: data.stat,
-      quoted: m,
-    });
+    return sendText(conn, m.chat, data.stat, m);
   } catch (err) {
     console.error("HDB ERROR:", err);
 
