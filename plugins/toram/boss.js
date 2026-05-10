@@ -1,4 +1,5 @@
 import { config, thumbnail } from "../../config.js"; // ✅ tambah config
+import { buildSelectButton } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
@@ -79,7 +80,29 @@ const handler = async (m, { conn }) => {
       `*Stats*\n${stats}\n\n` +
       `*Drop*\n${drops}`;
 
+    const { data: db, error: dbError } = await supa
+      .from("bosv22")
+      .select("name");
     await conn.sendMessage(m.chat, { text: mtext }, { quoted: m });
+    await conn.sendButton(
+      m.chat,
+      {
+        text: mtext,
+        footer: `NeuraInc`,
+        buttons: [
+          buildSelectButton(
+            "Boss",
+            "daftar Bos",
+            db.map((item) => ({
+              title: item.name,
+              description: `melihat detai ${item.name}`,
+              id: `.bos ${item.name}`,
+            })),
+          ),
+        ],
+      },
+      { quoted: msg },
+    );
   } catch (err) {
     console.error("[boss]", err);
     // ✅ Opsional: kasih feedback ke user kalau error
