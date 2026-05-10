@@ -83,7 +83,7 @@ const handler = async (m, { conn }) => {
     const { data: db, error: dbError } = await supa
       .from("bosv22")
       .select("name");
-    await conn.sendMessage(m.chat, { text: mtext }, { quoted: m });
+    // await conn.sendMessage(m.chat, { text: mtext }, { quoted: m });
     await conn.sendButton(
       m.chat,
       {
