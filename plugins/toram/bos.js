@@ -16,14 +16,7 @@ const handler = async (m, { conn }) => {
 
     const name = arg.slice(1).join(" ").trim();
 
-    if (!name)
-      return sendText(
-        conn,
-        m.chat,
-        `Format yang anda gunakan salah .bosdef any`,
-      );
-
-    if (name === "--all") {
+    if (!name) {
       const { data: db, error } = await supa.from("bosdef").select("name");
 
       if (error || !db)
