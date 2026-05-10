@@ -79,23 +79,20 @@ const handler = async (m, { conn }) => {
     //   text: parser,
     //   quoted: m,
     // });
+    const { data: db, error } = await supa.from("bosdef").select("name");
     conn.sendButton(m.chat, {
       text: parser,
       footer: "Neura inc",
       buttons: [
-        buildSelectButton("Bosdef", "Menu yang relevan", [
-          {
-            title: "bos",
-            description: "Daftar bos",
-            id: ".bos",
-          },
-
-          {
-            title: "bosdef",
-            description: "Daftar bosdef",
-            id: ".bosdef --all",
-          },
-        ]),
+        buildSelectButton(
+          "Bosdef",
+          "Daftar Bos yang tersedia",
+          db.map((item) => ({
+            title: item.name,
+            description: `melihat detail ${item.name}`,
+            id: `.bosdef ${item.name}`,
+          })),
+        ),
       ],
     });
   } catch (err) {
