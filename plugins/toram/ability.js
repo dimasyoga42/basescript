@@ -135,6 +135,14 @@ const handler = async (m, { conn }) => {
               description: "Kembali ke bahasa asli",
               id: `.trait ${item.name}`,
             },
+            {
+              title: "Daftar Trait",
+              row: data.map((item) => ({
+                title: item.name,
+                description: `melihat detail ${item.name}`,
+                id: `.trait ${item.name}`,
+              })),
+            },
           ]),
         ],
       });
