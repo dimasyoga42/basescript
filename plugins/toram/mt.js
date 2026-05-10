@@ -19,7 +19,7 @@ const handler = async (m, { conn }) => {
     const soup = cheerio.load(des.data);
     const result = soup("#news").find("div").text().trim();
     const reg = result.split("Kembali ke atas")[0];
-    await sendText(conn, m.chat, `${reg}`, m);
+    await conn.sendMessage(m.chat, { text: reg });
     // sendBtns(conn, m.chat, {
     //   title: m.pushName,
     //   body: "Neura Inc",
