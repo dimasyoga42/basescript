@@ -79,26 +79,7 @@ const handler = async (m, { conn }) => {
         statEffect = await translateText(item.stat_effect, "en");
       }
 
-      await editText(conn, m.chat, m, `*${item.name}*\n\n${statEffect}`);
-
-      return conn.sendButton(m.chat, {
-        text: "Translate Option",
-        footer: "Neurainc",
-        buttons: [
-          buildSelectButton("Translate", "Bahasa Yang Tersedia", [
-            {
-              title: "Bahasa Inggris",
-              description: "Ubah ke bahasa Inggris",
-              id: `.trait --ing ${item.name}`,
-            },
-            {
-              title: "Bahasa Indonesia",
-              description: "Kembali ke bahasa asli",
-              id: `.trait ${item.name}`,
-            },
-          ]),
-        ],
-      });
+      return await editText(conn, m.chat, m, `*${item.name}*\n\n${statEffect}`);
     }
 
     // PARTIAL MATCH
@@ -122,26 +103,7 @@ const handler = async (m, { conn }) => {
         statEffect = await translateText(item.stat_effect, "en");
       }
 
-      await editText(conn, m.chat, m, `*${item.name}*\n\n${statEffect}`);
-
-      return conn.sendButton(m.chat, {
-        text: "Translate Option",
-        footer: "Neurainc",
-        buttons: [
-          buildSelectButton("Translate", "Bahasa Yang Tersedia", [
-            {
-              title: "Bahasa Inggris",
-              description: "Ubah ke bahasa Inggris",
-              id: `.trait --ing ${item.name}`,
-            },
-            {
-              title: "Bahasa Indonesia",
-              description: "Kembali ke bahasa asli",
-              id: `.trait ${item.name}`,
-            },
-          ]),
-        ],
-      });
+      return await editText(conn, m.chat, m, `*${item.name}*\n\n${statEffect}`);
     }
 
     // MULTI RESULT
