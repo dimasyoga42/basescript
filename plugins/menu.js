@@ -42,45 +42,45 @@ const handler = async (m, { conn }) => {
   //   thumbnail: randomThumb,
   //   quoted: m,
   // });
-  // await sendFancyTextModif(conn, m.chat, {
-  //   title: "Neura Sama",
-  //   body: "Selalu siap Untuk mu",
-  //   name: `hello ${m.pushName}`,
-  //   text: result.trim(),
-  //   thumbnail: randomThumb,
-  // });
-  // conn.sendMessage(m.chat, { text: result.trim() }, { quoted: m });
-  await conn.sendButton(m.chat, {
-    image: {
-      url: randomThumb,
-    },
-
-    caption: result.trim(),
-    footer: "Neura Inc",
-    buttons: [
-      buildSelectButton(
-        "Neura",
-        "Menu Favorit",
-
-        [
-          {
-            title: "Trait",
-            description: "Daftar Trait",
-            id: ".trait",
-          },
-
-          {
-            title: "Skill",
-            description: "Daftar Skill",
-            id: ".skill",
-          },
-        ],
-      ),
-    ],
-
-    bottom_sheet: true,
-    bottom_name: "Neura",
+  await sendFancyTextModif(conn, m.chat, {
+    title: "Neura Sama",
+    body: "Selalu siap Untuk mu",
+    name: `${m.pushName}`,
+    text: result.trim(),
+    thumbnail: randomThumb,
   });
+  // conn.sendMessage(m.chat, { text: result.trim() }, { quoted: m });
+  // await conn.sendButton(m.chat, {
+  //   image: {
+  //     url: randomThumb,
+  //   },
+
+  //   caption: result.trim(),
+  //   footer: "Neura Inc",
+  //   buttons: [
+  //     buildSelectButton(
+  //       "Neura",
+  //       "Menu Favorit",
+
+  //       [
+  //         {
+  //           title: "Trait",
+  //           description: "Daftar Trait",
+  //           id: ".trait",
+  //         },
+
+  //         {
+  //           title: "Skill",
+  //           description: "Daftar Skill",
+  //           id: ".skill",
+  //         },
+  //       ],
+  //     ),
+  //   ],
+
+  //   bottom_sheet: true,
+  //   bottom_name: "Neura",
+  // });
 };
 
 handler.command = ["menu", "help"];
