@@ -79,10 +79,8 @@ const handler = async (m, { conn }) => {
         statEffect = await translateText(item.stat_effect, "en");
       }
 
-      await editText(conn, m.chat, m, `*${item.name}*\n\n${statEffect}`);
-
       return conn.sendButton(m.chat, {
-        text: "Translate Option",
+        text: `*${item.name}*\n\n${statEffect}`,
         footer: "Neurainc",
         buttons: [
           buildSelectButton("Translate", "Bahasa Yang Tersedia", [
@@ -122,10 +120,8 @@ const handler = async (m, { conn }) => {
         statEffect = await translateText(item.stat_effect, "en");
       }
 
-      await editText(conn, m.chat, m, `*${item.name}*\n\n${statEffect}`);
-
       return conn.sendButton(m.chat, {
-        text: "Translate Option",
+        text: `*${item.name}*\n\n${statEffect}`,
         footer: "Neurainc",
         buttons: [
           buildSelectButton("Translate", "Bahasa Yang Tersedia", [
