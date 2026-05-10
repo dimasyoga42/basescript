@@ -48,15 +48,16 @@ const handler = async (m, { conn }) => {
         text: "Pilih salah satu ability:",
         footer: config.OwnerName,
         buttons: [
-          buildSelectButton(
-            "Daftar Trait",
-            "Silahkan pilih salah satu",
-            data.map((item) => ({
-              title: item.name,
-              description: `Lihat Stat dari ${item.name}`,
-              id: `.trait ${item.name}`,
-            })),
-          ),
+          buildSelectButton("Daftar Trait", "Silahkan pilih salah satu", [
+            {
+              title: "Trait List",
+              rows: data.map((item) => ({
+                title: item.name,
+                description: `Lihat Stat dari ${item.name}`,
+                id: `.trait ${item.name}`,
+              })),
+            },
+          ]),
         ],
         bottom_sheet: true,
         bottom_name: "Menu Ability",
@@ -83,16 +84,29 @@ const handler = async (m, { conn }) => {
         text: `*${item.name}*\n\n${statEffect}`,
         footer: "Neurainc",
         buttons: [
-          buildSelectButton("Translate", "Bahasa Yang Tersedia", [
+          buildSelectButton("Menu Trait", "Pilih salah satu", [
             {
-              title: "Bahasa Inggris",
-              description: "Ubah ke bahasa Inggris",
-              id: `.trait --ing ${item.name}`,
+              title: "Translate",
+              rows: [
+                {
+                  title: "Bahasa Inggris",
+                  description: "Ubah ke bahasa Inggris",
+                  id: `.trait --ing ${item.name}`,
+                },
+                {
+                  title: "Bahasa Indonesia",
+                  description: "Kembali ke bahasa asli",
+                  id: `.trait ${item.name}`,
+                },
+              ],
             },
             {
-              title: "Bahasa Indonesia",
-              description: "Kembali ke bahasa asli",
-              id: `.trait ${item.name}`,
+              title: "Daftar Trait",
+              rows: exactData.map((trait) => ({
+                title: trait.name,
+                description: `Melihat detail ${trait.name}`,
+                id: `.trait ${trait.name}`,
+              })),
             },
           ]),
         ],
@@ -124,23 +138,28 @@ const handler = async (m, { conn }) => {
         text: `*${item.name}*\n\n${statEffect}`,
         footer: "Neurainc",
         buttons: [
-          buildSelectButton("Translate", "Bahasa Yang Tersedia", [
+          buildSelectButton("Menu Trait", "Pilih salah satu", [
             {
-              title: "Bahasa Inggris",
-              description: "Ubah ke bahasa Inggris",
-              id: `.trait --ing ${item.name}`,
-            },
-            {
-              title: "Bahasa Indonesia",
-              description: "Kembali ke bahasa asli",
-              id: `.trait ${item.name}`,
+              title: "Translate",
+              rows: [
+                {
+                  title: "Bahasa Inggris",
+                  description: "Ubah ke bahasa Inggris",
+                  id: `.trait --ing ${item.name}`,
+                },
+                {
+                  title: "Bahasa Indonesia",
+                  description: "Kembali ke bahasa asli",
+                  id: `.trait ${item.name}`,
+                },
+              ],
             },
             {
               title: "Daftar Trait",
-              row: data.map((item) => ({
-                title: item.name,
-                description: `melihat detail ${item.name}`,
-                id: `.trait ${item.name}`,
+              rows: data.map((trait) => ({
+                title: trait.name,
+                description: `Melihat detail ${trait.name}`,
+                id: `.trait ${trait.name}`,
               })),
             },
           ]),
@@ -153,15 +172,16 @@ const handler = async (m, { conn }) => {
       text: `Ditemukan *${data.length}* ability untuk: _${query}_\nPilih salah satu:`,
       footer: config.OwnerName,
       buttons: [
-        buildSelectButton(
-          "Daftar Trait",
-          "Silahkan pilih salah satu",
-          data.map((item) => ({
-            title: item.name,
-            description: `Lihat Stat dari ${item.name}`,
-            id: `.trait ${item.name}`,
-          })),
-        ),
+        buildSelectButton("Daftar Trait", "Silahkan pilih salah satu", [
+          {
+            title: "Trait Result",
+            rows: data.map((item) => ({
+              title: item.name,
+              description: `Lihat Stat dari ${item.name}`,
+              id: `.trait ${item.name}`,
+            })),
+          },
+        ]),
       ],
       bottom_sheet: true,
       bottom_name: "Menu Ability",
