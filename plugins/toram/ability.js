@@ -103,7 +103,7 @@ const handler = async (m, { conn }) => {
         statEffect = await translateText(item.stat_effect, "en");
       }
 
-      return await editText(conn, m.chat, m, `*${item.name}*\n\n${statEffect}`);
+      return await sendText(conn, m.chat, m, `*${item.name}*\n\n${statEffect}`);
     }
 
     // MULTI RESULT
