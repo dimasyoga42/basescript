@@ -1,42 +1,145 @@
-// EXACT MATCH
-const { data: exactData, error: exactError } = await supa
-  .from("ablityv2")
-  .select("*")
-  .ilike("name", query)
-  .limit(1);
+import translate from "google-translate-api-x";
+import { config, thumbnail } from "../../config.js";
+import {
+  buildSelectButton,
+  editText,
+  sendFancyText,
+  sendText,
+} from "../../src/config/message.js";
+import { supa } from "../../src/config/supa.js";
 
-if (!exactError && exactData?.length === 1) {
-  const item = exactData[0];
+async function translateText(text, to = "en") {
+  try {
+    if (!text) return text;
 
-  let statEffect = item.stat_effect;
+    const result = await translate(text, { to });
 
-  if (isTranslate) {
-    statEffect = await translateText(item.stat_effect, "en");
+    return result.text || text;
+  } catch (err) {
+    console.error("[translate]", err);
+
+    return text;
   }
-
-  return await editText(conn, m.chat, m, `*${item.name}*\n\n${statEffect}`);
 }
 
-// PARTIAL MATCH
-const { data, error } = await supa
-  .from("ablityv2")
-  .select("*")
-  .ilike("name", `%${query}%`)
-  .order("name", { ascending: true });
+const handler = async (m, { conn }) => {
+  try {
+    const text = (m.text || "").trim();
+    const parts = text.split(/\s+/);
 
-if (error || !data?.length) {
-  return sendText(conn, m.chat, config.message.notFound, m);
-}
+    const isTranslate = parts[1] === "--ing";
 
-// JIKA CUMA 1 HASIL
-if (data.length === 1) {
-  const item = data[0];
+    const query = isTranslate
+      ? parts.slice(2).join(" ").trim()
+      : parts.slice(1).join(" ").trim();
 
-  let statEffect = item.stat_effect;
+    // LIST SEMUA TRAIT
+    if (!query) {
+      const { data, error } = await supa
+        .from("ablityv2")
+        .select("name")
+        .order("name", { ascending: true });
 
-  if (isTranslate) {
-    statEffect = await translateText(item.stat_effect, "en");
+      if (error || !data?.length) {
+        return sendText(conn, m.chat, "Gagal mengambil daftar ability.", m);
+      }
+
+      return await conn.sendButton(m.chat, {
+        text: "Pilih salah satu ability:",
+        footer: config.OwnerName,
+        buttons: [
+          buildSelectButton(
+            "Daftar Trait",
+            "Silahkan pilih salah satu",
+            data.map((item) => ({
+              title: item.name,
+              description: `Lihat Stat dari ${item.name}`,
+              id: `.trait ${item.name}`,
+            })),
+          ),
+        ],
+        bottom_sheet: true,
+        bottom_name: "Menu Ability",
+      });
+    }
+
+    // EXACT MATCH
+    const { data: exactData, error: exactError } = await supa
+      .from("ablityv2")
+      .select("*")
+      .ilike("name", query)
+      .limit(1);
+
+    if (!exactError && exactData?.length === 1) {
+      const item = exactData[0];
+
+      let statEffect = item.stat_effect;
+
+      if (isTranslate) {
+        statEffect = await translateText(item.stat_effect, "en");
+      }
+
+      return await editText(conn, m.chat, m, `*${item.name}*\n\n${statEffect}`);
+    }
+
+    // PARTIAL MATCH
+    const { data, error } = await supa
+      .from("ablityv2")
+      .select("*")
+      .ilike("name", `%${query}%`)
+      .order("name", { ascending: true });
+
+    if (error || !data?.length) {
+      return sendText(conn, m.chat, config.message.notFound, m);
+    }
+
+    // JIKA CUMA 1 HASIL
+    if (data.length === 1) {
+      const item = data[0];
+
+      let statEffect = item.stat_effect;
+
+      if (isTranslate) {
+        statEffect = await translateText(item.stat_effect, "en");
+      }
+
+      return await editText(conn, m.chat, m, `*${item.name}*\n\n${statEffect}`);
+    }
+
+    // MULTI RESULT
+    return await conn.sendButton(m.chat, {
+      text: `Ditemukan *${data.length}* ability untuk: _${query}_\nPilih salah satu:`,
+      footer: config.OwnerName,
+      buttons: [
+        buildSelectButton(
+          "Daftar Trait",
+          "Silahkan pilih salah satu",
+          data.map((item) => ({
+            title: item.name,
+            description: `Lihat Stat dari ${item.name}`,
+            id: `.trait ${item.name}`,
+          })),
+        ),
+      ],
+      bottom_sheet: true,
+      bottom_name: "Menu Ability",
+    });
+  } catch (err) {
+    console.error("[ability]", err);
+
+    await sendFancyText(conn, m.chat, {
+      title: config.BotName,
+      body: `Developer By ${config.OwnerName}`,
+      thumbnail,
+      text: config.message.error,
+      quoted: m,
+    });
   }
+};
 
-  return await editText(conn, m.chat, m, `*${item.name}*\n\n${statEffect}`);
-}
+handler.command = "trait";
+handler.alias = ["ability"];
+handler.category = "Toram Search";
+handler.submenu = "Toram";
+
+export default handler;
