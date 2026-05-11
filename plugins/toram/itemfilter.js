@@ -33,7 +33,8 @@ const handler = async (m, { conn }) => {
 
     // 🔥 detect flag
     let categoryFilter = null;
-
+    let perbandingan = null;
+    let dbStat = [];
     if (/--add/i.test(query)) {
       categoryFilter = "Additional";
       query = query.replace(/--add/gi, "").trim();
@@ -79,7 +80,18 @@ const handler = async (m, { conn }) => {
       categoryFilter = "Special";
       query = query.replace(/--ring/gi, "").trim();
     }
-
+    if (/>/i.test(query)) {
+      perbandingan = ">";
+      const { data, err } = supa
+        .from("item_v2")
+        .select("Effects, Category")
+        .ilike("Effects", `${query}`)
+        .eq("Category", categoryFilter);
+      dbStat.push(data);
+    }
+    if (/</i.test(query)) {
+      return (perbandingan = "<");
+    }
     // 🔥 build query
     let db = supa
       .from("item_v2")
