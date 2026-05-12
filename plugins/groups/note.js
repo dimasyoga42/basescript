@@ -99,7 +99,9 @@ const handler = async (m, { conn }) => {
       return await conn.sendMessage(
         m.chat,
         {
-          image: Buffer.from(note.media),
+          image: {
+            url: `${note.media}?token=${process.DB_KEY}`,
+          },
           caption,
         },
         {
@@ -122,7 +124,6 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = ["note"];
-
 handler.category = "Menu Grub";
 handler.submenu = "Note";
 
