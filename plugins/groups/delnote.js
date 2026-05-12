@@ -6,7 +6,10 @@ const handler = async (m, { conn }) => {
   try {
     const id = m.text.split(" ")[1];
     if (!id) {
-      const { data: db, err } = await supa.from("note").select("id, note_name");
+      const { data: db, err } = await supa
+        .from("note")
+        .select("id, note_name")
+        .eq("grubId", m.chat);
       return conn.sendButton(m.chat, {
         text: "Pilih salah satu untuk hapus catatan",
         footer: "Neurainc",
