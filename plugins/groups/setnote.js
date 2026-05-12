@@ -91,7 +91,7 @@ const handler = async (m, { conn }) => {
         return await sendText(conn, m.chat, "Gagal membuat url gambar", m);
       }
 
-      mediaUrl = signedData.signedUrl;
+      mediaUrl = `${process.env.SUPABASE_URL}${signedData.signedUrl}`;
     }
 
     const { error } = await supa.from("note").insert({
