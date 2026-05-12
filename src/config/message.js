@@ -261,28 +261,12 @@ export const sendFancyText = async (
 export const sendFancyTextModif = async (
   sock,
   jid,
-  {
-    title = "Bot",
-    body = "Message",
-    name = "neura",
-    text = "",
-    quoted = null,
-  } = {},
+  { name = "neura", text = "", quoted = null } = {},
 ) => {
   let externalAdReply = {
-    title,
-    body,
     mediaType: 1,
     containsAutoReply: true,
   };
-
-  if (thumbnail) {
-    if (Buffer.isBuffer(thumbnail)) {
-      externalAdReply.thumbnail = thumbnail;
-    } else {
-      externalAdReply.thumbnailUrl = thumbnail;
-    }
-  }
 
   await sock.sendPresenceUpdate("composing", jid);
   await new Promise((r) => setTimeout(r, 100));

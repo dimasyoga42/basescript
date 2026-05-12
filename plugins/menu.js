@@ -32,39 +32,44 @@ const handler = async (m, { conn }) => {
     result += categories[cat].map((c) => `│.${c}`).join("\n") + "\n╰────\n";
   }
 
+  await sendFancyTextModif(conn, m.chat, {
+    name: m.pushName,
+    text: result.trim(),
+    quoted: m,
+  });
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
-  await conn.sendButton(m.chat, {
-    image: {
-      url: randomThumb,
-    },
+  // await conn.sendButton(m.chat, {
+  //   image: {
+  //     url: randomThumb,
+  //   },
 
-    caption: result.trim(),
-    footer: "Neura Inc",
-    buttons: [
-      buildSelectButton(
-        "Neura",
-        "Menu Favorit",
+  //   caption: result.trim(),
+  //   footer: "Neura Inc",
+  //   buttons: [
+  //     buildSelectButton(
+  //       "Neura",
+  //       "Menu Favorit",
 
-        [
-          {
-            title: "Trait",
-            description: "Daftar Trait",
-            id: ".trait",
-          },
+  //       [
+  //         {
+  //           title: "Trait",
+  //           description: "Daftar Trait",
+  //           id: ".trait",
+  //         },
 
-          {
-            title: "Skill",
-            description: "Daftar Skill",
-            id: ".skill",
-          },
-        ],
-      ),
-    ],
+  //         {
+  //           title: "Skill",
+  //           description: "Daftar Skill",
+  //           id: ".skill",
+  //         },
+  //       ],
+  //     ),
+  //   ],
 
-    bottom_sheet: true,
-    bottom_name: "Neura",
-  });
+  //   bottom_sheet: true,
+  //   bottom_name: "Neura",
+  // });
 };
 
 handler.command = ["menu", "help"];
