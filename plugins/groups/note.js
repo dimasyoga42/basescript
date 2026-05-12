@@ -100,7 +100,7 @@ const handler = async (m, { conn }) => {
         m.chat,
         {
           image: {
-            url: `${note.media}?token=${process.DB_KEY}`,
+            url: `${note.media}?token=${process.env.DB_KEY}`,
           },
           caption,
         },
