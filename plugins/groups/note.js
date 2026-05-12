@@ -4,25 +4,45 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const name = m.text.replace(/^\.note\s*/i, "").trim();
-    if (!name) {
-      const { data: db, err } = await supa.from("note").select("note_name");
-      if (!db || err)
-        return conn.sendMessage(
+    const query = m.text.replace(/^\.note\s*/i, "").trim();
+
+    if (!query) {
+      const { data, error } = await supa
+        .from("note")
+        .select("id, note_name")
+        .eq("grubId", m.chat)
+        .order("id", { ascending: true });
+
+      if (error) {
+        console.error("[note][list]", error);
+
+        return await sendText(
+          conn,
           m.chat,
-          { text: "Tidak Menemukan Data yang tersimpan untuk grub ini" },
-          { quoted: m },
+          "Gagal mengambil daftar catatan",
+          m,
         );
+      }
+
+      if (!data || data.length === 0) {
+        return await sendText(
+          conn,
+          m.chat,
+          "Belum ada catatan yang tersimpan di grup ini",
+          m,
+        );
+      }
+
       return await conn.sendButton(m.chat, {
-        text: "berikut adalah catanan yang tersimpan",
-        footer: "Neurainc",
+        text: `📒 Berikut daftar catatan yang tersimpan\n\nTotal: ${data.length} catatan`,
+        footer: config.OwnerName || "Neurainc",
         buttons: [
           buildSelectButton(
-            "Catatan",
-            "Pilih salah satu untuk melihat",
-            db.map((item) => ({
+            "Daftar Catatan",
+            "Pilih salah satu catatan",
+            data.map((item) => ({
               title: item.note_name,
-              description: `lihat detail catatan ${item.note_name}`,
+              description: `Lihat detail catatan ${item.note_name}`,
               id: `.note ${item.note_name}`,
             })),
           ),
@@ -34,21 +54,60 @@ const handler = async (m, { conn }) => {
       .from("note")
       .select("id, note_name, isi")
       .eq("grubId", m.chat)
-      .ilike("note_name", `%${name}%`)
-      .limit(1);
+      .ilike("note_name", `%${query}%`)
+      .order("id", { ascending: true })
+      .limit(10);
 
-    if (error) return sendText(conn, m.chat, "Failed to fetch note", m);
-    if (!data?.length) return sendText(conn, m.chat, "Note not found", m);
+    if (error) {
+      console.error("[note][fetch]", error);
 
-    const n = data[0];
-    await sendText(conn, m.chat, `*${n.note_name}*\n\n${n.isi}`, m);
+      return await sendText(conn, m.chat, "Gagal mengambil data catatan", m);
+    }
+
+    if (!data || data.length === 0) {
+      return await sendText(
+        conn,
+        m.chat,
+        `Catatan dengan nama "${query}" tidak ditemukan`,
+        m,
+      );
+    }
+
+    if (data.length > 1) {
+      return await conn.sendButton(m.chat, {
+        text: `Ditemukan ${data.length} catatan yang mirip dengan "${query}"`,
+        footer: config.OwnerName || "Neurainc",
+        buttons: [
+          buildSelectButton(
+            "Pilih Catatan",
+            "Silahkan pilih salah satu",
+            data.map((item) => ({
+              title: item.note_name,
+              description: `Lihat isi catatan ${item.note_name}`,
+              id: `.note ${item.note_name}`,
+            })),
+          ),
+        ],
+      });
+    }
+
+    const note = data[0];
+
+    await sendText(conn, m.chat, `📒 *${note.note_name}*\n\n${note.isi}`, m);
   } catch (err) {
     console.error("[note]", err);
-    await sendText(conn, m.chat, config.message.error, m);
+
+    await sendText(
+      conn,
+      m.chat,
+      config?.message?.error || "Terjadi kesalahan saat memproses permintaan",
+      m,
+    );
   }
 };
 
 handler.command = ["note"];
 handler.category = "Menu Grub";
 handler.submenu = "Note";
+
 export default handler;
