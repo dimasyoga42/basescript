@@ -52,7 +52,7 @@ const handler = async (m, { conn }) => {
 
     const { data, error } = await supa
       .from("note")
-      .select("id, note_name, isi")
+      .select("id, note_name, isi, media")
       .eq("grubId", m.chat)
       .ilike("note_name", `%${query}%`)
       .order("id", { ascending: true })
@@ -93,7 +93,24 @@ const handler = async (m, { conn }) => {
 
     const note = data[0];
 
-    await sendText(conn, m.chat, `📒 *${note.note_name}*\n\n${note.isi}`, m);
+    const caption = `📒 *${note.note_name}*\n\n${note.isi}`;
+
+    if (note.media) {
+      return await conn.sendMessage(
+        m.chat,
+        {
+          image: {
+            url: note.media,
+          },
+          caption,
+        },
+        {
+          quoted: m,
+        },
+      );
+    }
+
+    await sendText(conn, m.chat, caption, m);
   } catch (err) {
     console.error("[note]", err);
 
