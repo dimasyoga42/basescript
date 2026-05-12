@@ -1,8 +1,13 @@
+import fs from "fs/promises";
+import path from "path";
+
 import { downloadMediaMessage, getContentType } from "@whiskeysockets/baileys";
 
 import { config } from "../../config.js";
 import { sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
+
+const TEMP_DIR = "./temp/note";
 
 const handler = async (m, { conn }) => {
   try {
@@ -49,7 +54,7 @@ const handler = async (m, { conn }) => {
 
     const messageType = getContentType(quoted.message || quoted.msg || {});
 
-    let mediaUrl = null;
+    let mediaPath = null;
 
     if (messageType === "imageMessage") {
       const buffer = await downloadMediaMessage(
@@ -62,43 +67,24 @@ const handler = async (m, { conn }) => {
         },
       );
 
+      await fs.mkdir(TEMP_DIR, {
+        recursive: true,
+      });
+
       const safeName = name.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
 
       const fileName = `${Date.now()}-${safeName}.jpg`;
 
-      const filePath = `${m.chat}/${fileName}`;
+      mediaPath = path.join(TEMP_DIR, fileName);
 
-      const { error: uploadError } = await supa.storage
-        .from("note")
-        .upload(filePath, buffer, {
-          upsert: true,
-          contentType: "image/jpeg",
-        });
-
-      if (uploadError) {
-        console.error("[setnote][upload]", uploadError);
-
-        return await sendText(conn, m.chat, "Gagal upload gambar catatan", m);
-      }
-
-      const { data: signedData, error: signedError } = await supa.storage
-        .from("note")
-        .createSignedUrl(filePath, 60 * 60 * 24 * 365);
-
-      if (signedError) {
-        console.error("[setnote][signed-url]", signedError);
-
-        return await sendText(conn, m.chat, "Gagal membuat url gambar", m);
-      }
-
-      mediaUrl = `${process.env.SUPABASE_URL}${signedData.signedUrl}`;
+      await fs.writeFile(mediaPath, buffer);
     }
 
     const { error } = await supa.from("note").insert({
       grubId: m.chat,
       note_name: name,
       isi: content,
-      media: mediaUrl,
+      media: mediaPath,
     });
 
     if (error) {

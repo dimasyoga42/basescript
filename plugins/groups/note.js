@@ -1,3 +1,5 @@
+import fs from "fs/promises";
+
 import { config } from "../../config.js";
 import { buildSelectButton, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
@@ -96,18 +98,24 @@ const handler = async (m, { conn }) => {
     const caption = `📒 *${note.note_name}*\n\n${note.isi}`;
 
     if (note.media) {
-      return await conn.sendMessage(
-        m.chat,
-        {
-          image: {
-            url: `${note.media}?token=${process.env.DB_KEY}`,
+      try {
+        const buffer = await fs.readFile(note.media);
+
+        return await conn.sendMessage(
+          m.chat,
+          {
+            image: buffer,
+            caption,
           },
-          caption,
-        },
-        {
-          quoted: m,
-        },
-      );
+          {
+            quoted: m,
+          },
+        );
+      } catch (mediaError) {
+        console.error("[note][media]", mediaError);
+
+        return await sendText(conn, m.chat, caption, m);
+      }
     }
 
     await sendText(conn, m.chat, caption, m);
@@ -124,6 +132,7 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = ["note"];
+
 handler.category = "Menu Grub";
 handler.submenu = "Note";
 
