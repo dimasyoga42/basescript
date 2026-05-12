@@ -45,13 +45,15 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    const messageType = getContentType(m.message);
+    const quoted = m.quoted ? m.quoted : m;
 
-    let mediaUrl = null;
+    const messageType = getContentType(quoted.message || quoted.msg || {});
+
+    let mediaBuffer = null;
 
     if (messageType === "imageMessage") {
-      const buffer = await downloadMediaMessage(
-        m,
+      mediaBuffer = await downloadMediaMessage(
+        quoted,
         "buffer",
         {},
         {
@@ -59,38 +61,13 @@ const handler = async (m, { conn }) => {
           reuploadRequest: conn.updateMediaMessage,
         },
       );
-
-      const safeName = name.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
-
-      const fileName = `${Date.now()}-${safeName}.jpg`;
-
-      const filePath = `${m.chat}/${fileName}`;
-
-      const { error: uploadError } = await supa.storage
-        .from("note")
-        .upload(filePath, buffer, {
-          upsert: true,
-          contentType: "image/jpeg",
-        });
-
-      if (uploadError) {
-        console.error("[setnote][upload]", uploadError);
-
-        return await sendText(conn, m.chat, "Gagal upload gambar catatan", m);
-      }
-
-      const { data: publicData } = supa.storage
-        .from("note")
-        .getPublicUrl(filePath);
-
-      mediaUrl = publicData.publicUrl;
     }
 
     const { error } = await supa.from("note").insert({
       grubId: m.chat,
       note_name: name,
       isi: content,
-      media: mediaUrl,
+      media: mediaBuffer,
     });
 
     if (error) {
@@ -114,6 +91,7 @@ const handler = async (m, { conn }) => {
 
 handler.command = ["setnote"];
 handler.alias = ["addnote"];
+
 handler.category = "Menu Grub";
 handler.submenu = "Note";
 
