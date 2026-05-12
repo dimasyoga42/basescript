@@ -60,7 +60,7 @@ export const config = {
   owner: ["272206605082689@lid", "179573169848377@lid"],
   admin: "179573169848377@lid",
   pembolong: `
-  *extract*: 3 - 4M
+  *extract*: 5 - 7M
   Fairy Silk 4-5M
 
   *OHS*
@@ -76,7 +76,7 @@ export const config = {
   1-2: 80-100M
 
   *STAFF*
-  0-1: 15-20M
+  0-1: 20-30M
   1-2: 50-90M
 
   *MD*
