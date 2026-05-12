@@ -266,8 +266,6 @@ export const sendFancyTextModif = async (
     body = "Message",
     name = "neura",
     text = "",
-    thumbnail = null,
-    renderLargerThumbnail = true,
     quoted = null,
   } = {},
 ) => {
@@ -275,10 +273,6 @@ export const sendFancyTextModif = async (
     title,
     body,
     mediaType: 1,
-    previewType: "PHOTO",
-    renderLargerThumbnail,
-    showAdAttribution: false,
-    sourceUrl: "https://whatsapp.com",
     containsAutoReply: true,
   };
 

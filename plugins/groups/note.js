@@ -1,17 +1,34 @@
 import { config } from "../../config.js";
-import { sendText } from "../../src/config/message.js";
+import { buildSelectButton, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
     const name = m.text.replace(/^\.note\s*/i, "").trim();
-    if (!name)
-      return sendText(
-        conn,
-        m.chat,
-        "Enter note title\nExample: .note My Title",
-        m,
-      );
+    if (!name) {
+      const { data: db, err } = await supa.from("note").select("note_name");
+      if (!db || err)
+        return conn.sendMessage(
+          m.chat,
+          { text: "Tidak Menemukan Data yang tersimpan untuk grub ini" },
+          { quoted: m },
+        );
+      return conn.senButton(m.chat, {
+        text: "berikut adalah catanan yang tersimpan",
+        footer: "Neurainc",
+        buttons: [
+          buildSelectButton(
+            "Catatan",
+            "Pilih salah satu untuk melihat",
+            db.map((item) => ({
+              title: item.note_name,
+              description: `lihat detail catatan ${item.note_name}`,
+              id: `.note ${item.note_name}`,
+            })),
+          ),
+        ],
+      });
+    }
 
     const { data, error } = await supa
       .from("note")
