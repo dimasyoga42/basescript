@@ -13,7 +13,7 @@ const handler = async (m, { conn }) => {
           { text: "Tidak Menemukan Data yang tersimpan untuk grub ini" },
           { quoted: m },
         );
-      return conn.senButton(m.chat, {
+      return await conn.sendButton(m.chat, {
         text: "berikut adalah catanan yang tersimpan",
         footer: "Neurainc",
         buttons: [

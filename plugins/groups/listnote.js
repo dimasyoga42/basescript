@@ -4,20 +4,31 @@ import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const { data, error } = await supa
+    const { data: db, error } = await supa
       .from("note")
       .select("id, note_name")
       .eq("grubId", m.chat)
       .order("id", { ascending: true });
 
     if (error) return sendText(conn, m.chat, "Failed to fetch note list", m);
-    if (!data?.length)
+    if (!db?.length)
       return sendText(conn, m.chat, "No notes saved in this group", m);
 
-    const list = data
-      .map((i, n) => `${n + 1}. ${i.note_name} (${i.id})`)
-      .join("\n");
-    await sendText(conn, m.chat, `*NOTE LIST*\n\n${list}`, m);
+    await conn.sendButton(m.chat, {
+      text: "berikut adalah catanan yang tersimpan",
+      footer: "Neurainc",
+      buttons: [
+        buildSelectButton(
+          "Catatan",
+          "Pilih salah satu untuk melihat",
+          db.map((item) => ({
+            title: item.note_name,
+            description: `lihat detail catatan ${item.note_name}`,
+            id: `.note ${item.note_name}`,
+          })),
+        ),
+      ],
+    });
   } catch (err) {
     console.error("[notelist]", err);
     await sendText(conn, m.chat, config.message.error, m);
