@@ -1,12 +1,27 @@
 import { config } from "../../config.js";
-import { sendText } from "../../src/config/message.js";
+import { buildSelectButton, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
     const id = m.text.split(" ")[1];
-    if (!id)
-      return sendText(conn, m.chat, "Enter note ID\nExample: .delnote 3", m);
+    if (!id) {
+      const { data: db, err } = await supa.from("note").select("id, note_name");
+      return conn.sendButton(m.chat, {
+        text: "Pilih salah satu untuk hapus catatan",
+        footer: "Neurainc",
+        buttons: [
+          buildSelectButton(
+            "Hapus Catatan",
+            "Pilih salah satu",
+            db.map((item) => ({
+              title: item.note_name,
+              id: `.delnote ${id}`,
+            })),
+          ),
+        ],
+      });
+    }
 
     const { error, count } = await supa
       .from("note")
