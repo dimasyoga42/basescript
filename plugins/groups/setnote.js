@@ -1,7 +1,5 @@
 import { downloadMediaMessage, getContentType } from "@whiskeysockets/baileys";
 
-import fs from "fs";
-
 import { config } from "../../config.js";
 import { sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
@@ -24,13 +22,19 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    const { data: existing } = await supa
+    const { data: existing, error: checkError } = await supa
       .from("note")
       .select("id")
       .eq("grubId", m.chat)
       .ilike("note_name", name)
       .limit(1)
       .maybeSingle();
+
+    if (checkError) {
+      console.error("[setnote][check]", checkError);
+
+      return await sendText(conn, m.chat, "Gagal memeriksa data catatan", m);
+    }
 
     if (existing) {
       return await sendText(
@@ -60,13 +64,12 @@ const handler = async (m, { conn }) => {
 
       const fileName = `${Date.now()}-${safeName}.jpg`;
 
-      const filePath = `note/${m.chat}/${fileName}`;
+      const filePath = `${m.chat}/${fileName}`;
 
       const { error: uploadError } = await supa.storage
         .from("note")
         .upload(filePath, buffer, {
           upsert: true,
-          cacheControl: "3600",
           contentType: "image/jpeg",
         });
 
@@ -111,7 +114,6 @@ const handler = async (m, { conn }) => {
 
 handler.command = ["setnote"];
 handler.alias = ["addnote"];
-
 handler.category = "Menu Grub";
 handler.submenu = "Note";
 
