@@ -65,7 +65,7 @@ const handler = async (m, { conn }) => {
       const { error: uploadError } = await supa.storage
         .from("note")
         .upload(filePath, buffer, {
-          upsert: false,
+          upsert: true,
           cacheControl: "3600",
           contentType: "image/jpeg",
         });
