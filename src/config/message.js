@@ -276,7 +276,6 @@ export const sendFancyTextModif = async (
     {
       text,
       contextInfo: {
-        externalAdReply,
         ...messagetxt(name),
       },
     },
