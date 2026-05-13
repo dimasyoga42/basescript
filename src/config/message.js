@@ -8,7 +8,7 @@ const ensure = (v, name) => {
 const messagetxt = (name) => {
   const CHANNEL = {
     forwardingScore: 999,
-    isForwarded: true,
+    isForwarded: false,
     forwardedNewsletterMessageInfo: {
       newsletterJid: "120363401312267152@newsletter",
       newsletterName: `hello ${name}`,
