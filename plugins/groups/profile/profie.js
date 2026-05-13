@@ -30,7 +30,7 @@ const handler = async (m, { conn }) => {
     if (!user) {
       const profileURL = conn.profilePictureUrl(m.chat, "image");
       const name = m.pushName;
-      con.sendMessage(m.chat, {
+      conn.sendMessage(m.chat, {
         image: { url: profileURL },
         caption: `name: ${name}\n User ini belum membuat Profil gunakan .setdesc | .setpp untuk menambahkan profil`,
       });
