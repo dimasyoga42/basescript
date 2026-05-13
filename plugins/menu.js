@@ -32,13 +32,15 @@ const handler = async (m, { conn }) => {
     result += categories[cat].map((c) => `│.${c}`).join("\n") + "\n╰────\n";
   }
 
-  await sendFancyTextModif(conn, m.chat, {
-    name: m.pushName,
-    text: result.trim(),
-    quoted: m,
-  });
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
+
+  await sendFancyTextModif(conn, m.chat, {
+    name: m.pushName,
+    image: randomThumb,
+    caption: result.trim(),
+    quoted: m,
+  });
   // await conn.sendButton(m.chat, {
   //   image: {
   //     url: randomThumb,

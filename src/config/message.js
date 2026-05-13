@@ -261,7 +261,7 @@ export const sendFancyText = async (
 export const sendFancyTextModif = async (
   sock,
   jid,
-  { name = "neura", text = "", quoted = null } = {},
+  { name = "neura", image = "", caption = "", quoted = null } = {},
 ) => {
   let externalAdReply = {
     mediaType: 1,
@@ -274,7 +274,8 @@ export const sendFancyTextModif = async (
   await sock.sendMessage(
     jid,
     {
-      text,
+      image: { url: image },
+      caption: caption,
       contextInfo: {
         ...messagetxt(name),
       },
