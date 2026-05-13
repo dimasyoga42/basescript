@@ -27,17 +27,24 @@ const handler = async (m, { conn }) => {
     const data = await getUserData(db);
     const user = data.find((u) => u.userId === targetId);
 
-    if (!user)
-      return sendText(
-        conn,
-        m.chat,
-        isSelf
-          ? "No profile found.\n.setdesc | .setpp | .setbuff"
-          : "User has no profile.",
-        m,
-      );
+    if (!user) {
+      const profileURL = conn.profilePictureUrl(m.chat, "image");
+      const name = m.pushName;
+      con.sendMessage(m.chat, {
+        image: { url: profileURL },
+        caption: `name: ${name}\n User ini belum membuat Profil gunakan .setdesc | .setpp untuk menambahkan profil`,
+      });
+    }
+    // return sendText(
+    //   conn,
+    //   m.chat,
+    //   isSelf
+    //     ? "No profile found.\n.setdesc | .setpp | .setbuff"
+    //     : "User has no profile.",
+    //   m,
+    // );
 
-    const caption = `Buff: ${user.idBuff || "-"}\nBio: ${user.bio || "-"}`;
+    const caption = `Buff: ${user.idBuff || "-"}\n${user.bio || "-"}`;
 
     if (user.profilPath && fs.existsSync(user.profilPath))
       return await conn.sendMessage(

@@ -132,7 +132,6 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = ["note"];
-
 handler.category = "Menu Grub";
 handler.submenu = "Note";
 

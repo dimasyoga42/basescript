@@ -12,8 +12,8 @@ const getProfilePicture = async (conn, jid) => {
 
 const getName = async (conn, jid) => {
   try {
-    const contact = await conn.onWhatsApp(jid);
-    return contact?.[0]?.notify || jid.split("@")[0];
+    const contact = await conn.getPNFromLid(jid);
+    return contact.split("@")[0] || jid.split("@")[0];
   } catch {
     return jid.split("@")[0];
   }
