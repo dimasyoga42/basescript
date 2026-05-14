@@ -1,5 +1,5 @@
 import axios from "axios";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendFancyTextModif } from "../../src/config/message.js";
 
 const handler = async (m, { conn }) => {
   const res = await axios.get(
@@ -9,11 +9,9 @@ const handler = async (m, { conn }) => {
   const messagetxt = `
   *Informasi Gempa Terbaru By BMKG*\ntanggl: ${data.gempa.Tanggal}\njam: ${data.gempa.Jam}\ncoordinat:${data.gempa.Coordinates}\nlintang: ${data.gempa.Lintang}\nbujur: ${data.gempa.Bujur}\nmagnitude: ${data.gempa.Magnitude}\nkedalaman: ${data.gempa.Kedalaman}\nwilayah: ${data.gempa.Wilayah}\npotensi: ${data.gempa.Potensi}
       `.trim();
-  sendFancyText(conn, m.chat, {
-    title: "Neura Sama",
-    body: "Gempa realtime info",
-    thumbnail: `https://static.bmkg.go.id/${data.gempa.Shakemap}`,
-    text: messagetxt,
+  sendFancyTextModif(conn, m.chat, {
+    image: `https://static.bmkg.go.id/${data.gempa.Shakemap}`,
+    caption: messagetxt,
     msg: m,
   });
 };
