@@ -1,5 +1,5 @@
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 
 export const isAdmin = async (conn, m) => {
   try {
@@ -12,24 +12,12 @@ export const isAdmin = async (conn, m) => {
     const senderId = m.key.participant || m.key.remoteJid;
 
     if (!admin.includes(senderId)) {
-      sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Develop by ${config.OwnerName}`,
-        text: `*${config.message.notAdmin}*`,
-        thumbnail: "",
-        msg: m,
-      });
+      sendText(conn, m.chat, "anda bukan andmin");
       return false;
     }
     return true;
   } catch (err) {
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Develop by ${config.OwnerName}`,
-      text: `*${config.message.error}*`,
-      thumbnail: "",
-      msg: m,
-    });
+    sendText(conn, m.chat, "terjadi kesalahan coba lagi");
     return false;
   }
 };
@@ -44,13 +32,7 @@ export const isBotadmin = async (conn, m) => {
     const admin = metadata.participants.filter((p) => p.admin).map((p) => p.id);
 
     if (!admin.includes(BOT_ID)) {
-      sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Develop by ${config.OwnerName}`,
-        text: `*${config.message.botNotadmin}*`,
-        thumbnail: thumbnail,
-        quoted: m,
-      });
+      sendText(conn, m.chat, "bot bukan admin");
       return false;
     }
     return true;
