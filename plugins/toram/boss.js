@@ -2,7 +2,7 @@ import { config, thumbnail } from "../../config.js"; // ✅ tambah config
 import { buildSelectButton, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 import { formatDetail, parseMonsters } from "./_formater.js";
-
+const BASE_URL = "https://coryn.club";
 const handler = async (m, { conn }) => {
   try {
     const text = m.text.replace(/\.boss|\.bos/i, "").trim();
