@@ -1,6 +1,7 @@
 import { config, thumbnail } from "../../config.js"; // ✅ tambah config
-import { buildSelectButton } from "../../src/config/message.js";
+import { buildSelectButton, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
+import { formatDetail, parseMonsters } from "./_formater.js";
 
 const handler = async (m, { conn }) => {
   try {
@@ -40,12 +41,22 @@ const handler = async (m, { conn }) => {
       .limit(1);
 
     if (error) throw error;
-    if (!data?.length)
-      return conn.sendMessage(
-        m.chat,
-        { text: `Boss "${text}" tidak ditemukan.` },
-        { quoted: m },
-      );
+    if (!data?.length) {
+      const url = `${BASE_URL}/monster.php?name=${encodeURIComponent(query)}&type=&order=id+DESC&show=22`;
+      const res = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0" },
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const monsters = parseMonsters(await res.text());
+      if (!monsters.length)
+        return sendText(conn, m.chat, config.message.notFound, m);
+      const result = monsters
+        .map((mob, i) => formatDetail(mob, i, monsters.length))
+        .join("\n\n");
+
+      await sendText(conn, m.chat, `${result}`, m);
+    }
 
     const { name, element, location, drop, range } = data[0];
 
