@@ -42,7 +42,7 @@ const handler = async (m, { conn }) => {
 
     if (error) throw error;
     if (!data?.length) {
-      const url = `${BASE_URL}/monster.php?name=${encodeURIComponent(query)}&type=&order=id+DESC&show=22`;
+      const url = `${BASE_URL}/monster.php?name=${encodeURIComponent(text)}&type=&order=id+DESC&show=22`;
       const res = await fetch(url, {
         headers: { "User-Agent": "Mozilla/5.0" },
       });
