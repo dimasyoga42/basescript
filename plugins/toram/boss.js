@@ -70,7 +70,7 @@ const handler = async (m, { conn }) => {
         .map((mob, i) => formatDetail(mob, i, monsters.length))
         .join("\n\n");
 
-      await sendText(conn, m.chat, `${result}`, m);
+      return await sendText(conn, m.chat, `${result}`, m);
     }
 
     const { name, element, location, drop, range } = data[0];
