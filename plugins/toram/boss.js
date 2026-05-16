@@ -1,7 +1,7 @@
 import { config, thumbnail } from "../../config.js"; // ✅ tambah config
 import { buildSelectButton, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
-import { formatDetail, parseMonsters } from "./_formater.js";
+import { parseMonsters } from "./_formater.js";
 const BASE_URL = "https://coryn.club";
 const handler = async (m, { conn }) => {
   try {
@@ -42,6 +42,21 @@ const handler = async (m, { conn }) => {
 
     if (error) throw error;
     if (!data?.length) {
+      const formatDetail = (mob, i, total) => {
+        const s = mob.stats;
+        return (
+          `*${mob.name}* ${total > 1 ? `(${i + 1}/${total})` : ""}\n${"─".repeat(20)}\n` +
+          `Lv     : ${s.lv || "-"}\n` +
+          `Type   : ${s.type || "-"}\n` +
+          `Mode   : ${s.mode || "-"}\n` +
+          `HP     : ${s.hp || "-"}\n` +
+          `Elemen : ${s.element || "-"}\n` +
+          `EXP    : ${s.exp || "-"}\n` +
+          `Tamable: ${s.tamable || "-"}\n` +
+          `Spawn  : ${mob.spawn || "-"}\n\n` +
+          `*Drop:*\n${mob.drops.join("\n") || "-"}`
+        );
+      };
       const url = `${BASE_URL}/monster.php?name=${encodeURIComponent(text)}&type=&order=id+DESC&show=22`;
       const res = await fetch(url, {
         headers: { "User-Agent": "Mozilla/5.0" },
