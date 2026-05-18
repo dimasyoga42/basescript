@@ -8,7 +8,7 @@ const handler = async (m, { conn }) => {
     );
     const data = res.data;
     console.log(data);
-    sendImage(conn, m.chat, data.url, "ini adalah husbu anda hari ini", m);
+    sendImage(conn, m.chat, data.data.url, "ini adalah husbu anda hari ini", m);
   } catch (err) {
     conn.sendMessage(
       m.chat,
