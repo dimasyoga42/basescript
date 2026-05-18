@@ -7,6 +7,7 @@ const handler = async (m, { conn }) => {
       `https://api.neoxr.eu/api/husbu?apikey=${process.env.NOXER}`,
     );
     const data = res.data;
+    console.log(data);
     sendImage(conn, m.chat, data.url, "ini adalah husbu anda hari ini", m);
   } catch (err) {
     conn.sendMessage(
