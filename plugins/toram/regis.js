@@ -1,5 +1,9 @@
 import { config, thumbnail } from "../../config.js";
-import { buildSelectButton, sendFancyText, sendText } from "../../src/config/message.js";
+import {
+  buildSelectButton,
+  sendFancyText,
+  sendText,
+} from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn, text }) => {
@@ -14,10 +18,9 @@ const handler = async (m, { conn, text }) => {
       return conn.sendMessage(
         m.chat,
         { text: "Gagal mengambil data dari database." },
-        { quoted: m }
+        { quoted: m },
       );
     }
-
 
     if (!text) {
       return conn.sendButton(m.chat, {
@@ -34,7 +37,6 @@ const handler = async (m, { conn, text }) => {
         bottom_name: "Daftar Regist",
       });
     }
-
 
     const { data, error } = await supa
       .from("regist")
@@ -56,27 +58,11 @@ const handler = async (m, { conn, text }) => {
     const mtext = data
       .map(
         (item) =>
-          `────────────\n*${item.name}*\n\n${item.effect}\n\nMax Level:\n- ${item.max_lv}\nLevel:\n- ${item.levels_studied}\n────────────`
+          `────────────\n*${item.name}*\n\n${item.effect}\n\nMax Level:\n- ${item.max_lv}\nLevel:\n- ${item.levels_studied}\n────────────`,
       )
       .join("\n");
 
-    await conn.sendButton(m.chat, {
-      text: mtext,
-      footer: config.OwnerName,
-      buttons: [
-        buildSelectButton(
-          "Daftar Registlet",
-          "Registlet yang tersedia",
-          allData.map((item) => ({
-            title: item.name,
-            description: `Lihat Stat dari ${item.name}`,
-            id: `.regist ${item.name}`,
-          }))
-        ),
-      ],
-      bottom_sheet: true,
-      bottom_name: "Daftar Registlet",
-    });
+    await sendText(conn, m.chat, mtext, m);
   } catch (err) {
     console.error("[regis] Error:", err);
     sendFancyText(conn, m.chat, {
