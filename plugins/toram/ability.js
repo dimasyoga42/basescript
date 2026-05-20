@@ -1,37 +1,12 @@
-import translate from "google-translate-api-x";
-import { config, thumbnail } from "../../config.js";
-import {
-  buildSelectButton,
-  editText,
-  sendFancyText,
-  sendText,
-} from "../../src/config/message.js";
+import { config } from "../../config.js";
+import { buildSelectButton, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
-
-async function translateText(text, to = "en") {
-  try {
-    if (!text) return text;
-
-    const result = await translate(text, { to });
-
-    return result.text || text;
-  } catch (err) {
-    console.error("[translate]", err);
-
-    return text;
-  }
-}
 
 const handler = async (m, { conn }) => {
   try {
     const text = (m.text || "").trim();
     const parts = text.split(/\s+/);
-
-    const isTranslate = parts[1] === "--ing";
-
-    const query = isTranslate
-      ? parts.slice(2).join(" ").trim()
-      : parts.slice(1).join(" ").trim();
+    const query = parts.slice(1).join(" ").trim();
 
     // LIST SEMUA TRAIT
     if (!query) {
@@ -72,14 +47,7 @@ const handler = async (m, { conn }) => {
 
     if (!exactError && exactData?.length === 1) {
       const item = exactData[0];
-
-      let statEffect = item.stat_effect;
-
-      if (isTranslate) {
-        statEffect = await translateText(item.stat_effect, "en");
-      }
-
-      return conn.sendMessage(conn, m.chat, `${item.name}\n${statEffect}`, m);
+      return sendText(conn, m.chat, `${item.name}\n${item.stat_effect}`, m);
     }
 
     // PARTIAL MATCH
@@ -90,20 +58,13 @@ const handler = async (m, { conn }) => {
       .order("name", { ascending: true });
 
     if (error || !data?.length) {
-      return sendText(conn, m.chat, "data trait tidak ditemukan", m);
+      return sendText(conn, m.chat, "Data trait tidak ditemukan.", m);
     }
 
     // JIKA CUMA 1 HASIL
     if (data.length === 1) {
       const item = data[0];
-
-      let statEffect = item.stat_effect;
-
-      if (isTranslate) {
-        statEffect = await translateText(item.stat_effect, "en");
-      }
-
-      return sendText(conn, m.chat, `${data.name}\n${statEffect}`, m);
+      return sendText(conn, m.chat, `${item.name}\n${item.stat_effect}`, m);
     }
 
     // MULTI RESULT
@@ -126,13 +87,17 @@ const handler = async (m, { conn }) => {
     });
   } catch (err) {
     console.error("[ability]", err);
-
-    await sendText(conn, m.chat, "terjadi kesalahan saat mengambil data pada server", m);
+    await sendText(
+      conn,
+      m.chat,
+      "Terjadi kesalahan saat mengambil data pada server.",
+      m,
+    );
+  }
 };
 
 handler.command = "trait";
 handler.alias = ["ability"];
 handler.category = "Toram Search";
 handler.submenu = "Toram";
-
 export default handler;
