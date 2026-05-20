@@ -37,12 +37,12 @@ const mergeRoutes = (normalRoutes, maxRoutes) => {
 };
 
 const sendXtalResult = (conn, chat, m, item) => {
-  const text = `*${item.name}* [${item.type || "-"}]
+  const text = `*${item.name}* ${item.type || "-"}
 
-*Stats:*
+Stats effect:
 ${item.stats || "-"}
 
-*Upgrade Path:*
+Rute Upgrade
 - ${item.upgrade_route || "-"}
 - ${item.max_upgrade_route || "-"}`.trim();
 

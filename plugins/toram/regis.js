@@ -58,7 +58,7 @@ const handler = async (m, { conn, text }) => {
     const mtext = data
       .map(
         (item) =>
-          `────────────\n*${item.name}*\n\n${item.effect}\n\nMax Level:\n- ${item.max_lv}\nLevel:\n- ${item.levels_studied}\n────────────`,
+          `────────────\n*${item.name}*\nDeskripsi:\n${item.effect}\n\nMax Level:\n- ${item.max_lv}\nLevel:\n- ${item.levels_studied}\n────────────`,
       )
       .join("\n");
 
