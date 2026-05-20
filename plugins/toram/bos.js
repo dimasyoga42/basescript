@@ -73,7 +73,7 @@ const handler = async (m, { conn }) => {
     //   quoted: m,
     // });
     const { data: db, error } = await supa.from("bosdef").select("name");
-    conn.sendMessage(conn, { text: parser }, { quoted: m });
+    conn.sendMessage(m.chat, { text: parser }, { quoted: m });
   } catch (err) {
     sendText(conn, m.chat, "terjadi kesalahan pada server harap di ulang", m);
   }
