@@ -16,13 +16,7 @@ const handler = async (m, { conn }) => {
     if (errAll) throw errAll;
 
     if (!allBuff || allBuff.length === 0) {
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Develop by ${config.OwnerName}`,
-        thumbnail,
-        text: "Data buff kosong",
-        quoted: m,
-      });
+      return conn.senMessage(m.chat, `buff tidak tersedia`, m);
     }
 
     // ===== LIST SEMUA =====
@@ -31,19 +25,7 @@ const handler = async (m, { conn }) => {
         .map((item) => `\n*${item.name}*\n${item.code}\n`)
         .join("\n────────────\n");
 
-      return await conn.sendButton(m.chat, {
-        text: mtext,
-        footer: config.OwnerName,
-        buttons: allBuff.map((item) => ({
-          name: "quick_reply",
-          buttonParamsJson: JSON.stringify({
-            display_text: item.name,
-            id: `.buff ${item.name}`,
-          }),
-        })),
-        bottom_sheet: true,
-        bottom_name: "Daftar Buff",
-      });
+      return await conn.sendMessage(m.chat, { text: mtext }, { quoted: m });
     }
 
     // ===== SEARCH / DETAIL =====

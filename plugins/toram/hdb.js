@@ -39,10 +39,10 @@ const handler = async (m, { conn }) => {
       .maybeSingle();
 
     if (error || !data) {
-      return sendText(conn, m.chat, config.message.notFound, m);
+      return sendText(conn, m.chat, "data bos tidak ditemukan", m);
     }
 
-    return sendText(conn, m.chat, data.stat, m);
+    return sendText(conn, m.chat, `*${data.bosname}*\n${data.stat}`, m);
   } catch (err) {
     console.error("HDB ERROR:", err);
 

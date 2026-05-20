@@ -79,24 +79,7 @@ const handler = async (m, { conn }) => {
         statEffect = await translateText(item.stat_effect, "en");
       }
 
-      return conn.sendButton(m.chat, {
-        text: `*${item.name}*\n\n${statEffect}`,
-        footer: "Neurainc",
-        buttons: [
-          buildSelectButton("Translate", "Bahasa Yang Tersedia", [
-            {
-              title: "Bahasa Inggris",
-              description: "Ubah ke bahasa Inggris",
-              id: `.trait --ing ${item.name}`,
-            },
-            {
-              title: "Bahasa Indonesia",
-              description: "Kembali ke bahasa asli",
-              id: `.trait ${item.name}`,
-            },
-          ]),
-        ],
-      });
+      return conn.sendMessage(conn, m.chat, `${item.name}\n${statEffect}`, m);
     }
 
     // PARTIAL MATCH
@@ -107,7 +90,7 @@ const handler = async (m, { conn }) => {
       .order("name", { ascending: true });
 
     if (error || !data?.length) {
-      return sendText(conn, m.chat, config.message.notFound, m);
+      return sendText(conn, m.chat, "data trait tidak ditemukan", m);
     }
 
     // JIKA CUMA 1 HASIL
@@ -120,24 +103,7 @@ const handler = async (m, { conn }) => {
         statEffect = await translateText(item.stat_effect, "en");
       }
 
-      return conn.sendButton(m.chat, {
-        text: `*${item.name}*\n\n${statEffect}`,
-        footer: "Neurainc",
-        buttons: [
-          buildSelectButton("Translate", "Bahasa Yang Tersedia", [
-            {
-              title: "Bahasa Inggris",
-              description: "Ubah ke bahasa Inggris",
-              id: `.trait --ing ${item.name}`,
-            },
-            {
-              title: "Bahasa Indonesia",
-              description: "Kembali ke bahasa asli",
-              id: `.trait ${item.name}`,
-            },
-          ]),
-        ],
-      });
+      return sendText(conn, m.chat, `${data.name}\n${statEffect}`, m);
     }
 
     // MULTI RESULT
@@ -161,14 +127,7 @@ const handler = async (m, { conn }) => {
   } catch (err) {
     console.error("[ability]", err);
 
-    await sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail,
-      text: config.message.error,
-      quoted: m,
-    });
-  }
+    await sendText(conn, m.chat, "terjadi kesalahan saat mengambil data pada server", m);
 };
 
 handler.command = "trait";

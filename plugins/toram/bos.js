@@ -73,29 +73,9 @@ const handler = async (m, { conn }) => {
     //   quoted: m,
     // });
     const { data: db, error } = await supa.from("bosdef").select("name");
-    conn.sendButton(m.chat, {
-      text: parser,
-      footer: "Neura inc",
-      buttons: [
-        buildSelectButton(
-          "Bosdef",
-          "Daftar Bos yang tersedia",
-          db.map((item) => ({
-            title: item.name,
-            description: `melihat detail ${item.name}`,
-            id: `.bosdef ${item.name}`,
-          })),
-        ),
-      ],
-    });
+    conn.sendMessage(conn, { text: parser }, { quoted: m });
   } catch (err) {
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail: thumbnail,
-      text: config.message.error,
-      quoted: m,
-    });
+    sendText(conn, m.chat, "terjadi kesalahan pada server harap di ulang", m);
   }
 };
 

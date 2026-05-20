@@ -1,4 +1,5 @@
 import { config } from "../../config.js";
+import { sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
 const normalizeName = (str) =>
@@ -61,13 +62,7 @@ ${item.stats || "-"}
     }),
   }));
 
-  return conn.sendButton(chat, {
-    text,
-    footer: config.BotName,
-    buttons,
-    bottom_sheet: true,
-    bottom_name: "Detail Rute Evolusi",
-  });
+  return sendText(conn, m.chat, text, m);
 };
 
 const handler = async (m, { conn }) => {
@@ -84,7 +79,7 @@ const handler = async (m, { conn }) => {
         return conn.sendMessage(
           m.chat,
           { text: "Gagal mengambil data dari database." },
-          { quoted: m }
+          { quoted: m },
         );
       }
 
@@ -123,7 +118,7 @@ const handler = async (m, { conn }) => {
       return conn.sendMessage(
         m.chat,
         { text: `Informasi untuk *${query}* tidak ditemukan dalam database.` },
-        { quoted: m }
+        { quoted: m },
       );
     }
 
@@ -149,7 +144,7 @@ const handler = async (m, { conn }) => {
     return conn.sendMessage(
       m.chat,
       { text: "Terjadi kegagalan sistem saat memproses permintaan." },
-      { quoted: m }
+      { quoted: m },
     );
   }
 };
