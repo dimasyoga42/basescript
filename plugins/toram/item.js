@@ -11,7 +11,7 @@ const formatStats = (stats = "") =>
 const formatItem = (item) => `*${item.ItemName}* ${item.Category || "-"}
 
 Stats Effect
-- ${formatStats(item.Effects)}
+${formatStats(item.Effects)}
 
 proses:
 - ${item.Process || "-"}
