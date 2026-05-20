@@ -6,10 +6,12 @@ const formatStats = (stats = "") =>
     .split("|")
     .map((s) => s.trim())
     .filter((s) => s && !/^amount$/i.test(s))
-    .join("\n");
+    .join("\n- ");
 
 const formatItem = (item) => `*${item.ItemName}* ${item.Category || "-"}
-${formatStats(item.Effects)}
+
+Stats Effect
+- ${formatStats(item.Effects)}
 
 proses:
 - ${item.Process || "-"}
