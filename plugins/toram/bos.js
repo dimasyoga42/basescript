@@ -48,7 +48,7 @@ const handler = async (m, { conn }) => {
 
     const { data } = await supa
       .from("bosdef")
-      .select("name, type, image_url, spawn, element, stat")
+      .select("name, type, image_url, spawn, element, spawn, stat")
       .ilike("name", `%${name}%`)
       .limit(1)
       .maybeSingle();
@@ -63,7 +63,7 @@ const handler = async (m, { conn }) => {
       });
 
     const parser =
-      `Element:\n${data.element}\nType: ${data.type}\n${dtail}\n\nStat Info:\n${data.stat}`.trim();
+      `*${data.name}* ${data.spawn}\nElement:\n${data.element}\nType: ${data.type}\n${dtail}\n\nStat Info:\n${data.stat}`.trim();
 
     // sendFancyText(conn, m.chat, {
     //   title: data.name,
