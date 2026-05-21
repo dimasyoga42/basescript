@@ -1,6 +1,10 @@
 import axios from "axios";
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText, sendText } from "../../src/config/message.js";
+import {
+  sendFancyText,
+  sendFancyTextModif,
+  sendText,
+} from "../../src/config/message.js";
 const handler = async (m, { conn }) => {
   try {
     const stats = m.text.replace(".fillarm", "");
@@ -44,14 +48,10 @@ const handler = async (m, { conn }) => {
       .map(([k, v]) => `${k.toUpperCase().padEnd(8)}: ${v}`)
       .join("\n");
 
-    const result = `
-    Success Rate : ${data.successRate}\nStarting Pot : ${data.startingPot}
+    const result = `source:http://tanaka0.work/
+    Success Rate : ${data.successRate}\nStarting Pot : ${data.startingPot}\nMaterial Cost\n${material}\nReduction         : ${data.materialDetails.reduction}\nHighest Step Cost : ${data.highestStepCost}\n
 
-   Positive Stats\n${positiveStats}
-
-   Negative Stats\n${negativeStats}
-
-   Steps (${data.totalSteps})\n${steps}\n\nMaterial Cost\n${material}\nReduction         : ${data.materialDetails.reduction}\nHighest Step Cost : ${data.highestStepCost}\n\nCharacter Config\nCharacter Lv : ${data.inputConfig.characterLevel}\nBS Lv        : ${data.inputConfig.professionLevel}\nStart Pot    : ${data.inputConfig.startingPotential}
+   Steps (${data.totalSteps})\n${steps}\n\nCharacter Config\nCharacter Lv : ${data.inputConfig.characterLevel}\nBS Lv        : ${data.inputConfig.professionLevel}\nStart Pot    : ${data.inputConfig.startingPotential}
 
    Process Time : ${data.duration} ms
    `.trim();
@@ -62,7 +62,12 @@ const handler = async (m, { conn }) => {
     //   text: result,
     //   quoted: m,
     // });
-    sendText(conn, m.chat, result, m);
+    sendFancyTextModif(conn, m.chat, {
+      name: m.pushName,
+      caption: result,
+      image: thumbnail,
+      quoted: m,
+    });
   } catch (err) {}
 };
 

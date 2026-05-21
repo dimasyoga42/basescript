@@ -1,6 +1,6 @@
 import path from "path";
 import { isAdmin } from "../_function/_admin.js";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 import { config, thumbnail } from "../../config.js";
 import { getUserData, saveUserData } from "../../src/config/func.js";
 
@@ -14,13 +14,7 @@ const handler = async (m, { conn }) => {
       m.message?.extendedTextMessage?.contextInfo?.mentionedJid ?? [];
 
     if (mention.length === 0)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Developer By ${config.OwnerName}`,
-        thumbnail,
-        text: "Format: .unmute @user",
-        msg: m,
-      });
+      return sendText(conn, m.chat, "format sala gunakan .umute @tag", m);
 
     const target = mention[0];
     const data = getUserData(db);
@@ -29,21 +23,9 @@ const handler = async (m, { conn }) => {
       data.filter((u) => u.id !== target),
     );
 
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail,
-      text: config.message.unmute,
-      quoted: m,
-    });
+    sendText(conn, m.chat, "user telah di unmute", m);
   } catch (err) {
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail,
-      text: config.message.error,
-      quoted: m,
-    });
+    sendText(conn, m.chat, "terjadi kesalahan pada server", m);
   }
 };
 

@@ -1,6 +1,6 @@
 import path from "path";
 import { isAdmin } from "../_function/_admin.js";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 import { config, thumbnail } from "../../config.js";
 import { getUserData, saveUserData } from "../../src/config/func.js";
 
@@ -13,45 +13,21 @@ const handler = async (m, { conn }) => {
     const mention =
       m.message?.extendedTextMessage?.contextInfo?.mentionedJid ?? [];
     if (mention.length === 0)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: "exemple: .delwarn @user",
-        thumbnail,
-        text: config.message.invalid,
-        msg: m,
-      });
+      return sendText(conn, m.chat, "format salah .delwarn @tag", m);
 
     const target = mention[0];
     const data = getUserData(db);
     const group = data.find((g) => g.id === m.chat);
 
     if (!group || !group.members.find((u) => u.id === target))
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Developer By ${config.OwnerName}`,
-        thumbnail,
-        text: "User tidak memiliki warn di grup ini.",
-        msg: m,
-      });
+      return sendText(conn, m.chat, "user tidak ada dalam grub", m);
 
     group.members = group.members.filter((u) => u.id !== target);
     saveUserData(db, data);
 
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail,
-      text: "Warn user berhasil dihapus.",
-      msg: m,
-    });
+    sendText(conn, m.chat, "warn user berhasil di hapus.", m);
   } catch (err) {
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail,
-      text: config.message.error,
-      msg: m,
-    });
+    sendText(conn, m.chat, "teradi kesalahan pada server", m);
   }
 };
 

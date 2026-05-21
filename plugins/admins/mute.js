@@ -1,6 +1,6 @@
 import path from "path";
 import { isAdmin } from "../_function/_admin.js";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 import { config, thumbnail } from "../../config.js";
 import { getUserData, saveUserData } from "../../src/config/func.js";
 
@@ -24,23 +24,16 @@ const handler = async (m, { conn, text }) => {
       m.message?.extendedTextMessage?.contextInfo?.mentionedJid ?? [];
 
     if (mention.length === 0)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `exemple: .mute time @user`,
-        thumbnail,
-        text: config.message.invalid,
-        quoted: m,
-      });
+      return sendText(
+        conn,
+        m.chat,
+        "user tidak ditemukan harap di cek kembali",
+        m,
+      );
 
     const expDate = getExp(minute);
     if (!expDate)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `exemple: .mute time @user`,
-        thumbnail,
-        text: config.message.invalid,
-        quoted: m,
-      });
+      return sendText(conn, m.chat, "format salah gunakan .mute time @tag", m);
 
     const target = mention[0];
     const data = getUserData(db);
@@ -52,21 +45,9 @@ const handler = async (m, { conn, text }) => {
     }
     saveUserData(db, data);
 
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail,
-      text: config.message.mute,
-      quoted: m,
-    });
+    sendText(conn, m.chat, "user berhasil di bungkam", m);
   } catch (err) {
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail,
-      text: config.message.error,
-      quoted: m,
-    });
+    sendText(conn, m.chat, "terjadi kesalahan pada server", m);
   }
 };
 
