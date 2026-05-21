@@ -60,12 +60,7 @@ const handler = async (m, { conn }) => {
     //   text: result,
     //   quoted: m,
     // });
-    sendFancyTextModif(conn, m.chat, {
-      name: m.pushName,
-      caption: result,
-      image: thumbnail,
-      quoted: m,
-    });
+    sendText(conn, m.chat, result, m);
   } catch (err) {}
 };
 
