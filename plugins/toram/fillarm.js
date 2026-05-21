@@ -61,7 +61,9 @@ const handler = async (m, { conn }) => {
     //   quoted: m,
     // });
     sendText(conn, m.chat, result, m);
-  } catch (err) {}
+  } catch (err) {
+    sendText(conn, m.chat, err, m);
+  }
 };
 
 handler.command = ["fillarm"];
