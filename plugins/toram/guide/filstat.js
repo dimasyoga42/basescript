@@ -3,13 +3,13 @@ import { sendText } from "../../../src/config/message.js";
 const handler = (m, { conn }) => {
   try {
     const stattxt =
-      `Exemple:\n- .fillarm dteearh%=Max,cd%=10,cd=20,cr=Max,acc%=min,acc=min,matk%=min,penmag%=min,pot112,lv290,bs300\n- .fillwep eledark%=1,dteligth%=Max,cd%=10,cd=20,dodge%=min,hpreg%=min,hpreg=min,pot122,lv290,bs300
+      `Exemple:\n- .fillarm dteearh%=Max,cd%=10,cd=20,cr=Max,acc%=min,acc=min,matk%=min,penmag%=min,pot=112,lv=290,prof=300\n- .fillwep eledark%=1,dteligth%=Max,cd%=10,cd=20,dodge%=min,hpreg%=min,hpreg=min,pot122,lv290,bs300
 stat yang bisa digunakan:
 min = untuk status yang di negatifkan
 max = poin status maksimal
 lv = adalah level char (wajib)
 pot = potensial (Wajib)
-bs = level Blacksmith profession (opsional)
+prof = level Blacksmith profession (opsional)
 
 cd, critdmg, cd%, critdmg% = Critical Damage
 cr, cr%, crtirate, critrate% = Critical Rate
