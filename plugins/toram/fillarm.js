@@ -64,45 +64,20 @@ Gunakan:
 
     const steps = data.steps?.length > 0 ? data.steps.join("\n") : "-";
 
-    const materials = data.materialDetails || {};
-
-    const reductionText = Array.isArray(materials.reductions)
-      ? materials.reductions.join(", ")
-      : "-";
-
-    const materialLines = Object.entries(materials)
-      .filter(([key]) => key !== "reductions")
-      .map(([key, value]) => `${key.toUpperCase()} : ${value}pt`)
+    const materialLines = Object.entries(data.materials || {})
+      .map(([key, value]) => `${key.toUpperCase().padEnd(10)} : ${value}`)
       .join("\n");
 
     const result = `
 Source              : https://tanaka0.work/
-
-Success Rate        : ${data.successRate || "-"}
+Success Rate        : ${data.successRate || "-"}%
 Starting Pot        : ${data.startingPot || "-"}
-
-Positive Stats
-${positiveStats}
-
-Negative Stats
-${negativeStats}
-
 Material Cost
 ${materialLines || "-"}
-
-Reduction
-${reductionText}
-
 Highest Step Cost   : ${data.highestStepCost || "-"}
 
 Steps (${data.totalSteps || 0})
 ${steps}
-
-Character Config
-Character Lv        : ${data.inputConfig.characterLevel}
-BS Lv               : ${data.inputConfig.professionLevel}
-Start Pot           : ${data.inputConfig.startingPotential}
-Recipe Pot          : ${data.inputConfig.recipePotential}
 
 Process Time        : ${data.duration} ms
 `.trim();
