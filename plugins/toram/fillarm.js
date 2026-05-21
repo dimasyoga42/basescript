@@ -48,8 +48,8 @@ const handler = async (m, { conn }) => {
       .map(([k, v]) => `${k.toUpperCase().padEnd(8)}: ${v}`)
       .join("\n");
 
-    const result = `source:http://tanaka0.work/
-    Success Rate : ${data.successRate}\nStarting Pot : ${data.startingPot}\nMaterial Cost\n${material}\nReduction         : ${data.materialDetails.reduction}\nHighest Step Cost : ${data.highestStepCost}\n
+    const result =
+      `source:http://tanaka0.work/\nSuccess Rate : ${data.successRate}\nStarting Pot : ${data.startingPot}\nMaterial Cost\n${material}\nReduction         : ${data.materialDetails.reduction}\nHighest Step Cost : ${data.highestStepCost}\n
 
    Steps (${data.totalSteps})\n${steps}\n\nCharacter Config\nCharacter Lv : ${data.inputConfig.characterLevel}\nBS Lv        : ${data.inputConfig.professionLevel}\nStart Pot    : ${data.inputConfig.startingPotential}
 
