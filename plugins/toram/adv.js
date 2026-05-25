@@ -8,7 +8,7 @@ const handler = async (m, { conn }) => {
     const [, level, exp, max, qsFrom] = arg;
 
     if (!level || !exp || !max || !qsFrom)
-      return conn.sendMessage(m.chat {text: "Format yang anda gunakan salah\ncontoh .spamadv 120 0 315 10"}, {quoted: m});
+      return conn.sendMessage(m.chat {text: "Format salah\ncontoh .spamadv 120 0 315 10"}, {quoted: m});
 
     const res = await axios.get(
       `${config.restapi.toram}toram/spamadv?lv=${encodeURIComponent(level)}&exp=${encodeURIComponent(exp)}&lvmx=${encodeURIComponent(max)}&from=${encodeURIComponent(qsFrom)}`,
