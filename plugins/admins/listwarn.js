@@ -1,6 +1,6 @@
 import path from "path";
 import { isAdmin } from "../_function/_admin.js";
-import { sendFancyText } from "../../src/config/message.js";
+import { sendFancyText, sendText } from "../../src/config/message.js";
 import { config, thumbnail } from "../../config.js";
 import { getUserData } from "../../src/config/func.js";
 
@@ -14,13 +14,7 @@ const handler = async (m, { conn }) => {
     const group = data.find((g) => g.id === m.chat);
 
     if (!group || !group.members.length)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Developer By ${config.OwnerName}`,
-        thumbnail,
-        text: "Tidak ada data warn di grup ini.",
-        msg: m,
-      });
+      return sendText(conn, m.chat, "tidak ada user yang di warn", m);
 
     const mentions = group.members.map((u) => u.id);
     const list = group.members
@@ -36,13 +30,7 @@ const handler = async (m, { conn }) => {
       { quoted: m },
     );
   } catch (err) {
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail,
-      text: config.message.error,
-      msg: m,
-    });
+    sendText(conn, m.chat, "terjadi kesalahan pada server", m);
   }
 };
 
