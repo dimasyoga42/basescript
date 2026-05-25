@@ -18,15 +18,17 @@ const handler = async (m, { conn }) => {
       return conn.sendButton(m.chat, {
         text: "Silahkan pilih bos peek yang akan di aktifkan",
         footter: "Neurainc",
-        buttons: buildSelectButton(
-          "Panel Owner",
-          "Silahkan pilih bos peek yang aktif",
-          peek.map((item) => ({
-            title: item.name,
-            description: `Aktifkan ${item.name}`,
-            id: `.addevent type=edit ${item.name}`,
-          })),
-        ),
+        buttons: [
+          buildSelectButton(
+            "Panel Owner",
+            "Silahkan pilih bos peek yang aktif",
+            peek.map((item) => ({
+              title: item.name,
+              description: `Aktifkan ${item.name}`,
+              id: `.addevent type=edit ${item.name}`,
+            })),
+          ),
+        ],
       });
     }
     if (query[0] === "type=edit") {
