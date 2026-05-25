@@ -1,9 +1,11 @@
 import { getUserData } from "../../src/config/func.js";
 import { buildSelectButton, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
+import { isOwner } from "../_function/_ban.js";
 
 const handler = async (m, { conn }) => {
   try {
+    if (!isOwner(conn, m)) return;
     const raw = m.text.replace(/\.(addevent|setevent)\s*/gi, "").trim();
     const query = raw.split(/\s+/);
     const db = supa.from("bospeek");
