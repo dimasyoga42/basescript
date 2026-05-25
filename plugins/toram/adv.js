@@ -39,10 +39,10 @@ Progress Detail:
 ${progressText}
 
 Source: ${res.data?.result?.source || "Neura API"}`;
-    await conn.sendMessage(m.chat, {text: responseText}, {quoted: m});
+    await sendText(conn, m.chat, responseText, m);
   } catch (err) {
     console.error(err);
-    await conn.sendMessage(m.chat, {text:"terjadi kesalahan server"}, {quoted: m})
+    await sendText(conn, m.chat, "terjadi kesalahan server", m)
   }
 };
 
