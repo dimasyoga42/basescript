@@ -1,6 +1,10 @@
 import axios from "axios";
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText, sendFancyTextModif, sendText } from "../../src/config/message.js";
+import {
+  sendFancyText,
+  sendFancyTextModif,
+  sendText,
+} from "../../src/config/message.js";
 
 const handler = async (m, { conn }) => {
   try {
@@ -8,7 +12,11 @@ const handler = async (m, { conn }) => {
     const [, level, exp, max, qsFrom] = arg;
 
     if (!level || !exp || !max || !qsFrom)
-      return conn.sendMessage(m.chat {text: "Format salah\ncontoh .spamadv 120 0 315 10"}, {quoted: m});
+      return conn.sendMessage(
+        m.chat,
+        { text: "Format salah\ncontoh .spamadv 120 0 315 10" },
+        { quoted: m },
+      );
 
     const res = await axios.get(
       `${config.restapi.toram}toram/spamadv?lv=${encodeURIComponent(level)}&exp=${encodeURIComponent(exp)}&lvmx=${encodeURIComponent(max)}&from=${encodeURIComponent(qsFrom)}`,
@@ -42,7 +50,7 @@ Source: ${res.data?.result?.source || "Neura API"}`;
     await sendText(conn, m.chat, responseText, m);
   } catch (err) {
     console.error(err);
-    await sendText(conn, m.chat, "terjadi kesalahan server", m)
+    await sendText(conn, m.chat, "terjadi kesalahan server", m);
   }
 };
 
