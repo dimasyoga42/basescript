@@ -1,6 +1,6 @@
 import axios from "axios";
 import { config, thumbnail } from "../../config.js";
-import { sendFancyText, sendText } from "../../src/config/message.js";
+import { sendFancyText, sendFancyTextModif, sendText } from "../../src/config/message.js";
 
 const handler = async (m, { conn }) => {
   try {
@@ -8,12 +8,7 @@ const handler = async (m, { conn }) => {
     const [, level, exp, max, qsFrom] = arg;
 
     if (!level || !exp || !max || !qsFrom)
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Develop by ${config.OwnerName}`,
-        text: `Format yang anda gunakan salah\ncontoh .spamadv 120 0 315 10`,
-        quoted: m,
-      });
+      return conn.sendMessage(m.chat {text: "Format yang anda gunakan salah\ncontoh .spamadv 120 0 315 10"}, {quoted: m});
 
     const res = await axios.get(
       `${config.restapi.toram}toram/spamadv?lv=${encodeURIComponent(level)}&exp=${encodeURIComponent(exp)}&lvmx=${encodeURIComponent(max)}&from=${encodeURIComponent(qsFrom)}`,
@@ -44,16 +39,10 @@ Progress Detail:
 ${progressText}
 
 Source: ${res.data?.result?.source || "Neura API"}`;
-    await sendText(conn, m.chat, responseText, m);
+    await conn.sendMessage(m.chat, {text: responseText}, {quoted: m});
   } catch (err) {
     console.error(err);
-    await sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Develop by ${config.OwnerName}`,
-      thumbnail: thumbnail,
-      text: config.message.error,
-      quoted: m,
-    });
+    await conn.sendMessage(m.chat, {text:"terjadi kesalahan server"}, {quoted: m})
   }
 };
 
