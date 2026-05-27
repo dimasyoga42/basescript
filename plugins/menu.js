@@ -41,7 +41,7 @@ const handler = async (m, { conn }) => {
     console.error("[menu] gagal ambil bospeek:", peekError.message);
   } else if (dataPeek?.length) {
     bospeekSection =
-      `*Bos Peek:*\n` +
+      `*Puncak Petualang:*\n` +
       dataPeek.map((item) => `  - ${item.name} - ${item.element}`).join("\n");
   } else {
     bospeekSection = "*Bos Puncak Petualang:* Tidak ada bos aktif";
