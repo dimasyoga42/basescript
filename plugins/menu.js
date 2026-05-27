@@ -1,36 +1,49 @@
-import { config, thumbnail } from "../config.js";
-import {
-  buildSelectButton,
-  sendFancyText,
-  sendFancyTextModif,
-  sendMenu,
-  sendText,
-} from "../src/config/message.js";
+import { config } from "../config.js";
+import { scrapeBoostBoss } from "./toram/boost.js";
+import { sendFancyTextModif } from "../src/config/message.js";
 
 const handler = async (m, { conn }) => {
-  const { plugins } = await import("./index.js");
-  const categories = {};
+  let dataBoses = { active: false, bosses: [] };
+  try {
+    dataBoses = await scrapeBoostBoss();
+  } catch (e) {
+    console.error("[menu] gagal scrape boss:", e.message);
+  }
 
+  const { plugins } = await import("./index.js");
+
+  const categories = {};
   for (const name in plugins) {
     const plugin = plugins[name];
     if (!plugin?.command) continue;
-
     const cmds = Array.isArray(plugin.command)
       ? plugin.command
       : [plugin.command];
     const cat = plugin.category || "other";
-
     if (!categories[cat]) categories[cat] = [];
     categories[cat].push(...cmds);
   }
 
-  let result =
-    "*Cara Penggunaan:*\n- gunakan .menu / .help untuk menampilkan menu bot\n- pilih salah satu fitur yang anda ingin gunakan\n- jika anda tidak paham cara penggunaan ketikan saja command yang anda ingin gunakan nanti bot akan memberikan intruksi penggunaan\n- gunakan .saran untuk memberikan masukan\n\n *Aturan Penggunaan:*\n- Dilarang Keras Spam command di batas tidak wajar\n- Dilarang Menggunakan tools stiker brat pin untuk hal hal kurang etis (vulgar, rasis, dll) melanggar banned\n";
-
-  for (const cat in categories) {
-    result += `\n╭─ *${cat}*\n`;
-    result += categories[cat].map((c) => `│.${c}`).join("\n") + "\n╰────\n";
+  let bossSection;
+  if (!dataBoses.active) {
+    bossSection = dataBoses.expired
+      ? `*Bos Boost:* Event berakhir ${dataBoses.lastDate}`
+      : `*Bos Boost:* Tidak ada event aktif saat ini`;
+  } else {
+    const bossList = dataBoses.bosses
+      .map((b) => `  - ${b.name} (${b.level}): ${b.location || "-"}`)
+      .join("\n");
+    bossSection = `*Bos Boosting* (s/d ${dataBoses.endDateStr}):\n${bossList}`;
   }
+
+  const commandSection = Object.entries(categories)
+    .map(
+      ([cat, cmds]) =>
+        `╭─ *${cat}*\n` + cmds.map((c) => `│ .${c}`).join("\n") + `\n╰────`,
+    )
+    .join("\n\n");
+
+  const result = `${bossSection}\n\n${commandSection}`;
 
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
@@ -41,40 +54,8 @@ const handler = async (m, { conn }) => {
     caption: result.trim(),
     quoted: m,
   });
-  // await conn.sendButton(m.chat, {
-  //   image: {
-  //     url: randomThumb,
-  //   },
-
-  //   caption: result.trim(),
-  //   footer: "Neura Inc",
-  //   buttons: [
-  //     buildSelectButton(
-  //       "Neura",
-  //       "Menu Favorit",
-
-  //       [
-  //         {
-  //           title: "Trait",
-  //           description: "Daftar Trait",
-  //           id: ".trait",
-  //         },
-
-  //         {
-  //           title: "Skill",
-  //           description: "Daftar Skill",
-  //           id: ".skill",
-  //         },
-  //       ],
-  //     ),
-  //   ],
-
-  //   bottom_sheet: true,
-  //   bottom_name: "Neura",
-  // });
 };
 
 handler.command = ["menu", "help"];
 handler.category = "Menu Grub";
-
 export default handler;
