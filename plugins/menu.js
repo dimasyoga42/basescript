@@ -27,7 +27,7 @@ const handler = async (m, { conn }) => {
   }
 
   // Query bospeek dari Supabase
-  let bospeekSection = "*Bos Peek:* Data tidak tersedia";
+  let bospeekSection = "*Bos Puncak:* Data tidak tersedia";
   const { data: dataPeek, error: peekError } = await supa
     .from("bospeek")
     .select("*")
@@ -40,7 +40,7 @@ const handler = async (m, { conn }) => {
       `*Bos Peek:*\n` +
       dataPeek.map((item) => `  - ${item.name} - ${item.element}`).join("\n");
   } else {
-    bospeekSection = "*Bos Peek:* Tidak ada bos aktif";
+    bospeekSection = "*Bos Puncak Petualang:* Tidak ada bos aktif";
   }
 
   // Section boost boss
