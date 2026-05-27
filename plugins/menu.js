@@ -2,8 +2,12 @@ import { config } from "../config.js";
 import { scrapeBoostBoss } from "./toram/boost.js";
 import { sendFancyTextModif } from "../src/config/message.js";
 import { supa } from "../src/config/supa.js";
+import { buildAvaGrid } from "./_function/_format.js";
 
 const handler = async (m, { conn }) => {
+  const image = await buildAvaGrid(
+    "https://neurapi.mochinime.cyou/api/toram/ava",
+  );
   // Scrape boost boss
   let dataBoses = { active: false, bosses: [] };
   try {
@@ -71,7 +75,7 @@ const handler = async (m, { conn }) => {
 
   await sendFancyTextModif(conn, m.chat, {
     name: m.pushName,
-    image: randomThumb,
+    image: image,
     caption: result.trim(),
     quoted: m,
   });
