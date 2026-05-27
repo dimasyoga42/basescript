@@ -1,8 +1,10 @@
 import { config } from "../config.js";
 import { scrapeBoostBoss } from "./toram/boost.js";
 import { sendFancyTextModif } from "../src/config/message.js";
+import { supa } from "../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
+  // Scrape boost boss
   let dataBoses = { active: false, bosses: [] };
   try {
     dataBoses = await scrapeBoostBoss();
@@ -10,8 +12,8 @@ const handler = async (m, { conn }) => {
     console.error("[menu] gagal scrape boss:", e.message);
   }
 
+  // Load plugins
   const { plugins } = await import("./index.js");
-
   const categories = {};
   for (const name in plugins) {
     const plugin = plugins[name];
@@ -24,6 +26,24 @@ const handler = async (m, { conn }) => {
     categories[cat].push(...cmds);
   }
 
+  // Query bospeek dari Supabase
+  let bospeekSection = "*Bos Peek:* Data tidak tersedia";
+  const { data: dataPeek, error: peekError } = await supa
+    .from("bospeek")
+    .select("*")
+    .eq("active", true);
+
+  if (peekError) {
+    console.error("[menu] gagal ambil bospeek:", peekError.message);
+  } else if (dataPeek?.length) {
+    bospeekSection =
+      `*Bos Peek:*\n` +
+      dataPeek.map((item) => `  - ${item.name} - ${item.element}`).join("\n");
+  } else {
+    bospeekSection = "*Bos Peek:* Tidak ada bos aktif";
+  }
+
+  // Section boost boss
   let bossSection;
   if (!dataBoses.active) {
     bossSection = dataBoses.expired
@@ -36,6 +56,7 @@ const handler = async (m, { conn }) => {
     bossSection = `*Bos Boosting* (s/d ${dataBoses.endDateStr}):\n${bossList}`;
   }
 
+  // Section command
   const commandSection = Object.entries(categories)
     .map(
       ([cat, cmds]) =>
@@ -43,7 +64,7 @@ const handler = async (m, { conn }) => {
     )
     .join("\n\n");
 
-  const result = `${bossSection}\n\n${commandSection}`;
+  const result = `${bossSection}\n\n${bospeekSection}\n\n${commandSection}`;
 
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
