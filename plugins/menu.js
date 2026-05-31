@@ -55,8 +55,8 @@ const handler = async (m, { conn }) => {
       : `*Bos Boost:* Tidak ada event aktif saat ini`;
   } else {
     const bossList = dataBoses.bosses
-      .map((b) => `  - ${b.name} (${b.level}): ${b.location || "-"}`)
-      .join("\n");
+      .map((b) => `- ${b.name} (${b.level}): ${b.location || "-"}`)
+      .join("\n- ");
     bossSection = `*Bos Boosting* (s/d ${dataBoses.endDateStr}):\n${bossList}`;
   }
 
@@ -68,7 +68,7 @@ const handler = async (m, { conn }) => {
     )
     .join("\n\n");
 
-  const result = `${bossSection}\n\n${bospeekSection}\n\n${commandSection}`;
+  const result = `${bossSection}\n\n\n${commandSection}`;
 
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
