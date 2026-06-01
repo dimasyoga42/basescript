@@ -228,7 +228,7 @@ export const sendFancyText = async (
     mediaType: 1,
     previewType: "PHOTO",
     renderLargerThumbnail,
-    showAdAttribution: false,
+    showAdAttribution: true,
     sourceUrl: "https://whatsapp.com",
     containsAutoReply: true,
   };
@@ -388,7 +388,7 @@ export const sendBtns = async (
     mediaType: 1,
     previewType: "PHOTO",
     renderLargerThumbnail,
-    showAdAttribution: false,
+    showAdAttribution: true,
     sourceUrl: "https://whatsapp.com",
     containsAutoReply: true,
   };

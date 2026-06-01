@@ -15,7 +15,7 @@ const handler = async (m, { conn }) => {
 
     sendImage(conn, m.chat, image, "ini adalah waifu mu", m);
   } catch (err) {
-    sendText(conn, m.chat, "harap di ulang", m);
+    sendText(conn, m.chat, `log: ${err.message}`, m);
   }
 };
 
