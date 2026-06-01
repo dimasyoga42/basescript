@@ -8,9 +8,11 @@ import {
 
 const handler = async (m, { conn }) => {
   try {
-    const res = await axios.get(`${config.restapi.waifu}`);
+    const res = await axios.get(
+      `https://api.neoxr.eu/api/waifu?apikey=${process.env.NOXER}`,
+    );
     const data = res.data;
-    const image = data.items[0].url;
+    const image = data.data.url;
     console.log(image);
 
     sendImage(conn, m.chat, image, "ini adalah waifu mu", m);
