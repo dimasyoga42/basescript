@@ -56,7 +56,7 @@ const handler = async (m, { conn }) => {
   } else {
     const bossList = dataBoses.bosses
       .map((b) => `- ${b.name} (${b.level}): ${b.location || "-"}`)
-      .join("\n- ");
+      .join("\n");
     bossSection = `*Bos Boosting* (s/d ${dataBoses.endDateStr}):\n${bossList}`;
   }
 
