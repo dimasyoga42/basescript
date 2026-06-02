@@ -1,6 +1,6 @@
 import { config } from "../config.js";
 import { scrapeBoostBoss } from "./toram/boost.js";
-import { sendFancyTextModif } from "../src/config/message.js";
+import { sendFancyText, sendFancyTextModif } from "../src/config/message.js";
 import { supa } from "../src/config/supa.js";
 import { buildAvaGrid } from "./_function/_format.js";
 
@@ -80,8 +80,15 @@ const handler = async (m, { conn }) => {
     caption: result.trim(),
     quoted: m,
   });
+  await sendFancyText(conn, m.chat, {
+    title: `good luck`,
+    body: `pendamping anda`,
+    text: result.trim(),
+    thumbnail:
+      "https://raw.githubusercontent.com/dimasyoga42/dataset/refs/heads/main/ava_grid.png",
+    quoted: m,
+  });
 };
-
 handler.command = ["menu", "help"];
 handler.category = "Menu Grub";
 export default handler;
