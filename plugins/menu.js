@@ -3,6 +3,7 @@ import { scrapeBoostBoss } from "./toram/boost.js";
 import { sendFancyText, sendFancyTextModif } from "../src/config/message.js";
 import { supa } from "../src/config/supa.js";
 import { buildAvaGrid } from "./_function/_format.js";
+import axios from "axios";
 
 const handler = async (m, { conn }) => {
   const image = await buildAvaGrid(
@@ -55,10 +56,15 @@ const handler = async (m, { conn }) => {
       : `*Bos Boost:* Tidak ada event aktif saat ini`;
   } else {
     const bossList = dataBoses.bosses
-      .map((b) => `- ${b.name} (${b.level}): ${b.location || "-"}`)
-      .join("\n");
-    bossSection = `*Bos Boosting* (s/d ${dataBoses.endDateStr}):\n${bossList}`;
+      .map((b) => `${b.name} (${b.level}): ${b.location || "-"}`)
+      .join("\n- ");
+    bossSection = `*Bos Boosting*:\n${bossList}`;
   }
+  let ava;
+  const res = await axios.get("https://neurapi.mochinime.cyou/api/toram/ava");
+  const data = res.data.result;
+  const vals = data.data.map((item) => `${item.name}`).join("\n- ");
+  ava = `*Ava Terbaru*:\n${vals}`;
 
   // Section command
   const commandSection = Object.entries(categories)
@@ -68,27 +74,19 @@ const handler = async (m, { conn }) => {
     )
     .join("\n\n");
 
-  const result = `${bossSection}\n\n\n${commandSection}`;
+  const result = `${bossSection}\n${ava}\n\n${commandSection}`;
 
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
 
   await sendFancyTextModif(conn, m.chat, {
     name: m.pushName,
-    image:
-      "https://raw.githubusercontent.com/dimasyoga42/dataset/refs/heads/main/ava_grid.png",
+    image: randomThumb,
     caption: result.trim(),
     quoted: m,
   });
-  await sendFancyText(conn, m.chat, {
-    title: `good luck`,
-    body: `pendamping anda`,
-    text: result.trim(),
-    thumbnail:
-      "https://raw.githubusercontent.com/dimasyoga42/dataset/refs/heads/main/ava_grid.png",
-    quoted: m,
-  });
 };
-handler.command = ["menu", "help"];
+handler.command = "menu";
+handler.alias = ["help"];
 handler.category = "Menu Grub";
 export default handler;
