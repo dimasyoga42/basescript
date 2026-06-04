@@ -63,7 +63,7 @@ const handler = async (m, { conn }) => {
   let ava;
   const res = await axios.get("https://neurapi.mochinime.cyou/api/toram/ava");
   const data = res.data.result;
-  const vals = data.data.map((item) => `${item.name}`).join("\n- ");
+  const vals = data.data.map((item) => `- ${item.name}`).join("\n");
   ava = `*Ava Terbaru*:\n${vals}`;
 
   // Section command
