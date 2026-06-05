@@ -5,7 +5,7 @@ const handler = (m, { conn }) => {
     sendImage(
       conn,
       m.chat,
-      "https://raw.githubusercontent.com/dimasyoga42/dataset/main/dye_weapon.png",
+      "https://raw.githubusercontent.com/dimasyoga42/dataset/refs/heads/main/dye_table.png",
       "Dye Weapon Prediction",
       m,
     );
