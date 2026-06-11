@@ -46,33 +46,25 @@ const handler = async (m, { conn, text }) => {
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      return sendFancyText(conn, m.chat, {
-        title: config.BotName,
-        body: `Developer By ${config.OwnerName}`,
-        thumbnail: thumbnail,
-        text: config.message.notFound ?? "Data tidak ditemukan.",
-        quoted: m,
-      });
+      return sendText(
+        conn,
+        m.chat,
+        `pencarian untuk ${text} tidak ditemukan, atau ada kesalahan pada sistem`,
+        m,
+      );
     }
 
     const mtext = data
       .map(
         (item) =>
-          `────────────\n*${item.name}*\nDeskripsi:\n${item.effect}\n\nMax Level:\n- ${item.max_lv}\nLevel:\n- ${item.levels_studied}\n────────────`,
+          `*${item.name}*\nDeskripsi:\n${item.effect}\n\nMax Level:\n- ${item.max_lv}\nLevel:\n- ${item.levels_studied}\n`,
       )
       .join("\n");
 
     await sendText(conn, m.chat, mtext, m);
   } catch (err) {
     console.error("[regis] Error:", err);
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail: thumbnail,
-      text: config.message.error,
-      quoted: m,
-    });
-  }
+    sendText(conn, m.chat, "terjadi kesalahan pada server harap di ulang", m)
 };
 
 handler.command = "regis";

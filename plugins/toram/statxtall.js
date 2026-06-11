@@ -1,16 +1,18 @@
 import { config } from "../../config.js";
+import { buildSelectButton, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
 const handler = async (m, { conn }) => {
   try {
-    const text = m.text || "";
+    const text = m.text ?? "";
     const query = text.replace(/^\.statsxtal\s*/i, "").trim();
 
     if (!query) {
-      return conn.sendMessage(
+      return sendText(
+        conn,
         m.chat,
-        { text: "masukan stat xtal yang ingin anda cari setelah cmd" },
-        { quoted: m },
+        "masukan stat xtal yang ingin anda cari setelah cmd",
+        m,
       );
     }
 
@@ -21,52 +23,52 @@ const handler = async (m, { conn }) => {
       .limit(20);
 
     if (error) {
-      console.log("ERR STATS XTAL:", error.message);
-      return conn.sendMessage(
-        m.chat,
-        { text: "terjadi kesalahan saat mengambil data" },
-        { quoted: m },
-      );
+      console.error("ERR STATS XTAL:", error.message);
+      return sendText(conn, m.chat, "terjadi kesalahan saat mengambil data", m);
     }
 
-    if (!data || data.length === 0) {
-      return conn.sendMessage(
-        m.chat,
-        { text: "stat yang dicari tidak ditemukan" },
-        { quoted: m },
-      );
+    if (!data?.length) {
+      return sendText(conn, m.chat, "stat yang dicari tidak ditemukan", m);
     }
 
-    // ✅ kalau cuma 1 → langsung redirect ke xtal detail
     if (data.length === 1) {
-      return conn.sendMessage(
-        m.chat,
-        { text: `.xtal ${data[0].name}` },
-        { quoted: m },
-      );
+      return sendText(conn, m.chat, `.xtal ${data[0].name}`, m);
     }
 
-    // ✅ kalau banyak → button
     return await conn.sendButton(m.chat, {
-      text: `Ditemukan ${data.length} xtal dengan stat: "${query}"\nPilih salah satu:`,
+      text: `Ditemukan *${data.length}* xtal dengan stat _${query}_
+
+Pilih salah satu:`,
+
       footer: config.OwnerName,
-      buttons: data.map((item) => ({
-        name: "quick_reply",
-        buttonParamsJson: JSON.stringify({
-          display_text: item.name,
-          id: `.xtal ${item.name}`,
-        }),
-      })),
+
+      buttons: [
+        buildSelectButton(
+          "List Xtal",
+          "Silahkan pilih xtal",
+          data.map((item) => {
+            const matchedStat =
+              item.stats
+                ?.split("|")
+                .map((s) => s.trim())
+                .find((s) => s.toLowerCase().includes(query.toLowerCase())) ??
+              "Tidak ada stat";
+
+            return {
+              title: item.name,
+              description: matchedStat.slice(0, 72),
+              id: `.xtal ${item.name}`,
+            };
+          }),
+        ),
+      ],
+
       bottom_sheet: true,
       bottom_name: "List Xtal",
     });
   } catch (err) {
-    console.log("ERR STATS XTAL:", err.message);
-    await conn.sendMessage(
-      m.chat,
-      { text: "terjadi error tidak terduga" },
-      { quoted: m },
-    );
+    console.error("ERR STATS XTAL:", err);
+    await sendText(conn, m.chat, "terjadi error tidak terduga", m);
   }
 };
 
