@@ -64,11 +64,13 @@ const handler = async (m, { conn, text }) => {
     await sendText(conn, m.chat, mtext, m);
   } catch (err) {
     console.error("[regis] Error:", err);
-    sendText(conn, m.chat, "terjadi kesalahan pada server harap di ulang", m)
+    sendText(conn, m.chat, "terjadi kesalahan pada server harap di ulang", m);
+  }
 };
 
 handler.command = "regis";
 handler.alias = ["regist"];
 handler.category = "Toram Search";
 handler.submenu = "Toram";
+
 export default handler;
