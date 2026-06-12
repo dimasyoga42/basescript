@@ -116,7 +116,7 @@ const handler = async (m, { conn }) => {
     await conn.sendMessage(
       m.chat,
       {
-        audio: fixedBuffer,
+        audio: data.mp3.download_url,
         mimetype: "audio/mpeg",
         fileName: `${data.title}.mp3`,
         ptt: false,
