@@ -10,7 +10,7 @@ const handler = async (m, { conn }) => {
   try {
     const res = await axios.get("https://neurapi.mochinime.cyou/api/etc/waifu");
     const data = res.data;
-    const image = data.url;
+    const image = data.image;
     console.log(image);
     sendImage(conn, m.chat, image, `${data.character}`, m);
   } catch (err) {
