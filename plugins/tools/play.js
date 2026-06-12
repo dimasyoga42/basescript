@@ -3,7 +3,6 @@ import ffmpeg from "fluent-ffmpeg";
 import { writeFileSync, readFileSync, unlinkSync, existsSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
-import { execSync } from "child_process";
 import {
   reactMessage,
   sendFancyText,
@@ -12,40 +11,10 @@ import {
 } from "../../src/config/message.js";
 import { config, thumbnail } from "../../config.js";
 
-const resolveFfmpegPath = () => {
-  const candidates = [
-    "/usr/bin/ffmpeg",
-    "/usr/local/bin/ffmpeg",
-    "/opt/homebrew/bin/ffmpeg",
-  ];
-
-  for (const p of candidates) {
-    if (existsSync(p)) return p;
-  }
-
-  try {
-    const which = execSync("which ffmpeg", { stdio: ["pipe", "pipe", "pipe"] })
-      .toString()
-      .trim();
-    if (which) return which;
-  } catch {}
-
-  return null;
-};
-
-const ffmpegPath = resolveFfmpegPath();
-console.log("[FFMPEG PATH]", ffmpegPath);
-
-if (ffmpegPath) {
-  ffmpeg.setFfmpegPath(ffmpegPath);
-}
+ffmpeg.setFfmpegPath("/usr/bin/ffmpeg");
 
 const convertToMp3 = (inputBuffer) => {
   return new Promise((resolve, reject) => {
-    if (!ffmpegPath) {
-      return reject(new Error("FFmpeg tidak ditemukan di sistem"));
-    }
-
     const ts = Date.now();
     const tmpIn = join(tmpdir(), `neura_in_${ts}.mp3`);
     const tmpOut = join(tmpdir(), `neura_out_${ts}.mp3`);
