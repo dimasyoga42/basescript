@@ -76,9 +76,6 @@ const handler = async (m, { conn }) => {
       `https://neurapi.mochinime.cyou/api/etc/play?query=${encodeURIComponent(
         query,
       )}`,
-      {
-        timeout: 30000,
-      },
     );
 
     const data = res.data;
