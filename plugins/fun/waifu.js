@@ -8,14 +8,11 @@ import {
 
 const handler = async (m, { conn }) => {
   try {
-    const res = await axios.get(
-      `https://api.neoxr.eu/api/waifu?apikey=${process.env.NOXER}`,
-    );
+    const res = await axios.get("https://neurapi.mochinime.cyou/api/etc/waifu");
     const data = res.data;
-    const image = data.data.url;
+    const image = data.url;
     console.log(image);
-
-    sendImage(conn, m.chat, image, "ini adalah waifu mu", m);
+    sendImage(conn, m.chat, image, `${data.character}`, m);
   } catch (err) {
     sendText(conn, m.chat, `log: ${err.message}`, m);
   }
