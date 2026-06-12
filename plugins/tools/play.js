@@ -4,11 +4,13 @@ import { execSync } from "child_process";
 import { writeFileSync, readFileSync, unlinkSync, existsSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
+
 import {
   reactMessage,
   sendFancyText,
   sendText,
 } from "../../src/config/message.js";
+
 import { config, thumbnail } from "../../config.js";
 
 try {
@@ -28,6 +30,7 @@ const convertToMp3 = (inputBuffer) => {
 
     try {
       writeFileSync(tmpIn, inputBuffer);
+
       ffmpeg(tmpIn)
         .outputOptions(["-vn", "-ar 44100", "-ac 2", "-b:a 192k"])
         .format("mp3")
@@ -36,9 +39,9 @@ const convertToMp3 = (inputBuffer) => {
             const buffer = readFileSync(tmpOut);
             cleanup();
             resolve(buffer);
-          } catch (e) {
+          } catch (err) {
             cleanup();
-            reject(e);
+            reject(err);
           }
         })
         .on("error", (err) => {
@@ -55,25 +58,33 @@ const convertToMp3 = (inputBuffer) => {
 
 const handler = async (m, { conn }) => {
   try {
-    const query = m.text.replace(/^\.play|.music|.p\s*/i, "").trim();
+    const query = m.text.replace(/^(\.play|\.music|\.p)\s*/i, "").trim();
 
-    if (!query)
+    if (!query) {
       return sendText(
         conn,
         m.chat,
-        "Masukkan judul lagu\nContoh: .play Bohemian Rhapsody",
+        "Masukkan judul lagu\nContoh: .play Dia Anji",
         m,
       );
+    }
 
     await reactMessage(conn, m.chat, m, "🔍");
 
     const res = await axios.get(
-      `https://api.neoxr.eu/api/play?q=${encodeURIComponent(query)}&apikey=${process.env.NOXER}`,
+      `https://neurapi.mochinime.cyou/api/etc/play?query=${encodeURIComponent(
+        query,
+      )}`,
+      {
+        timeout: 30000,
+      },
     );
 
     const data = res.data;
-    console.log(data);
-    if (!data?.data?.url)
+
+    console.log("[PLAY API]", data);
+
+    if (!data?.success || !data?.mp3?.download_url) {
       return sendFancyText(conn, m.chat, {
         title: config.BotName,
         body: `Developer By ${config.OwnerName}`,
@@ -81,67 +92,68 @@ const handler = async (m, { conn }) => {
         text: config.message.notFound,
         msg: m,
       });
+    }
 
-    const audioRes = await axios.get(data.data.url, {
+    await sendFancyText(conn, m.chat, {
+      title: config.BotName,
+      body: `Developer By ${config.OwnerName}`,
+      thumbnail: data.thumbnail || thumbnail,
+      text: `🎵 ${data.title}
+
+📺 Channel: ${data.channel}
+⏱️ Durasi: ${data.duration}
+👁️ Views: ${data.views}`,
+      msg: m,
+    });
+
+    await reactMessage(conn, m.chat, m, "⬇️");
+
+    const audioRes = await axios.get(data.mp3.download_url, {
       responseType: "arraybuffer",
       timeout: 60000,
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
-      headers: { "User-Agent": "Mozilla/5.0" },
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+      },
     });
 
     const mp3Buffer = Buffer.from(audioRes.data);
+
     let fixedBuffer;
+
     try {
       fixedBuffer = await convertToMp3(mp3Buffer);
-    } catch {
+    } catch (err) {
+      console.log("[FFMPEG ERROR] Menggunakan file asli:", err.message);
       fixedBuffer = mp3Buffer;
     }
 
-    // await sendFancyText(conn, m.chat, {
-    //   title: config.BotName,
-    //   body: `Developer By ${config.OwnerName}`,
-    //   thumbnail: data.thumbnail || thumbnail,
-    //   text: `${data.title}\nChannel: ${data.channel}\nDurasi: ${data.fduration}\nViews: ${data.views}\nSize: ${data.data.size}`,
-    //   msg: m,
-    // });
+    await reactMessage(conn, m.chat, m, "🎵");
 
-    // await conn.sendMessage(
-    //   m.chat,
-    //   {
-    //     audio: fixedBuffer,
-    //     mimetype: "audio/mpeg",
-    //     fileName: `${data.title}.mp3`,
-    //     contextInfo: {
-    //       title: `${data.title}`,
-    //       body: `${config.BotName}`,
-    //       mediaType: 1,
-    //     },
-    //   },
-    //   { quoted: m },
-    // );
-    await conn.sendMessage(m.chat, {
-      audio: fixedBuffer,
-      mimetype: "audio/mpeg",
-      ptt: false,
-    });
-    // conn.sendOrder(
-    //   m.chat,
-    //   {
-    //     thumbnail: data.thumbnail,
-    //     status: 1,
-    //     surface: 1,
-    //     orderTitle: data.title,
-    //     sellerJid: conn.user.jid,
-    //     audio: fixedBuffer,
-    //     mimetype: "audio/mpeg",
-    //     fileName: `${data.title}.mp3`,
-    //   },
-    //   { quoted: m },
-    // );
+    await conn.sendMessage(
+      m.chat,
+      {
+        audio: fixedBuffer,
+        mimetype: "audio/mpeg",
+        fileName: `${data.title}.mp3`,
+        ptt: false,
+      },
+      {
+        quoted: m,
+      },
+    );
+
+    await reactMessage(conn, m.chat, m, "✅");
   } catch (err) {
-    console.error("[play]", err.message);
-    await sendText(conn, m.chat, config.message.error, m);
+    console.error("[PLAY ERROR]", err);
+
+    await sendText(
+      conn,
+      m.chat,
+      config.message.error || "Terjadi kesalahan saat memproses lagu.",
+      m,
+    );
   }
 };
 
@@ -149,4 +161,5 @@ handler.command = "play";
 handler.alias = ["music", "p"];
 handler.category = "Menu Tools";
 handler.submenu = "Tools";
+
 export default handler;
