@@ -1,8 +1,4 @@
 import axios from "axios";
-import ffmpeg from "fluent-ffmpeg";
-import { writeFileSync, readFileSync, unlinkSync, existsSync } from "fs";
-import { join } from "path";
-import { tmpdir } from "os";
 import {
   reactMessage,
   sendFancyText,
@@ -10,46 +6,6 @@ import {
   sendText,
 } from "../../src/config/message.js";
 import { config, thumbnail } from "../../config.js";
-
-ffmpeg.setFfmpegPath("/usr/bin/ffmpeg");
-
-const convertToMp3 = (inputBuffer) => {
-  return new Promise((resolve, reject) => {
-    const ts = Date.now();
-    const tmpIn = join(tmpdir(), `neura_in_${ts}.mp3`);
-    const tmpOut = join(tmpdir(), `neura_out_${ts}.mp3`);
-
-    const cleanup = () => {
-      if (existsSync(tmpIn)) unlinkSync(tmpIn);
-      if (existsSync(tmpOut)) unlinkSync(tmpOut);
-    };
-
-    try {
-      writeFileSync(tmpIn, inputBuffer);
-    } catch (err) {
-      return reject(new Error(`Gagal menulis file temp: ${err.message}`));
-    }
-
-    ffmpeg(tmpIn)
-      .outputOptions(["-vn", "-ar 44100", "-ac 2", "-b:a 192k"])
-      .format("mp3")
-      .on("end", () => {
-        try {
-          const buffer = readFileSync(tmpOut);
-          cleanup();
-          resolve(buffer);
-        } catch (err) {
-          cleanup();
-          reject(new Error(`Gagal membaca file output: ${err.message}`));
-        }
-      })
-      .on("error", (err) => {
-        cleanup();
-        reject(new Error(`FFmpeg error: ${err.message}`));
-      })
-      .save(tmpOut);
-  });
-};
 
 const handler = async (m, { conn }) => {
   try {
@@ -93,30 +49,10 @@ const handler = async (m, { conn }) => {
 
     await reactMessage(conn, m.chat, m, "⬇️");
 
-    const audioRes = await axios.get(data.mp3.download_url, {
-      responseType: "arraybuffer",
-      timeout: 60000,
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
-
-    const mp3Buffer = Buffer.from(audioRes.data);
-
-    let fixedBuffer;
-    try {
-      fixedBuffer = await convertToMp3(mp3Buffer);
-    } catch (err) {
-      console.log("[FFMPEG ERROR] Menggunakan file asli:", err.message);
-      fixedBuffer = mp3Buffer;
-    }
-
-    await reactMessage(conn, m.chat, m, "🎵");
-
     await conn.sendMessage(
       m.chat,
       {
-        audio: fixedBuffer,
+        audio: { url: data.mp3.download_url },
         mimetype: "audio/mpeg",
         fileName: `${data.title}.mp3`,
         ptt: false,
