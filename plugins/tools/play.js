@@ -1,28 +1,23 @@
 import axios from "axios";
 import ffmpeg from "fluent-ffmpeg";
-import { execSync } from "child_process";
+import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import { writeFileSync, readFileSync, unlinkSync, existsSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
-
 import {
   reactMessage,
   sendFancyText,
   sendFancyTextModif,
   sendText,
 } from "../../src/config/message.js";
-
 import { config, thumbnail } from "../../config.js";
 
-try {
-  const path = execSync("which ffmpeg").toString().trim();
-  ffmpeg.setFfmpegPath(path);
-} catch {}
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 const convertToMp3 = (inputBuffer) => {
   return new Promise((resolve, reject) => {
-    const tmpIn = join(tmpdir(), `neura_${Date.now()}.mp3`);
-    const tmpOut = join(tmpdir(), `neura_${Date.now()}_fixed.mp3`);
+    const tmpIn = join(tmpdir(), `neura_in_${Date.now()}.mp3`);
+    const tmpOut = join(tmpdir(), `neura_out_${Date.now()}.mp3`);
 
     const cleanup = () => {
       if (existsSync(tmpIn)) unlinkSync(tmpIn);
@@ -31,36 +26,34 @@ const convertToMp3 = (inputBuffer) => {
 
     try {
       writeFileSync(tmpIn, inputBuffer);
-
-      ffmpeg(tmpIn)
-        .outputOptions(["-vn", "-ar 44100", "-ac 2", "-b:a 192k"])
-        .format("mp3")
-        .on("end", () => {
-          try {
-            const buffer = readFileSync(tmpOut);
-            cleanup();
-            resolve(buffer);
-          } catch (err) {
-            cleanup();
-            reject(err);
-          }
-        })
-        .on("error", (err) => {
-          cleanup();
-          reject(err);
-        })
-        .save(tmpOut);
     } catch (err) {
-      cleanup();
-      reject(err);
+      return reject(new Error(`Gagal menulis file temp: ${err.message}`));
     }
+
+    ffmpeg(tmpIn)
+      .outputOptions(["-vn", "-ar 44100", "-ac 2", "-b:a 192k"])
+      .format("mp3")
+      .on("end", () => {
+        try {
+          const buffer = readFileSync(tmpOut);
+          cleanup();
+          resolve(buffer);
+        } catch (err) {
+          cleanup();
+          reject(new Error(`Gagal membaca file output: ${err.message}`));
+        }
+      })
+      .on("error", (err) => {
+        cleanup();
+        reject(new Error(`FFmpeg error: ${err.message}`));
+      })
+      .save(tmpOut);
   });
 };
 
 const handler = async (m, { conn }) => {
   try {
     const query = m.text.replace(/^(\.play|\.music|\.p)\s*/i, "").trim();
-
     if (!query) {
       return sendText(
         conn,
@@ -73,16 +66,11 @@ const handler = async (m, { conn }) => {
     await reactMessage(conn, m.chat, m, "🔍");
 
     const res = await axios.get(
-      `https://neurapi.mochinime.cyou/api/etc/play?query=${encodeURIComponent(
-        query,
-      )}`,
-      {
-        timeout: 100000,
-      },
+      `https://neurapi.mochinime.cyou/api/etc/play?query=${encodeURIComponent(query)}`,
+      { timeout: 100000 },
     );
 
     const data = res.data;
-
     console.log("[PLAY API]", data);
 
     if (!data?.success || !data?.mp3?.download_url) {
@@ -99,11 +87,7 @@ const handler = async (m, { conn }) => {
       title: config.BotName,
       body: `Developer By ${config.OwnerName}`,
       thumbnail: data.thumbnail || thumbnail,
-      text: `🎵 ${data.title}
-
-📺 Channel: ${data.channel}
-⏱️ Durasi: ${data.duration}
-👁️ Views: ${data.views}`,
+      text: `🎵 ${data.title}\n📺 Channel: ${data.channel}\n⏱️ Durasi: ${data.duration}\n👁️ Views: ${data.views}`,
       msg: m,
     });
 
@@ -114,15 +98,12 @@ const handler = async (m, { conn }) => {
       timeout: 60000,
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-      },
+      headers: { "User-Agent": "Mozilla/5.0" },
     });
 
     const mp3Buffer = Buffer.from(audioRes.data);
 
     let fixedBuffer;
-
     try {
       fixedBuffer = await convertToMp3(mp3Buffer);
     } catch (err) {
@@ -140,15 +121,12 @@ const handler = async (m, { conn }) => {
         fileName: `${data.title}.mp3`,
         ptt: false,
       },
-      {
-        quoted: m,
-      },
+      { quoted: m },
     );
 
     await reactMessage(conn, m.chat, m, "✅");
   } catch (err) {
     console.error("[PLAY ERROR]", err);
-
     await sendText(
       conn,
       m.chat,
@@ -162,5 +140,4 @@ handler.command = "play";
 handler.alias = ["music", "p"];
 handler.category = "Menu Tools";
 handler.submenu = "Tools";
-
 export default handler;
