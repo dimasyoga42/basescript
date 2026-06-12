@@ -40,11 +40,9 @@ const handler = async (m, { conn }) => {
     }
 
     await sendFancyTextModif(conn, m.chat, {
-      title: config.BotName,
-      body: `Developer By ${config.OwnerName}`,
-      thumbnail: data.thumbnail || thumbnail,
-      text: `🎵 ${data.title}\n📺 Channel: ${data.channel}\n⏱️ Durasi: ${data.duration}\n👁️ Views: ${data.views}`,
-      msg: m,
+      image: data.thumbnail || thumbnail,
+      caption: `🎵 ${data.title}\n📺 Channel: ${data.channel}\n⏱️ Durasi: ${data.duration}\n👁️ Views: ${data.views}`,
+      quoted: m,
     });
 
     await reactMessage(conn, m.chat, m, "⬇️");
