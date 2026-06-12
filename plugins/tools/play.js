@@ -8,6 +8,7 @@ import { tmpdir } from "os";
 import {
   reactMessage,
   sendFancyText,
+  sendFancyTextModif,
   sendText,
 } from "../../src/config/message.js";
 
@@ -76,7 +77,7 @@ const handler = async (m, { conn }) => {
         query,
       )}`,
       {
-        timeout: 30000,
+        timeout: 100000,
       },
     );
 
@@ -94,7 +95,7 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    await sendFancyText(conn, m.chat, {
+    await sendFancyTextModif(conn, m.chat, {
       title: config.BotName,
       body: `Developer By ${config.OwnerName}`,
       thumbnail: data.thumbnail || thumbnail,
