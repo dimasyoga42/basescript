@@ -10,6 +10,7 @@ const handler = async (m, { conn }) => {
   try {
     const res = await axios.get(`${config.restapi.milf}`);
     const data = res.data;
+    console.log(`[Log Milf]: ` + data);
     const image = data.items[0].url;
     console.log(image);
 
