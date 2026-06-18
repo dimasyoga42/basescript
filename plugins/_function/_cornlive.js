@@ -237,13 +237,12 @@ const sendLiveNotif = async (conn, latest, detail) => {
 
   const now = moment().tz(TIMEZONE).format("DD/MM/YYYY HH:mm");
 
-  let msg = `🔴 *TORAM LIVE STREAM*\n${latest.title}\n`;
-  if (detail.time) msg += `\n🕐 Time: ${detail.time}`;
+  let msg = `\n${latest.title}\n`;
+  if (detail.time) msg += `\nTime: ${detail.time}`;
   if (detail.youtubeUrl) msg += `\n▶️ YouTube: ${detail.youtubeUrl}`;
   if (detail.programs.length)
-    msg += `\n\n📋 Program:\n${detail.programs.map((p, i) => `${i + 1}. ${p}`).join("\n")}`;
-  if (detail.presents) msg += `\n\n🎁 Viewer Present: Available`;
-  msg += `\n\n🕐 Checked: ${now} WIB\n🔗 Source: ${latest.url}`;
+    msg += `\n\nProgram:\n${detail.programs.map((p, i) => `${i + 1}. ${p}`).join("\n")}`;
+  if (detail.presents) msg += `\n\nViewer Present: Available`;
 
   for (const group of activeGroups) {
     try {

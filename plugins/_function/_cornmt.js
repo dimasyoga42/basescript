@@ -187,11 +187,9 @@ const sendMtNotif = async (conn, latest, detail) => {
 
   const now = moment().tz(TIMEZONE).format("DD/MM/YYYY HH:mm");
 
-  let msg = `🔧 *TORAM UPDATE / MAINTENANCE*\n`;
-  msg += `📌 ${latest.title}\n`;
+  let msg;
+  msg += `${latest.title}\n`;
   if (detail.content) msg += `\n${detail.content}`;
-  msg += `\n\n🕐 Checked: ${now} WIB`;
-  msg += `\n🔗 Source: ${latest.url}`;
 
   for (const group of activeGroups) {
     try {
