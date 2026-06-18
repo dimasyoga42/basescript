@@ -19,7 +19,7 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["maid"];
-handler.category = "Menu Fun";
-handler.submenu = "Fun";
-export default handler;
+// handler.command = ["maid"];
+// handler.category = "Menu Fun";
+// handler.submenu = "Fun";
+// export default handler;

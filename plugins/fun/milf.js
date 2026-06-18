@@ -10,7 +10,7 @@ const handler = async (m, { conn }) => {
   try {
     const res = await axios.get(`${config.restapi.milf}`);
     const data = res.data;
-    console.log(`[Log Milf]: ` + data);
+    console.log(`[Log Milf]:  ` + data);
     const image = data.items[0].url;
     console.log(image);
 
@@ -20,7 +20,7 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command = ["milf"];
-handler.category = "Menu Fun";
-handler.submenu = "Fun";
-export default handler;
+// handler.command = ["milf"];
+// handler.category = "Menu Fun";
+// handler.submenu = "Fun";
+// export default handler;
