@@ -8,8 +8,9 @@ import {
 
 const handler = async (m, { conn }) => {
   try {
+    const randomPage = Math.floor(Math.random() * 60) + 1;
     const res = await axios.get(
-      `https://neurapi.mochinime.cyou/api/etc/pixiv/search?query=メイド服`,
+      `https://neurapi.mochinime.cyou/api/etc/pixiv/search?query=メイド服&page=${randomPage}`,
     );
     const data = res.data;
 
