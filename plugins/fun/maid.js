@@ -9,7 +9,7 @@ import {
 const handler = async (m, { conn }) => {
   try {
     const res = await axios.get(
-      `https://neurapi.mochinime.cyou/api/etc/pixiv/search?query=maid`,
+      `https://neurapi.mochinime.cyou/api/etc/pixiv/search?query=メイド服`,
     );
     const data = res.data;
 
