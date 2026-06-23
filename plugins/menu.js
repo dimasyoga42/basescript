@@ -81,7 +81,8 @@ const handler = async (m, { conn }) => {
 
   await sendFancyTextModif(conn, m.chat, {
     name: m.pushName,
-    image: randomThumb,
+    image:
+      "https://raw.githubusercontent.com/dimasyoga42/basescript/refs/heads/main/1.png",
     caption: result.trim(),
     quoted: m,
   });
