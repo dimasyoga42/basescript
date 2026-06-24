@@ -79,13 +79,13 @@ const handler = async (m, { conn }) => {
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
 
-  // await sendFancyTextModif(conn, m.chat, {
-  //   name: m.pushName,
-  //   image:
-  //     "https://raw.githubusercontent.com/dimasyoga42/basescript/refs/heads/main/1.png",
-  //   caption: result.trim(),
-  //   quoted: m,
-  // });
+  await sendFancyTextModif(conn, m.chat, {
+    name: m.pushName,
+    image:
+      "https://raw.githubusercontent.com/dimasyoga42/basescript/refs/heads/main/1.png",
+    caption: result.trim(),
+    quoted: m,
+  });
   await demoButtonV2(
     conn,
     m,
