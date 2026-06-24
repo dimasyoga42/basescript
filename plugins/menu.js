@@ -1,10 +1,13 @@
 import { config } from "../config.js";
 import { scrapeBoostBoss } from "./toram/boost.js";
-import { sendFancyText, sendFancyTextModif } from "../src/config/message.js";
+import {
+  demoButtonV2,
+  sendFancyText,
+  sendFancyTextModif,
+} from "../src/config/message.js";
 import { supa } from "../src/config/supa.js";
 import { buildAvaGrid } from "./_function/_format.js";
 import axios from "axios";
-
 const handler = async (m, { conn }) => {
   const image = await buildAvaGrid(
     "https://neurapi.mochinime.cyou/api/toram/ava",
@@ -79,13 +82,22 @@ const handler = async (m, { conn }) => {
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
 
-  await sendFancyTextModif(conn, m.chat, {
-    name: m.pushName,
-    image:
-      "https://raw.githubusercontent.com/dimasyoga42/basescript/refs/heads/main/1.png",
-    caption: result.trim(),
-    quoted: m,
-  });
+  // await sendFancyTextModif(conn, m.chat, {
+  //   name: m.pushName,
+  //   image:
+  //     "https://raw.githubusercontent.com/dimasyoga42/basescript/refs/heads/main/1.png",
+  //   caption: result.trim(),
+  //   quoted: m,
+  // });
+  await demoButtonV2(
+    conn,
+    m,
+    "Neura Sama",
+    result,
+    "Neura Inc",
+    "siap Melayani Anda",
+    randomThumb,
+  );
 };
 handler.command = "menu";
 handler.alias = ["help"];
