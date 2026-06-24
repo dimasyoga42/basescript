@@ -4,7 +4,7 @@ import { sendFancyText, sendFancyTextModif } from "../src/config/message.js";
 import { supa } from "../src/config/supa.js";
 import { buildAvaGrid } from "./_function/_format.js";
 import axios from "axios";
-import { demoButtonV2 } from "../src/config/ms.js";
+
 const handler = async (m, { conn }) => {
   const image = await buildAvaGrid(
     "https://neurapi.mochinime.cyou/api/toram/ava",
@@ -81,20 +81,10 @@ const handler = async (m, { conn }) => {
 
   await sendFancyTextModif(conn, m.chat, {
     name: m.pushName,
-    image:
-      "https://raw.githubusercontent.com/dimasyoga42/basescript/refs/heads/main/1.png",
+    image: randomThumb,
     caption: result.trim(),
     quoted: m,
   });
-  await demoButtonV2(
-    conn,
-    m,
-    "Neura Sama",
-    result,
-    "Neura Inc",
-    "siap Melayani Anda",
-    randomThumb,
-  );
 };
 handler.command = "menu";
 handler.alias = ["help"];
