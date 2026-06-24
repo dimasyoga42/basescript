@@ -86,15 +86,6 @@ const handler = async (m, { conn }) => {
     caption: result.trim(),
     quoted: m,
   });
-  await demoButtonV2(
-    conn,
-    m,
-    "Neura Sama",
-    "a",
-    "dimasyoga",
-    "siap Melayani anda",
-    randomThumb,
-  );
 };
 handler.command = "menu";
 handler.alias = ["help"];
