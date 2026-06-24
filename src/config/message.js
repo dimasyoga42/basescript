@@ -1,6 +1,6 @@
 import fs from "fs";
 import { downloadContentFromMessage } from "@whiskeysockets/baileys";
-import { Button, ButtonV2, Carousel, AIRich } from "@ryuu-reinzz/haruka-lib";
+import { ButtonV2 } from "@ryuu-reinzz/haruka-lib";
 export async function demoButtonV2(
   sock,
   m,
