@@ -90,7 +90,7 @@ const handler = async (m, { conn }) => {
     conn,
     m,
     "Neura Sama",
-    result,
+    "a",
     "dimasyoga",
     "siap Melayani anda",
     randomThumb,
