@@ -55,7 +55,7 @@ export async function demoButtonV2(
       .setBody(body)
       .setFooter(footer)
       .setThumbnail(thub)
-      .addButton("jadibot", ".bot")
+      .addButton("cekvip", ".cekvip")
       .send();
   } catch (err) {
     console.error("[ButtonV2] Gagal kirim:", err?.message, err?.stack);

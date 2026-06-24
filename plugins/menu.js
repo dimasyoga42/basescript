@@ -80,13 +80,21 @@ const handler = async (m, { conn }) => {
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
 
-  await sendFancyTextModif(conn, m.chat, {
-    name: m.pushName,
-    image: randomThumb,
-    caption: result.trim(),
-    quoted: m,
-  });
-  await demoButtonV2(conn, m, "Neura Sama", result, "Neura Inc", "selalu ada");
+  // await sendFancyTextModif(conn, m.chat, {
+  //   name: m.pushName,
+  //   image: randomThumb,
+  //   caption: result.trim(),
+  //   quoted: m,
+  // });
+  await demoButtonV2(
+    conn,
+    m,
+    "Neura Sama",
+    result,
+    "Neura Inc",
+    "selalu ada",
+    randomThumb,
+  );
 };
 handler.command = "menu";
 handler.alias = ["help"];
