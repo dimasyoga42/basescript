@@ -1,13 +1,10 @@
 import { config } from "../config.js";
 import { scrapeBoostBoss } from "./toram/boost.js";
-import {
-  demoButtonV2,
-  sendFancyText,
-  sendFancyTextModif,
-} from "../src/config/message.js";
+import { sendFancyText, sendFancyTextModif } from "../src/config/message.js";
 import { supa } from "../src/config/supa.js";
 import { buildAvaGrid } from "./_function/_format.js";
 import axios from "axios";
+import { demoButtonV2 } from "../src/config/ms.js";
 const handler = async (m, { conn }) => {
   const image = await buildAvaGrid(
     "https://neurapi.mochinime.cyou/api/toram/ava",

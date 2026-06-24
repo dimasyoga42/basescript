@@ -1,30 +1,5 @@
 import fs from "fs";
 import { downloadContentFromMessage } from "@whiskeysockets/baileys";
-//import { ButtonV2 } from "@ryuu-reinzz/haruka-lib";
-export async function demoButtonV2(
-  sock,
-  m,
-  title,
-  body,
-  footer,
-  subtitle,
-  thub = "https://cdn.ornzora.eu.cc/4d2905ce-3707-4ec0-998a-68a3d851629f-FIORA.jpg",
-) {
-  try {
-    await sock
-      .messageBuilder(m.chat, { quoted: m })
-      .setType("ButtonV2")
-      .setTitle(title)
-      .setSubtitle(subtitle)
-      .setBody(body)
-      .setFooter(footer)
-      .setThumbnail(thub)
-      .addButton("cekvip", ".cekvip")
-      .send();
-  } catch (err) {
-    console.error("[ButtonV2] Gagal kirim:", err?.message, err?.stack);
-  }
-}
 
 const ensure = (v, name) => {
   if (!v) throw new Error(`${name} is required`);
