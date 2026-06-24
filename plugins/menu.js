@@ -4,6 +4,7 @@ import { sendFancyText, sendFancyTextModif } from "../src/config/message.js";
 import { supa } from "../src/config/supa.js";
 import { buildAvaGrid } from "./_function/_format.js";
 import axios from "axios";
+import { demoButtonV2 } from "../src/config/ms.js";
 
 const handler = async (m, { conn }) => {
   const image = await buildAvaGrid(
@@ -85,6 +86,15 @@ const handler = async (m, { conn }) => {
     caption: result.trim(),
     quoted: m,
   });
+  await demoButtonV2(
+    conn,
+    m,
+    "Neura Sama",
+    result,
+    "dimasyoga",
+    "siap Melayani anda",
+    randomThumb,
+  );
 };
 handler.command = "menu";
 handler.alias = ["help"];
