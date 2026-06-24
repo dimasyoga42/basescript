@@ -10,7 +10,7 @@ import makeWASocket, {
   generateMessageID,
   generateWAMessage,
 } from "@ryuu-reinzz/baileys";
-import haruka from "@ryuu-reinzz/haruka-lib";
+import haruka from "@ryuu-reinzz/luna-lib";
 const property = {
   proto,
   generateWAMessageFromContent,

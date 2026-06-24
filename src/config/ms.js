@@ -6,7 +6,7 @@
 // backend lama yang dipakai library ini sudah tidak aktif/di-maintain.
 // =========================================================
 
-import { Button, ButtonV2, Carousel, AIRich } from "@ryuu-reinzz/haruka-lib";
+import { Button, ButtonV2, Carousel, AIRich } from "@ryuu-reinzz/luna-lib";
 
 // -------------------------------------------------------
 // 1. BUTTON (Native Flow Message) - via messageBuilder
