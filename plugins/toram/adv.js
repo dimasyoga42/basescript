@@ -6,6 +6,12 @@ import {
   sendText,
 } from "../../src/config/message.js";
 
+const rupiah = (angka) =>
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+  }).format(angka);
+
 const handler = async (m, { conn }) => {
   try {
     const arg = m.text.split(" ");
@@ -42,7 +48,7 @@ Calculation Result:
 - Final Level  : ${result.finalLevel} (${result.finalPercent}%)
 - Final EXP    : ${result.finalExp?.toLocaleString("id-ID")}
 - Reached      : ${result.reachedTarget ? "Berhasil" : "Belum"}
-- Cost skip MQ : ${result.mqcost} spina
+- Cost skip MQ : ${rupiah(result.mqcost)} spina
 
 Progress Detail:
 ${progressText}
