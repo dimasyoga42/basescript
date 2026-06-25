@@ -48,7 +48,7 @@ Calculation Result:
 - Final Level  : ${result.finalLevel} (${result.finalPercent}%)
 - Final EXP    : ${result.finalExp?.toLocaleString("id-ID")}
 - Reached      : ${result.reachedTarget ? "Berhasil" : "Belum"}
-- Cost skip MQ : ${rupiah(result.mqcost)} spina
+- Cost skip MQ : ${result.mqcost?.toLocaleString("id-ID")} spina
 
 Progress Detail:
 ${progressText}
