@@ -29,6 +29,7 @@ import { jawab } from "./plugins/fun/game.js";
 import { messageHandler } from "./plugins/ai/neura.js";
 import { cronLive } from "./plugins/_function/_cornlive.js";
 import { cronMt } from "./plugins/_function/_cornmt.js";
+import { cronCode } from "./plugins/_function/_code.js";
 dotenv.config();
 const start = async () => {
   // Load semua plugin dulu sebelum bot jalan
@@ -109,6 +110,7 @@ const start = async () => {
       await runCommand(sock, m, plugins);
       await cronLive(sock);
       await cronMt(sock);
+      await cronCode(sock);
     } catch (err) {
       console.error("Error saat memproses pesan:", err);
     }
