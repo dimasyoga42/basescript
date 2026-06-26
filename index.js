@@ -110,12 +110,12 @@ const start = async () => {
       await runCommand(sock, m, plugins);
       await cronLive(sock);
       await cronMt(sock);
-      setInterval(
-        () => {
-          cronCode(sock);
-        },
-        10 * 60 * 1000,
-      );
+      // setInterval(
+      //   () => {
+      //     cronCode(sock);
+      //   },
+      //   10 * 60 * 1000,
+      // );
     } catch (err) {
       console.error("Error saat memproses pesan:", err);
     }
