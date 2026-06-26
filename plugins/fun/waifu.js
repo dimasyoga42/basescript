@@ -8,25 +8,20 @@ import {
 
 const handler = async (m, { conn }) => {
   try {
-    const res = await axios.get(
-      "https://neurapi.mochinime.cyou/api/etc/pixiv/search",
-      { params: { query: "AnimeGril" } },
-    );
+    const res = await axios.get("https://neurapi.mochinime.cyou/api/etc/waifu");
     const data = res.data;
 
-    if (!data?.success || !Array.isArray(data.data) || data.data.length === 0) {
-      throw new Error("Gagal mengambil list waifu dari pencarian.");
+    if (!data?.success || !data?.image) {
+      throw new Error("Gagal mengambil data waifu, response tidak valid.");
     }
 
-    const list = data.data;
-    const randomItem = list[Math.floor(Math.random() * list.length)];
-
     const caption =
-      `🎴 *${randomItem.title || "Untitled"}*\n` +
-      `👤 Artist : ${randomItem.user || "-"}\n` +
-      `🔗 Source : https://pixiv.net${randomItem.detail}`;
+      `🎴 *${data.character || "Unknown"}*\n` +
+      `👤 Artist : ${data.user || "-"}\n` +
+      `❤️ Like : ${data.likeCount ?? 0} | 🔖 Bookmark : ${data.bookmarkCount ?? 0} | 👁️ View : ${data.viewCount ?? 0}\n` +
+      `🔗 Source : ${data.link || "-"}`;
 
-    await sendImage(conn, m.chat, randomItem.thumbnail, caption, m);
+    await sendImage(conn, m.chat, data.image, caption, m);
   } catch (err) {
     console.error("[waifu]", err);
     sendText(conn, m.chat, `log: ${err.message}`, m);
