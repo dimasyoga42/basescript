@@ -10,6 +10,7 @@ const handler = async (m, { conn }) => {
   try {
     const res = await axios.get("https://neurapi.mochinime.cyou/api/etc/waifu");
     const data = res.data;
+    console.log(data);
 
     if (!data?.success || !data?.image) {
       throw new Error("Gagal mengambil data waifu, response tidak valid.");

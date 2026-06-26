@@ -13,7 +13,7 @@ const handler = async (m, { conn }) => {
       `https://neurapi.mochinime.cyou/api/etc/pixiv/search?query=MILF&page=${randomPage}`,
     );
     const data = res.data;
-
+    console.log(data);
     if (
       !data?.success ||
       !Array.isArray(data?.data) ||
