@@ -16,11 +16,7 @@ const handler = async (m, { conn }) => {
       throw new Error("Gagal mengambil data waifu, response tidak valid.");
     }
 
-    const caption =
-      `🎴 *${data.character || "Unknown"}*\n` +
-      `👤 Artist : ${data.user || "-"}\n` +
-      `❤️ Like : ${data.likeCount ?? 0} | 🔖 Bookmark : ${data.bookmarkCount ?? 0} | 👁️ View : ${data.viewCount ?? 0}\n` +
-      `🔗 Source : ${data.link || "-"}`;
+    const caption = `Waifu anda adalah ${data.character}`;
 
     await sendImage(conn, m.chat, data.image, caption, m);
   } catch (err) {
