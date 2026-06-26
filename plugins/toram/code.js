@@ -1,5 +1,5 @@
 import axios from "axios";
-import { sendImage, sendText } from "../../src/config/message";
+import { sendImage, sendText } from "../../src/config/message.js";
 
 const handler = async (m, { conn }) => {
   try {
