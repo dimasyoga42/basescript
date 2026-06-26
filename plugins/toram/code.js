@@ -12,14 +12,12 @@ const handler = async (m, { conn }) => {
     if (!message?.attachments?.length) {
       return m.reply("Tidak ada gambar.");
     }
-
-    await sendImage(
-      conn,
-      m.chat,
-      message.attachments[0].url,
-      message.content,
-      m,
-    );
+    const caption = message.content
+      .replace(/<@&\d+>/g, "")
+      .replace(/\[([^\]]+)\]\(<([^>]+)>\)/g, "$1: $2")
+      .replace(/`/g, "")
+      .trim();
+    await sendImage(conn, m.chat, message.attachments[0].url, caption, m);
   } catch (err) {
     console.error(err);
     sendText(conn, m.chat, "Terjadi kesalahan.", m);
