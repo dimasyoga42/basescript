@@ -14,9 +14,9 @@ Stats Effect
 ${formatStats(item.Effects)}
 
 proses:
-- ${item.Process || "-"}
-- ${item.Duration || "-"}
-- ${item.ObtainedFrom || "-"}`;
+- process: ${item.Process || "-"}
+- Duration: ${item.Duration || "-"}
+- Drop From: ${item.ObtainedFrom || "-"}`;
 
 const handler = async (m, { conn }) => {
   try {
@@ -31,7 +31,6 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    // ✅ EXACT MATCH (ambil semua kemungkinan duplicate)
     const { data: exactData, error: exactError } = await supa
       .from("item_v2")
       .select("ItemName, Category, Process, Duration, Effects, ObtainedFrom")
@@ -47,13 +46,11 @@ const handler = async (m, { conn }) => {
         );
       }
 
-      // ✅ kalau duplicate (>1) → tampilkan semua
       const text = exactData.map((item) => formatItem(item)).join("\n\n");
 
       return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
 
-    // ✅ PARTIAL MATCH
     const { data, error } = await supa
       .from("item_v2")
       .select("ItemName, Category, Process, Duration, Effects, ObtainedFrom")

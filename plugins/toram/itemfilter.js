@@ -18,6 +18,10 @@ const STAT_PATTERNS = [
     exact: true,
   },
   {
+    alias: ["mp", "mp%", "magic pierce"],
+    patterns: ["magic Pierce"]
+  }
+  {
     aliases: ["cr", "crt", "critical", "critical rate", "crit rate"],
     patterns: ["Critical Rate", "Critical Rate %"],
   },
@@ -31,7 +35,7 @@ const STAT_PATTERNS = [
     exact: true,
   },
   {
-    aliases: ["mp", "maxmp", "max mp"],
+    aliases: [, "maxmp", "max mp"],
     patterns: ["MaxMP", "MaxMP %"],
     exact: true,
   },
@@ -54,7 +58,7 @@ const STAT_PATTERNS = [
     patterns: ["Physical Pierce %"],
   },
   {
-    aliases: ["mpierce", "magic pierce"],
+    aliases: ["mpierce", "magic pierce", "mp"],
     patterns: ["Magic Pierce %"],
   },
   {
@@ -79,17 +83,37 @@ const STAT_PATTERNS = [
   },
   {
     aliases: ["stability", "stab"],
-    patterns: ["Base Stability %", "Stability %"],
+    patterns: ["Stability %", "Stability %"],
   },
   {
     aliases: ["watk", "weapon atk", "base atk"],
-    patterns: ["Base ATK"],
+    patterns: ["Weapon ATK"],
   },
   {
     aliases: ["def", "base def"],
-    patterns: ["Base DEF", "DEF %"],
+    patterns: ["DEF", "DEF %"],
     exact: true,
   },
+  {
+    aliases: ["dte earth", "dte bumi"],
+    patterns: ["stronger Againt Earth", " % stronger Againt Earth", "stronger Againt Earth %"],
+  },
+  {
+    aliases: ["dte dark", "dte gelap", "dte Gelap", "dte Dark"],
+    patterns: ["stronger Againt Dark", "stronger Againt Dark %", "% stronger Againt Dark"]
+  },
+  {
+    aliases: ["dte api", "dte Api", "dte Fire", "dte fire"],
+    patterns: ["stronger Againt Fire", "stronger Againt Fire %", "% stronger Againt Fire"]
+  },
+  {
+    aliases: ["dte water", "dte Water", "dte air", "dte Air"],
+    patterns: ["stronger Againt Water", "stronger Againt Water %", "% stronger Againt Water"]
+  },
+  {
+    aliases: ["dte Cahaya", "dte cahaya", "dte ligth", "dte Ligth"],
+    patterns: ["stronger Againt Ligth", "% stronger Againt Ligth", "stronger Againt Ligth %"]
+  }
 ];
 
 const CATEGORY_FLAGS = {
@@ -104,6 +128,7 @@ const CATEGORY_FLAGS = {
   "--dagger": "Dagger",
   "--arrow": "Arrow",
   "--ring": "Special",
+  "--md": "magic divace",
 };
 
 const normalizeText = (text = "") =>
