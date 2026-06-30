@@ -47,7 +47,7 @@ const handler = async (m, { conn }) => {
       conn.sendSticker(m.chat, {
         sticker: buffer,
         packname: config.BotName,
-        author: "dimasyoga",
+        author: `By ${m.pushName}`,
       });
     }
     const { top, bottom } = parseText(m.text);
