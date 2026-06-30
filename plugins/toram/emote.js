@@ -1,7 +1,6 @@
 import { config, thumbnail } from "../../config.js";
 import { sendFancyText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
-import axios from "axios";
 
 const handler = async (m, { conn }) => {
   try {
@@ -20,16 +19,10 @@ const handler = async (m, { conn }) => {
         });
       }
 
-      // batasi jumlah button agar tidak melebihi limit WhatsApp
-      const MAX_BUTTONS = 20;
-      const limitedList = list.slice(0, MAX_BUTTONS);
-
       return conn.sendButton(m.chat, {
-        text: `Daftar Emot (${limitedList.length}${
-          list.length > MAX_BUTTONS ? ` dari ${list.length}` : ""
-        })\n- gunakan .emot [nama Emot yang dicari]`,
+        text: `Daftar Emot (${list.length})\n- gunakan .emot [nama Emot yang dicari]`,
         footer: config.OwnerName,
-        buttons: limitedList.map((item) => ({
+        buttons: list.map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
             display_text: item.name,
@@ -58,54 +51,18 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    // ─── FETCH IMAGE/GIF/VIDEO ─────────────────────────
-    let res;
-    try {
-      res = await axios.get(data.url, {
-        responseType: "arraybuffer",
-        timeout: 20000,
-        headers: {
-          "User-Agent": "Mozilla/5.0",
-          Accept: "image/*,video/*,*/*",
-        },
-        validateStatus: () => true,
-      });
-      if (res.status !== 200) throw new Error("Bad status");
-    } catch {
-      const fallback = data.url.replace(
-        "raw.githubusercontent.com",
-        "cdn.jsdelivr.net/gh",
-      );
-      res = await axios.get(fallback, {
-        responseType: "arraybuffer",
-        timeout: 20000,
-        headers: {
-          "User-Agent": "Mozilla/5.0",
-        },
-      });
-    }
+    const url = data.url;
+    const ext = url.toLowerCase().split("?")[0].split(".").pop();
 
-    const buffer = Buffer.from(res.data);
-    const contentType = (res.headers["content-type"] || "").toLowerCase();
-    const url = data.url.toLowerCase();
-    const ext = url.split("?")[0].split(".").pop();
-
-    const isGif = contentType.includes("gif") || ext === "gif";
-    const isVideo =
-      contentType.startsWith("video/") ||
-      ["mp4", "webm", "mkv", "mov", "3gp"].includes(ext);
-    const isWebp = contentType.includes("webp") || ext === "webp";
-    const isImage =
-      !isGif &&
-      !isVideo &&
-      (contentType.startsWith("image/") ||
-        ["jpg", "jpeg", "png", "bmp"].includes(ext));
+    const isGif = ext === "gif";
+    const isVideo = ["mp4", "webm", "mkv", "mov", "3gp"].includes(ext);
+    const isWebp = ext === "webp";
 
     if (isGif) {
       await conn.sendMessage(
         m.chat,
         {
-          video: buffer,
+          video: { url },
           mimetype: "image/gif",
           gifPlayback: true,
           caption: data.name,
@@ -116,29 +73,24 @@ const handler = async (m, { conn }) => {
       await conn.sendMessage(
         m.chat,
         {
-          video: buffer,
-          mimetype: contentType.startsWith("video/")
-            ? contentType
-            : "video/mp4",
+          video: { url },
           caption: data.name,
         },
         { quoted: m },
       );
     } else if (isWebp) {
-      await conn.sendMessage(m.chat, { sticker: buffer }, { quoted: m });
-    } else if (isImage) {
       await conn.sendMessage(
         m.chat,
-        { image: buffer, caption: data.name },
+        {
+          sticker: { url },
+        },
         { quoted: m },
       );
     } else {
       await conn.sendMessage(
         m.chat,
         {
-          document: buffer,
-          mimetype: contentType || "application/octet-stream",
-          fileName: `${data.name}.${ext || "bin"}`,
+          image: { url },
           caption: data.name,
         },
         { quoted: m },
