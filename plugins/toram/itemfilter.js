@@ -18,8 +18,9 @@ const STAT_PATTERNS = [
     exact: true,
   },
   {
-    alias: ["mp", "mp%", "magic pierce"],
+    aliases: ["mp", "mp%", "magic pierce"],
     patterns: ["magic Pierce"],
+    exact: true,
   },
   {
     aliases: ["cr", "crt", "critical", "critical rate", "crit rate"],
@@ -35,7 +36,7 @@ const STAT_PATTERNS = [
     exact: true,
   },
   {
-    aliases: [, "maxmp", "max mp"],
+    aliases: ["maxmp", "max mp"],
     patterns: ["MaxMP", "MaxMP %"],
     exact: true,
   },
@@ -117,6 +118,7 @@ const STAT_PATTERNS = [
       "stronger Againt Fire %",
       "% stronger Againt Fire",
     ],
+    exact: true,
   },
   {
     aliases: ["dte water", "dte Water", "dte air", "dte Air"],
@@ -125,6 +127,7 @@ const STAT_PATTERNS = [
       "stronger Againt Water %",
       "% stronger Againt Water",
     ],
+    exact: true,
   },
   {
     aliases: ["dte Cahaya", "dte cahaya", "dte ligth", "dte Ligth"],
@@ -133,6 +136,7 @@ const STAT_PATTERNS = [
       "% stronger Againt Ligth",
       "stronger Againt Ligth %",
     ],
+    exact: true,
   },
 ];
 
@@ -179,7 +183,10 @@ const resolveStatEntry = (keyword) => {
   const normalized = normalizeText(keyword);
 
   for (const stat of STAT_PATTERNS) {
+    if (!Array.isArray(stat.aliases)) continue;
+
     const matched = stat.aliases.some((alias) => {
+      if (!alias) return false;
       const normalizedAlias = normalizeText(alias);
       if (stat.exact) {
         return normalized === normalizedAlias;
