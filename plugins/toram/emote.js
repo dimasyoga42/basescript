@@ -40,6 +40,7 @@ const handler = async (m, { conn }) => {
       .ilike("name", `%${name}%`)
       .limit(1)
       .maybeSingle();
+    console.log(data);
 
     if (!data) {
       return sendFancyText(conn, m.chat, {
