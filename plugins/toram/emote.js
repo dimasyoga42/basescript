@@ -64,7 +64,6 @@ const handler = async (m, { conn }) => {
         m.chat,
         {
           video: { url },
-          mimetype: "image/gif",
           gifPlayback: true,
           caption: data.name,
         },
