@@ -19,8 +19,8 @@ const STAT_PATTERNS = [
   },
   {
     alias: ["mp", "mp%", "magic pierce"],
-    patterns: ["magic Pierce"]
-  }
+    patterns: ["magic Pierce"],
+  },
   {
     aliases: ["cr", "crt", "critical", "critical rate", "crit rate"],
     patterns: ["Critical Rate", "Critical Rate %"],
@@ -96,24 +96,44 @@ const STAT_PATTERNS = [
   },
   {
     aliases: ["dte earth", "dte bumi"],
-    patterns: ["stronger Againt Earth", " % stronger Againt Earth", "stronger Againt Earth %"],
+    patterns: [
+      "stronger Againt Earth",
+      " % stronger Againt Earth",
+      "stronger Againt Earth %",
+    ],
   },
   {
     aliases: ["dte dark", "dte gelap", "dte Gelap", "dte Dark"],
-    patterns: ["stronger Againt Dark", "stronger Againt Dark %", "% stronger Againt Dark"]
+    patterns: [
+      "stronger Againt Dark",
+      "stronger Againt Dark %",
+      "% stronger Againt Dark",
+    ],
   },
   {
     aliases: ["dte api", "dte Api", "dte Fire", "dte fire"],
-    patterns: ["stronger Againt Fire", "stronger Againt Fire %", "% stronger Againt Fire"]
+    patterns: [
+      "stronger Againt Fire",
+      "stronger Againt Fire %",
+      "% stronger Againt Fire",
+    ],
   },
   {
     aliases: ["dte water", "dte Water", "dte air", "dte Air"],
-    patterns: ["stronger Againt Water", "stronger Againt Water %", "% stronger Againt Water"]
+    patterns: [
+      "stronger Againt Water",
+      "stronger Againt Water %",
+      "% stronger Againt Water",
+    ],
   },
   {
     aliases: ["dte Cahaya", "dte cahaya", "dte ligth", "dte Ligth"],
-    patterns: ["stronger Againt Ligth", "% stronger Againt Ligth", "stronger Againt Ligth %"]
-  }
+    patterns: [
+      "stronger Againt Ligth",
+      "% stronger Againt Ligth",
+      "stronger Againt Ligth %",
+    ],
+  },
 ];
 
 const CATEGORY_FLAGS = {
