@@ -20,7 +20,7 @@ const handler = async (m, { conn }) => {
       }
 
       return await conn.sendButton(m.chat, {
-        text: "Pilih salah satu ability:",
+        text: "format salah gunakan .trait mega",
         footer: config.OwnerName,
         buttons: [
           buildSelectButton(

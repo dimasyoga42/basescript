@@ -6,12 +6,30 @@ import axios from "axios";
 const handler = async (m, { conn }) => {
   try {
     const name = m.text.replace(".emot", "").trim();
+
     if (!name) {
-      const db = await supa.from("emot").select("name");
+      const { data: list, error } = await supa.from("emot").select("name");
+
+      if (error || !list || list.length === 0) {
+        return sendFancyText(conn, m.chat, {
+          title: config.BotName,
+          body: `Developer By ${config.OwnerName}`,
+          thumbnail,
+          text: "Daftar emot kosong atau gagal dimuat.",
+          quoted: m,
+        });
+      }
+
+      // batasi jumlah button agar tidak melebihi limit WhatsApp
+      const MAX_BUTTONS = 20;
+      const limitedList = list.slice(0, MAX_BUTTONS);
+
       return conn.sendButton(m.chat, {
-        text: "Daftar Seluruh Emot\n- gunakan .emot [nama Emot yang dicari]",
+        text: `Daftar Emot (${limitedList.length}${
+          list.length > MAX_BUTTONS ? ` dari ${list.length}` : ""
+        })\n- gunakan .emot [nama Emot yang dicari]`,
         footer: config.OwnerName,
-        buttons: db.map((item) => ({
+        buttons: limitedList.map((item) => ({
           name: "quick_reply",
           buttonParamsJson: JSON.stringify({
             display_text: item.name,
@@ -54,7 +72,6 @@ const handler = async (m, { conn }) => {
       });
       if (res.status !== 200) throw new Error("Bad status");
     } catch {
-      // fallback kalau raw.githubusercontent error
       const fallback = data.url.replace(
         "raw.githubusercontent.com",
         "cdn.jsdelivr.net/gh",
@@ -71,8 +88,6 @@ const handler = async (m, { conn }) => {
     const buffer = Buffer.from(res.data);
     const contentType = (res.headers["content-type"] || "").toLowerCase();
     const url = data.url.toLowerCase();
-
-    // ─── DETEKSI TIPE FILE (content-type prioritas, ekstensi sebagai fallback) ───
     const ext = url.split("?")[0].split(".").pop();
 
     const isGif = contentType.includes("gif") || ext === "gif";
@@ -86,7 +101,6 @@ const handler = async (m, { conn }) => {
       (contentType.startsWith("image/") ||
         ["jpg", "jpeg", "png", "bmp"].includes(ext));
 
-    // ─── KIRIM SESUAI TIPE ─────────────────────────────
     if (isGif) {
       await conn.sendMessage(
         m.chat,
@@ -111,24 +125,14 @@ const handler = async (m, { conn }) => {
         { quoted: m },
       );
     } else if (isWebp) {
-      await conn.sendMessage(
-        m.chat,
-        {
-          sticker: buffer,
-        },
-        { quoted: m },
-      );
+      await conn.sendMessage(m.chat, { sticker: buffer }, { quoted: m });
     } else if (isImage) {
       await conn.sendMessage(
         m.chat,
-        {
-          image: buffer,
-          caption: data.name,
-        },
+        { image: buffer, caption: data.name },
         { quoted: m },
       );
     } else {
-      // fallback terakhir kalau tipe benar-benar tidak terdeteksi
       await conn.sendMessage(
         m.chat,
         {
