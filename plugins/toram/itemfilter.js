@@ -18,11 +18,6 @@ const STAT_PATTERNS = [
     exact: true,
   },
   {
-    aliases: ["mp", "mp%", "magic pierce"],
-    patterns: ["magic Pierce"],
-    exact: true,
-  },
-  {
     aliases: ["cr", "crt", "critical", "critical rate", "crit rate"],
     patterns: ["Critical Rate", "Critical Rate %"],
   },
