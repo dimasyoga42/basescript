@@ -1,18 +1,16 @@
 import { config } from "../../config.js";
 import { supa } from "../../src/config/supa.js";
 
-const formatStats = (stats = "") =>
-  stats
+const formatStats = (stats) =>
+  (stats || "")
     .split("|")
     .map((s) => s.trim())
     .filter((s) => s && !/^amount$/i.test(s))
     .join("\n- ");
 
 const formatItem = (item) => `*${item.ItemName}* ${item.Category || "-"}
-
 Stats Effect
 ${formatStats(item.Effects)}
-
 proses:
 - process: ${item.Process || "-"}
 - Duration: ${item.Duration || "-"}
@@ -37,7 +35,6 @@ const handler = async (m, { conn }) => {
       .ilike("ItemName", query);
 
     if (!exactError && exactData && exactData.length > 0) {
-      // kalau cuma 1
       if (exactData.length === 1) {
         return conn.sendMessage(
           m.chat,
@@ -45,9 +42,7 @@ const handler = async (m, { conn }) => {
           { quoted: m },
         );
       }
-
       const text = exactData.map((item) => formatItem(item)).join("\n\n");
-
       return conn.sendMessage(m.chat, { text }, { quoted: m });
     }
 
@@ -65,7 +60,6 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    // kalau cuma 1
     if (data.length === 1) {
       return conn.sendMessage(
         m.chat,
@@ -74,7 +68,6 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    // kalau banyak → button
     return await conn.sendButton(m.chat, {
       text: `Ditemukan ${data.length} item untuk: "${query}"\nPilih salah satu:`,
       footer: config.OwnerName,
