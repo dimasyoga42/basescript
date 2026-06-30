@@ -55,7 +55,7 @@ const handler = async (m, { conn }) => {
       );
     }
 
-    const caption = `Buff: ${user.idBuff || "-"}\n\n${user.bio || "-"}`;
+    const caption = `${user.bio || "-"}`;
 
     if (user.profilPath && fs.existsSync(user.profilPath)) {
       return await conn.sendMessage(

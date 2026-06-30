@@ -21,7 +21,7 @@ const handler = async (m, { conn }) => {
       return sendText(
         conn,
         m.chat,
-        "Enter bio description\nExample: .setdesc Student | Coding",
+        "Enter bio description\nExample: .setdesc any",
         m,
       );
 
