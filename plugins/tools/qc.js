@@ -41,7 +41,7 @@ const handler = async (m, { conn }) => {
 
     const sticker = await new Sticker(buffer, {
       pack: config.BotName,
-      author: config.OwnerName,
+      author: m.pushName,
       type: StickerTypes.FULL,
       quality: 80,
     }).toBuffer();

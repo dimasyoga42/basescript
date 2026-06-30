@@ -70,14 +70,15 @@ export const checkMentionAfk = async (conn, chatId, m) => {
       const timeText = formatTime(Date.now() - afkUser.time, " lalu");
       const caption = `user ini sedang AFK\nSejak: ${timeText}\nCatatan: ${afkUser.note}`;
 
-      sendFancyText(conn, chatId, {
-        title: "Neura Afk",
-        body: "Neura Sama",
-        text: caption,
-        thumbnail:
-          "https://i.pinimg.com/736x/f5/37/29/f5372928b53a4f87fc59ef26503c78e3.jpg",
-        quoted: m,
-      });
+      // sendFancyText(conn, chatId, {
+      //   title: "Neura Afk",
+      //   body: "Neura Sama",
+      //   text: caption,
+      //   thumbnail:
+      //     "https://i.pinimg.com/736x/f5/37/29/f5372928b53a4f87fc59ef26503c78e3.jpg",
+      //   quoted: m,
+      // });
+      sendText(conn, m.chat, caption, m);
     }
   } catch (err) {
     console.error("Error di checkMentionAfk:", err);
