@@ -1,11 +1,72 @@
 import { config, thumbnail } from "../../config.js";
 import { sendFancyText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
+import ffmpegPath from "ffmpeg-static";
+import { spawn } from "child_process";
+import fs from "fs";
+import path from "path";
+import os from "os";
+import axios from "axios";
+
+// ─── HELPER: convert gif (dari URL) ke mp4 buffer ─────
+async function gifUrlToMp4Buffer(gifUrl) {
+  const tmpDir = os.tmpdir();
+  const inputPath = path.join(
+    tmpDir,
+    `in-${Date.now()}-${Math.random().toString(36).slice(2)}.gif`,
+  );
+  const outputPath = path.join(
+    tmpDir,
+    `out-${Date.now()}-${Math.random().toString(36).slice(2)}.mp4`,
+  );
+
+  try {
+    const res = await axios.get(gifUrl, {
+      responseType: "arraybuffer",
+      timeout: 20000,
+      headers: { "User-Agent": "Mozilla/5.0" },
+    });
+    fs.writeFileSync(inputPath, res.data);
+
+    await new Promise((resolve, reject) => {
+      const ffmpeg = spawn(ffmpegPath, [
+        "-i",
+        inputPath,
+        "-movflags",
+        "faststart",
+        "-pix_fmt",
+        "yuv420p",
+        "-vf",
+        "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+        "-y",
+        outputPath,
+      ]);
+
+      let stderr = "";
+      ffmpeg.stderr.on("data", (d) => (stderr += d.toString()));
+
+      ffmpeg.on("close", (code) => {
+        if (code === 0) resolve();
+        else reject(new Error(`ffmpeg exit code ${code}: ${stderr}`));
+      });
+
+      ffmpeg.on("error", (err) => reject(err));
+    });
+
+    const buffer = fs.readFileSync(outputPath);
+    return buffer;
+  } finally {
+    // cleanup, jangan biarkan file numpuk walau gagal
+    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+  }
+}
 
 const handler = async (m, { conn }) => {
   try {
     const name = m.text.replace(".emot", "").trim();
 
+    // ─── LIST SEMUA EMOT ───────────────────────────────
     if (!name) {
       const { data: list, error } = await supa.from("emot").select("name");
 
@@ -34,13 +95,13 @@ const handler = async (m, { conn }) => {
       });
     }
 
+    // ─── CARI EMOT BERDASARKAN NAMA ────────────────────
     const { data } = await supa
       .from("emot")
       .select("name, url")
       .ilike("name", `%${name}%`)
       .limit(1)
       .maybeSingle();
-    console.log(data);
 
     if (!data) {
       return sendFancyText(conn, m.chat, {
@@ -59,16 +120,37 @@ const handler = async (m, { conn }) => {
     const isVideo = ["mp4", "webm", "mkv", "mov", "3gp"].includes(ext);
     const isWebp = ext === "webp";
 
+    // ─── KIRIM SESUAI TIPE ─────────────────────────────
     if (isGif) {
-      await conn.sendMessage(
-        m.chat,
-        {
-          video: { url },
-          gifPlayback: true,
-          caption: data.name,
-        },
-        { quoted: m },
-      );
+      try {
+        // coba convert gif ke mp4 dulu (hasil lebih stabil di WA)
+        const mp4Buffer = await gifUrlToMp4Buffer(url);
+        await conn.sendMessage(
+          m.chat,
+          {
+            video: mp4Buffer,
+            gifPlayback: true,
+            caption: data.name,
+          },
+          { quoted: m },
+        );
+      } catch (convertErr) {
+        console.error(
+          "gif convert error, fallback ke url langsung:",
+          convertErr.message,
+        );
+        // fallback: kirim langsung pakai url tanpa convert
+        await conn.sendMessage(
+          m.chat,
+          {
+            video: { url },
+            mimetype: "image/gif",
+            gifPlayback: true,
+            caption: data.name,
+          },
+          { quoted: m },
+        );
+      }
     } else if (isVideo) {
       await conn.sendMessage(
         m.chat,
@@ -87,6 +169,7 @@ const handler = async (m, { conn }) => {
         { quoted: m },
       );
     } else {
+      // default: jpg, jpeg, png, bmp, dll dianggap image
       await conn.sendMessage(
         m.chat,
         {
