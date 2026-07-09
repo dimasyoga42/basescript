@@ -96,7 +96,7 @@ const handler = async (m, { conn }) => {
     )
     .join("\n\n");
 
-  const result = `${bospeekSection}\n\n${bossSection}\n\n${ava}\n\n${commandSection}`;
+  const result = `${bossSection}\n\n${ava}\n\n${commandSection}`;
 
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
