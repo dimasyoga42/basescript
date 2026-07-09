@@ -15,6 +15,18 @@ const parseRawEmbed = (rawEmbed) => {
   }
 };
 
+const cleanFieldName = (rawName) => {
+  let name = (rawName || "").trim();
+
+  name = name.replace(/:\s*$/, "").trim();
+
+  if (name.startsWith("[") && name.endsWith("]")) {
+    name = name.slice(1, -1).trim();
+  }
+
+  return name;
+};
+
 const extractStatLines = (rawEmbed) => {
   const parsed = parseRawEmbed(rawEmbed);
   const fields = Array.isArray(parsed?.fields) ? parsed.fields : [];
@@ -34,12 +46,17 @@ const extractStatLines = (rawEmbed) => {
       return true;
     })
     .map((field) => {
-      const name = (field.name || "").trim();
+      const name = cleanFieldName(field.name);
       const value = (field.value || "").trim();
 
       if (!name) return value;
+      if (!value) return name;
 
-      return `${name.endsWith(":") ? name : `${name}:`} ${value}`;
+      if (value.includes("\n")) {
+        return `*${name}*\n${value}`;
+      }
+
+      return `${name}: ${value}`;
     })
     .filter(Boolean);
 };
