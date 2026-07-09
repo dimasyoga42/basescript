@@ -2,9 +2,33 @@ import { createCanvas, loadImage } from "@napi-rs/canvas";
 import fetch from "node-fetch";
 
 export async function buildAvaGrid(apiUrl) {
-  const res = await fetch(apiUrl);
-  const json = await res.json();
-  const items = json.result.data;
+  let res;
+  try {
+    res = await fetch(apiUrl);
+  } catch (e) {
+    throw new Error(`Gagal menghubungi API ava: ${e.message}`);
+  }
+
+  if (!res.ok) {
+    throw new Error(`API ava merespons dengan status ${res.status}`);
+  }
+
+  let json;
+  try {
+    json = await res.json();
+  } catch (e) {
+    throw new Error(`Gagal parsing response API ava: ${e.message}`);
+  }
+
+  const items = json?.result?.data;
+
+  if (!Array.isArray(items)) {
+    throw new Error("Struktur data API ava tidak valid atau kosong");
+  }
+
+  if (items.length === 0) {
+    throw new Error("Tidak ada data ava yang tersedia saat ini");
+  }
 
   const images = await Promise.all(
     items.map((item) => loadImage(item.image).catch(() => null)),
@@ -14,7 +38,6 @@ export async function buildAvaGrid(apiUrl) {
   const IMG_H = 300;
   const PADDING = 20;
   const LABEL_H = 50;
-
   const canvasW = IMG_W + PADDING * 2;
   const canvasH =
     items.length * (IMG_H + LABEL_H) + (items.length + 1) * PADDING;
@@ -41,7 +64,7 @@ export async function buildAvaGrid(apiUrl) {
     ctx.fillStyle = "#0f0f1e";
     ctx.fillRect(x, y + IMG_H, IMG_W, LABEL_H);
 
-    const date = item.date.replace(/［|］/g, "").trim();
+    const date = (item?.date ?? "").replace(/［|］/g, "").trim();
     ctx.fillStyle = "#aaaaaa";
     ctx.font = "12px sans-serif";
     ctx.textAlign = "right";
@@ -50,9 +73,9 @@ export async function buildAvaGrid(apiUrl) {
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 16px sans-serif";
     ctx.textAlign = "left";
-    let name = item.name;
+    let name = item?.name ?? "-";
     while (ctx.measureText(name).width > IMG_W - 16) name = name.slice(0, -1);
-    if (name !== item.name) name += "...";
+    if (name !== (item?.name ?? "-")) name += "...";
     ctx.fillText(name, x + 8, y + IMG_H + 36);
   }
 

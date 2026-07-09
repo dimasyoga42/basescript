@@ -7,9 +7,13 @@ import axios from "axios";
 import { demoButtonV2 } from "../src/config/ms.js";
 
 const handler = async (m, { conn }) => {
-  const image = await buildAvaGrid(
-    "https://neurapi.mochinime.cyou/api/toram/ava",
-  );
+  let image = null;
+  try {
+    image = await buildAvaGrid("https://neurapi.mochinime.cyou/api/toram/ava");
+  } catch (e) {
+    console.error("[menu] gagal build ava grid:", e.message);
+  }
+
   // Scrape boost boss
   let dataBoses = { active: false, bosses: [] };
   try {
@@ -34,19 +38,24 @@ const handler = async (m, { conn }) => {
 
   // Query bospeek dari Supabase
   let bospeekSection = "*Bos Puncak:* Data tidak tersedia";
-  const { data: dataPeek, error: peekError } = await supa
-    .from("bospeek")
-    .select("*")
-    .eq("active", true);
-
-  if (peekError) {
-    console.error("[menu] gagal ambil bospeek:", peekError.message);
-  } else if (dataPeek?.length) {
-    bospeekSection =
-      `*Puncak Petualang:*\n` +
-      dataPeek.map((item) => `  - ${item.name} - ${item.element}`).join("\n");
-  } else {
-    bospeekSection = "*Bos Puncak Petualang:* Tidak ada bos aktif";
+  try {
+    const { data: dataPeek, error: peekError } = await supa
+      .from("bospeek")
+      .select("*")
+      .eq("active", true);
+    if (peekError) {
+      console.error("[menu] gagal ambil bospeek:", peekError.message);
+    } else if (dataPeek?.length) {
+      bospeekSection =
+        `*Puncak Petualang:*\n` +
+        dataPeek
+          .map((item) => `  - ${item.name} - ${item.element}`)
+          .join("\n");
+    } else {
+      bospeekSection = "*Bos Puncak Petualang:* Tidak ada bos aktif";
+    }
+  } catch (e) {
+    console.error("[menu] error query bospeek:", e.message);
   }
 
   // Section boost boss
@@ -61,11 +70,23 @@ const handler = async (m, { conn }) => {
       .join("\n- ");
     bossSection = `*Bos Boosting*:\n${bossList}`;
   }
-  let ava;
-  const res = await axios.get("https://neurapi.mochinime.cyou/api/toram/ava");
-  const data = res.data.result;
-  const vals = data.data.map((item) => `- ${item.name}`).join("\n");
-  ava = `*Ava Terbaru*:\n${vals}`;
+
+  // Section ava
+  let ava = "*Ava Terbaru:* Data tidak tersedia";
+  try {
+    const res = await axios.get(
+      "https://neurapi.mochinime.cyou/api/toram/ava",
+    );
+    const data = res.data?.result;
+    if (Array.isArray(data?.data) && data.data.length > 0) {
+      const vals = data.data.map((item) => `- ${item.name}`).join("\n");
+      ava = `*Ava Terbaru*:\n${vals}`;
+    } else {
+      ava = "*Ava Terbaru:* Tidak ada data ava saat ini";
+    }
+  } catch (e) {
+    console.error("[menu] gagal ambil data ava:", e.message);
+  }
 
   // Section command
   const commandSection = Object.entries(categories)
@@ -75,7 +96,7 @@ const handler = async (m, { conn }) => {
     )
     .join("\n\n");
 
-  const result = `${bossSection}\n\n${commandSection}`;
+  const result = `${bospeekSection}\n\n${bossSection}\n\n${ava}\n\n${commandSection}`;
 
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
@@ -86,6 +107,7 @@ const handler = async (m, { conn }) => {
   //   caption: result.trim(),
   //   quoted: m,
   // });
+
   await demoButtonV2(
     conn,
     m,
@@ -96,7 +118,9 @@ const handler = async (m, { conn }) => {
     randomThumb,
   );
 };
+
 handler.command = "menu";
 handler.alias = ["help"];
 handler.category = "Menu Grub";
+
 export default handler;
