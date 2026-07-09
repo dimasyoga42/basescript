@@ -2,22 +2,61 @@ import { config, thumbnail } from "../../config.js";
 import { sendFancyText, sendText } from "../../src/config/message.js";
 import { supa } from "../../src/config/supa.js";
 
-const formatSkill = (item) =>
-  [
-    `*${item.name}* (Tier ${item.Tier || "-"})`,
-    `${item.desc || "-"}`,
+const EXCLUDED_FIELD_NAMES = ["skill tree", "tier", "source"];
+
+const parseRawEmbed = (rawEmbed) => {
+  if (!rawEmbed) return null;
+
+  try {
+    return typeof rawEmbed === "string" ? JSON.parse(rawEmbed) : rawEmbed;
+  } catch (err) {
+    console.error("[skill] failed to parse raw_embed:", err.message);
+    return null;
+  }
+};
+
+const extractStatLines = (rawEmbed) => {
+  const parsed = parseRawEmbed(rawEmbed);
+  const fields = Array.isArray(parsed?.fields) ? parsed.fields : [];
+
+  return fields
+    .filter((field) => {
+      const name = (field?.name || "")
+        .toLowerCase()
+        .replace(/:\s*$/, "")
+        .trim();
+      const value = (field?.value || "").trim();
+
+      if (!name && !value) return false;
+      if (EXCLUDED_FIELD_NAMES.some((excluded) => name.includes(excluded)))
+        return false;
+
+      return true;
+    })
+    .map((field) => {
+      const name = (field.name || "").trim();
+      const value = (field.value || "").trim();
+
+      if (!name) return value;
+
+      return `${name.endsWith(":") ? name : `${name}:`} ${value}`;
+    })
+    .filter(Boolean);
+};
+
+const formatSkill = (item) => {
+  const statLines = extractStatLines(item.raw_embed);
+
+  return [
+    `*${item.name}* (Tier ${item.tier || "-"})`,
+    `Skill Tree: ${item.skill_tree || "-"}${item.category ? ` (${item.category})` : ""}`,
     ``,
-    `MP       : ${item.mpcost || "-"}`,
-    `Range    : ${item.range || "-"}`,
-    `Type     : ${item["Skill Type"] || "-"}`,
-    `Combo    : ${item.combo || "-"}`,
-    `Motion   : ${item["Motion Speed"] || "-"}`,
-    `Proration: ${item["Proration Used"] || "-"} / ${item["Proration Inflicted"] || "-"}`,
-    ``,
-    `${item.info || ""}`,
+    `${item.description || "-"}`,
+    ...(statLines.length ? ["", ...statLines] : []),
   ]
     .join("\n")
     .trim();
+};
 
 const buildSelectButton = (title, sectionTitle, rows) => ({
   name: "single_select",
@@ -32,13 +71,13 @@ const handler = async (m, { conn }) => {
     const query = (m.text || "").replace(/^\.skill\s*/i, "").trim();
 
     if (!query) {
-      const { data, error } = await supa.from("skilv2").select("*");
+      const { data, error } = await supa.from("skills").select("*");
 
       if (error || !data)
         return sendText(conn, m.chat, config.message.error, m);
 
       const trees = [
-        ...new Set(data.map((v) => v.skilltree).filter(Boolean)),
+        ...new Set(data.map((v) => v.skill_tree).filter(Boolean)),
       ].sort();
 
       if (trees.length === 0)
@@ -73,10 +112,10 @@ const handler = async (m, { conn }) => {
         );
 
       const { data, error } = await supa
-        .from("skilv2")
+        .from("skills")
         .select("*")
-        .ilike("skilltree", `%${treeName}%`)
-        .order("Tier", { ascending: true });
+        .ilike("skill_tree", `%${treeName}%`)
+        .order("tier", { ascending: true });
 
       if (error || !data || data.length === 0)
         return sendText(
@@ -95,7 +134,7 @@ const handler = async (m, { conn }) => {
             treeName,
             data.map((item) => ({
               title: item.name,
-              description: `Tier ${item.Tier || "-"}`,
+              description: `Tier ${item.tier || "-"}`,
               id: `.skill ${item.name}`,
             })),
           ),
@@ -104,7 +143,7 @@ const handler = async (m, { conn }) => {
     }
 
     const { data, error } = await supa
-      .from("skilv2")
+      .from("skills")
       .select("*")
       .ilike("name", `%${query}%`)
       .limit(20);
@@ -112,11 +151,9 @@ const handler = async (m, { conn }) => {
     if (error || !data || data.length === 0)
       return sendText(conn, m.chat, `Skill *"${query}"* tidak ditemukan.`, m);
 
-    // Kalau tepat 1 hasil → langsung tampil detail
     if (data.length === 1)
       return sendText(conn, m.chat, formatSkill(data[0]), m);
 
-    // Banyak hasil → button pilihan
     return conn.sendButton(m.chat, {
       text: `Ditemukan *${data.length}* skill untuk "*${query}*":`,
       footer: config.OwnerName,
@@ -126,7 +163,7 @@ const handler = async (m, { conn }) => {
           "Hasil Pencarian",
           data.map((item) => ({
             title: item.name,
-            description: `Tier ${item.Tier || "-"} · ${item.skilltree || "-"}`,
+            description: `Tier ${item.tier || "-"} · ${item.skill_tree || "-"}`,
             id: `.skill ${item.name}`,
           })),
         ),
