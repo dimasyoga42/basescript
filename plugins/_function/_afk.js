@@ -78,7 +78,7 @@ export const checkMentionAfk = async (conn, chatId, m) => {
       //     "https://i.pinimg.com/736x/f5/37/29/f5372928b53a4f87fc59ef26503c78e3.jpg",
       //   quoted: m,
       // });
-      sendText(conn, m.chat, caption, m);
+      await sendText(conn, m.chat, caption, m);
     }
   } catch (err) {
     console.error("Error di checkMentionAfk:", err);
