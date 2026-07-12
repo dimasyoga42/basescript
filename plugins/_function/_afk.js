@@ -59,7 +59,7 @@ export const checkMentionAfk = async (conn, chatId, m) => {
     const groupId = chatId;
 
     if (!data[groupId]) return;
-    if (data[groupId].mute) return;
+    // if (data[groupId].mute) return;
 
     const mentioned = contextInfo.mentionedJid;
 
