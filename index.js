@@ -103,8 +103,8 @@ const start = async () => {
       const isAfkCommand = m.text?.trim().toLowerCase().startsWith(".afk");
       if (!isAfkCommand) {
         await checkUnAfk(sock, m.chat, m);
-        await checkMentionAfk(sock, m.chat, m);
       }
+      await checkMentionAfk(sock, m.chat, m);
       await jawab(sock, m);
       await messageHandler(sock, m.chat, m);
       await runCommand(sock, m, plugins);
