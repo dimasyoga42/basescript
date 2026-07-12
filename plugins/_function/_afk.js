@@ -14,20 +14,24 @@ const formatTime = (ms, suffix = "") => {
   return suffix ? "baru saja" : "beberapa detik";
 };
 
+// samakan format JID (buang suffix device ":xx")
+const normalizeJid = (jid = "") => jid.split(":")[0] + "@" + jid.split("@")[1];
+
 export const checkUnAfk = async (conn, mchat, m) => {
   try {
     const data = getUserData(db);
-    const userId = m.key.participant || m.key.remoteJid;
+    const userId = normalizeJid(m.key.participant || m.key.remoteJid);
     const groupId = m.chat;
 
-    if (!data[groupId]) return;
+    if (!data[groupId] || !Array.isArray(data[groupId].afk)) return;
 
-    const afkIndex = data[groupId].afk.findIndex((u) => u.userId === userId);
+    const afkIndex = data[groupId].afk.findIndex(
+      (u) => normalizeJid(u.userId) === userId,
+    );
     if (afkIndex === -1) return;
 
     const afkUser = data[groupId].afk[afkIndex];
     data[groupId].afk.splice(afkIndex, 1);
-
     // Grup tidak dihapus meskipun afk kosong
     saveUserData(db, data);
 
@@ -39,6 +43,7 @@ export const checkUnAfk = async (conn, mchat, m) => {
       m,
     );
   } catch (err) {
+    console.error("Error di checkUnAfk:", err);
     sendFancyText(conn, mchat, {
       title: "Neura Sama",
       body: "waah gagal nih",
@@ -53,32 +58,26 @@ export const checkUnAfk = async (conn, mchat, m) => {
 export const checkMentionAfk = async (conn, chatId, m) => {
   try {
     const contextInfo = m.message?.extendedTextMessage?.contextInfo;
-    if (!contextInfo?.mentionedJid) return;
+    if (!contextInfo?.mentionedJid?.length) return;
 
     const data = getUserData(db);
     const groupId = chatId;
 
-    if (!data[groupId]) return;
+    if (!data[groupId] || !Array.isArray(data[groupId].afk)) return;
     // if (data[groupId].mute) return;
 
-    const mentioned = contextInfo.mentionedJid;
+    const mentioned = contextInfo.mentionedJid.map(normalizeJid);
 
     for (const userId of mentioned) {
-      const afkUser = data[groupId].afk.find((u) => u.userId === userId);
+      const afkUser = data[groupId].afk.find(
+        (u) => normalizeJid(u.userId) === userId,
+      );
       if (!afkUser) continue;
 
       const timeText = formatTime(Date.now() - afkUser.time, " lalu");
-      const caption = `user ini sedang AFK\nSejak: ${timeText}\nCatatan: ${afkUser.note}`;
+      const caption = `user ini sedang AFK\nSejak: ${timeText}\nCatatan: ${afkUser.note || "tidak ada"}`;
 
-      // sendFancyText(conn, chatId, {
-      //   title: "Neura Afk",
-      //   body: "Neura Sama",
-      //   text: caption,
-      //   thumbnail:
-      //     "https://i.pinimg.com/736x/f5/37/29/f5372928b53a4f87fc59ef26503c78e3.jpg",
-      //   quoted: m,
-      // });
-      await sendText(conn, m.chat, caption, m);
+      await sendText(conn, chatId, caption, m);
     }
   } catch (err) {
     console.error("Error di checkMentionAfk:", err);
