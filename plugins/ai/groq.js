@@ -18,7 +18,7 @@ const getGroqMessage = async (cotext, sys) => {
           content: cotext,
         },
       ],
-      model: "openai/gpt-oss-120b",
+      model: "whisper-large-v3-turbo",
     });
   } catch (error) {
     throw error;
