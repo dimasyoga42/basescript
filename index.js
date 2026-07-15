@@ -29,7 +29,7 @@ import { jawab } from "./plugins/fun/game.js";
 import { messageHandler } from "./plugins/ai/neura.js";
 import { cronLive } from "./plugins/_function/_cornlive.js";
 import { cronMt } from "./plugins/_function/_cornmt.js";
-import { cronCode } from "./plugins/_function/_code.js";
+import { cronCode } from "./plugins/_function/_codes.js";
 dotenv.config();
 const start = async () => {
   // Load semua plugin dulu sebelum bot jalan
