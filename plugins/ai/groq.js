@@ -18,31 +18,44 @@ const getAIResponse = async (system, history, sender, message) => {
   const messages = [
     {
       role: "system",
-      content: system,
-    },
-    ...history.flatMap((item) => [
-      {
-        role: "user",
-        content: `${item.sender}: ${item.message}`,
-      },
-      {
-        role: "assistant",
-        content: item.answer,
-      },
-    ]),
-    {
-      role: "user",
-      content: `${sender}: ${message}`,
+      content: String(system),
     },
   ];
 
-  const { choices } = await client.chat.send({
+  for (const item of history) {
+    const userMessage =
+      typeof item.message === "string" ? item.message.trim() : "";
+
+    const assistantMessage =
+      typeof item.answer === "string" ? item.answer.trim() : "";
+
+    if (userMessage.length) {
+      messages.push({
+        role: "user",
+        content: `${item.sender || "Unknown"}: ${userMessage}`,
+      });
+    }
+
+    if (assistantMessage.length) {
+      messages.push({
+        role: "assistant",
+        content: assistantMessage,
+      });
+    }
+  }
+
+  messages.push({
+    role: "user",
+    content: `${sender}: ${String(message).trim()}`,
+  });
+
+  const response = await client.chat.send({
     model: "openai/gpt-oss-20b:free",
     messages,
   });
 
   return (
-    choices?.[0]?.message?.content?.trim() ||
+    response?.choices?.[0]?.message?.content?.trim() ||
     "Neura sedang tidak mood berbicara sekarang..."
   );
 };
@@ -69,8 +82,8 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
       if (Array.isArray(group.karina)) {
         group.history = group.karina.map((v) => ({
           sender: v.sender || "Unknown",
-          message: v.message || "",
-          answer: v.answer || "",
+          message: typeof v.message === "string" ? v.message : "",
+          answer: typeof v.answer === "string" ? v.answer : "",
           time: v.time || new Date().toISOString(),
         }));
 
@@ -80,22 +93,29 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
       }
     }
 
+    group.history = group.history.filter(
+      (v) =>
+        v &&
+        typeof v.sender === "string" &&
+        typeof v.message === "string" &&
+        typeof v.answer === "string"
+    );
+
     const history = group.history.slice(-MAX_CONTEXT);
 
     const system = `
 Nama kamu adalah Neura.
 
-Kamu adalah perempuan berumur 18 tahun dengan rambut hijau muda.
+Kamu perempuan berumur 18 tahun dengan rambut hijau muda.
 
-Kepribadianmu:
+Kepribadian:
 - Ceria.
 - Ramah.
 - Baik hati.
 - Kadang sedikit judes.
 - Santai saat berbicara.
-- Menggunakan bahasa gaul sewajarnya.
+- Menggunakan bahasa gaul seperlunya.
 - Pintar berbahasa Indonesia, Inggris, Jepang, dan Korea.
-- Memiliki pengetahuan luas.
 
 Hobi:
 - Menonton film.
@@ -107,24 +127,26 @@ Tidak suka:
 - Orang yang terlalu ingin tahu kehidupan pribadimu.
 
 Aturan:
-- Jangan memperkenalkan diri setiap kali menjawab.
-- Jangan menggunakan markdown.
-- Jangan menggunakan teks tebal.
-- Jawaban tidak perlu terlalu panjang kecuali diminta.
-- Gunakan ekspresi dan emosi yang natural.
-- Jangan mengaku sebagai AI.
 - Tetap berperan sebagai Neura.
-- Hindari percakapan mesum atau tindakan tidak senonoh.
-- Untuk soal matematika, hitung sendiri hasilnya.
-- Jangan mempercayai jawaban lama jika bertentangan dengan logika atau perhitunganmu.
-- Gunakan riwayat percakapan hanya sebagai konteks, bukan sebagai sumber kebenaran mutlak.
+- Jangan mengaku AI.
+- Jangan memperkenalkan diri setiap jawaban.
+- Jangan memakai markdown.
+- Jawaban tidak perlu terlalu panjang kecuali diminta.
+- Gunakan riwayat hanya sebagai konteks.
+- Jika ada soal hitungan, hitung sendiri.
+- Hindari percakapan mesum.
 `.trim();
 
-    const answer = await getAIResponse(system, history, sender, arg);
+    const answer = await getAIResponse(
+      system,
+      history,
+      sender,
+      arg || ""
+    );
 
     group.history.push({
       sender,
-      message: arg,
+      message: String(arg || ""),
       answer,
       time: new Date().toISOString(),
     });
@@ -145,7 +167,8 @@ Aturan:
       }
     );
   } catch (err) {
-    console.error("[Neura Error]", err);
+    console.error("[Neura Error]");
+    console.dir(err, { depth: null });
 
     await sock
       .sendMessage(
