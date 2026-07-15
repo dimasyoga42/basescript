@@ -1,25 +1,24 @@
 import path from "path";
 import Groq from "groq-sdk";
 import { getUserData, saveUserData } from "../../src/config/func.js";
+import { OpenRouter } from '@openrouter/sdk';
 import dotenv from "dotenv";
 dotenv.config();
 const db = path.resolve("db", "neura.json");
 const res = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const client = new OpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY,
+});
 const getGroqMessage = async (cotext, sys) => {
   try {
-    return res.chat.completions.create({
+    const response = await client.chat.send({
+      model: 'openai/gpt-oss-20b:free',
       messages: [
-        {
-          role: "system",
-          content: sys,
-        },
-        {
-          role: "user",
-          content: cotext,
-        },
+        { role: 'user', content: cotext },
+        {role: 'system', content: sys},
       ],
-      model: "whisper-large-v3-turbo",
     });
+    return response;
   } catch (error) {
     throw error;
   }
