@@ -10,32 +10,41 @@ const TIMEZONE = "Asia/Jakarta";
 const db_path = path.resolve("db", "mt.json");
 const cache_path = path.resolve("db", "mt_cache.json");
 
-// ─── Persistent Cache ─────────────────────────────────────────────────────────
-// Format: [{ url: string, sentAt: ISO string }, ...]
-// Cache otomatis bersih setelah 7 hari
-
 const loadCache = () => {
   try {
-    if (!fs.existsSync(cache_path)) return { set: new Set(), raw: [] };
+    if (!fs.existsSync(cache_path)) {
+      return {
+        set: new Set(),
+        raw: [],
+      };
+    }
 
-    const raw = JSON.parse(fs.readFileSync(cache_path, "utf-8"));
-    if (!Array.isArray(raw)) return { set: new Set(), raw: [] };
+    const raw = JSON.parse(fs.readFileSync(cache_path, "utf8"));
 
-    // Migrate format lama (array of string)
-    const normalized =
-      typeof raw[0] === "string"
-        ? raw.map((url) => ({ url, sentAt: new Date().toISOString() }))
-        : raw;
+    if (!Array.isArray(raw)) {
+      return {
+        set: new Set(),
+        raw: [],
+      };
+    }
 
-    // Buang cache lebih dari 7 hari
     const cutoff = moment().tz(TIMEZONE).subtract(7, "days");
-    const filtered = normalized.filter((item) =>
+
+    const filtered = raw.filter((item) =>
       moment(item.sentAt).isAfter(cutoff),
     );
 
-    return { set: new Set(filtered.map((i) => i.url)), raw: filtered };
+    return {
+      set: new Set(
+        filtered.map((item) => `${item.url}|${item.groupId}`),
+      ),
+      raw: filtered,
+    };
   } catch {
-    return { set: new Set(), raw: [] };
+    return {
+      set: new Set(),
+      raw: [],
+    };
   }
 };
 
@@ -55,8 +64,6 @@ const isToday = (dateStr) => {
     return false;
   }
 
-  // Bersihkan bracket fullwidth Jepang dan karakter non-standar
-  // Contoh: "［2026-05-04］" → "2026-05-04"
   const cleaned = dateStr
     .replace(/［/g, "")
     .replace(/］/g, "")
@@ -170,8 +177,9 @@ const scrapeDetail = async (url) => {
 
 // ─── Kirim notifikasi ke semua grup aktif ─────────────────────────────────────
 
-const sendMtNotif = async (conn, latest, detail) => {
+const sendMtNotif = async (conn, latest, detail, sentRaw, sentSet) => {
   let db = [];
+
   try {
     db = getUserData(db_path);
   } catch {
@@ -180,28 +188,52 @@ const sendMtNotif = async (conn, latest, detail) => {
   }
 
   const activeGroups = db.filter((item) => item.status === true);
+
   if (!activeGroups.length) {
     console.log("[cronMt] Tidak ada grup aktif.");
     return;
   }
 
-  const now = moment().tz(TIMEZONE).format("DD/MM/YYYY HH:mm");
-
-  let msg;
+  let msg = "";
   msg += `${latest.title}\n`;
-  if (detail.content) msg += `\n${detail.content}`;
+
+  if (detail.content) {
+    msg += `\n${detail.content}`;
+  }
 
   for (const group of activeGroups) {
+    const cacheKey = `${latest.url}|${group.id}`;
+
+    if (sentSet.has(cacheKey)) {
+      console.log(`[cronMt] Skip ${group.id} (sudah pernah dikirim)`);
+      continue;
+    }
+
     try {
       if (detail.thumbnailUrl) {
         await conn.sendMessage(group.id, {
-          image: { url: detail.thumbnailUrl },
+          image: {
+            url: detail.thumbnailUrl,
+          },
           caption: msg,
         });
       } else {
-        await conn.sendMessage(group.id, { text: msg });
+        await conn.sendMessage(group.id, {
+          text: msg,
+        });
       }
+
       console.log(`[cronMt] Notif terkirim ke ${group.id}`);
+
+      sentRaw.push({
+        url: latest.url,
+        groupId: group.id,
+        sentAt: new Date().toISOString(),
+      });
+
+      sentSet.add(cacheKey);
+
+      saveCache(sentRaw);
     } catch (err) {
       console.error(`[cronMt] Gagal kirim ke ${group.id}:`, err.message);
     }
@@ -241,15 +273,10 @@ export const cronMt = async (conn) => {
       const detail = await scrapeDetail(latest.url);
 
       // 4. Kirim ke semua grup aktif
-      await sendMtNotif(conn, latest, detail);
-
-      // 5. Simpan ke cache agar tidak kirim ulang
-      sentRaw.push({ url: latest.url, sentAt: new Date().toISOString() });
-      sentSet.add(latest.url);
-      saveCache(sentRaw);
+      await sendMtNotif(conn, latest, detail, sentRaw, sentSet);
 
       // Kirim 1 update per cron run, stop setelah berhasil
-      break;
+      return
     }
   } catch (err) {
     console.error("[cronMt] Error:", err.message);
