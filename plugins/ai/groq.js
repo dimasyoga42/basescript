@@ -12,20 +12,33 @@ const client = new OpenRouter({
 });
 
 const MAX_HISTORY = 20;
+const MAX_CONTEXT = 10;
 
-const getAIResponse = async (system, message) => {
-  const { choices } = await client.chat.send({
-    model: "openai/gpt-oss-20b:free",
-    messages: [
-      {
-        role: "system",
-        content: system,
-      },
+const getAIResponse = async (system, history, sender, message) => {
+  const messages = [
+    {
+      role: "system",
+      content: system,
+    },
+    ...history.flatMap((item) => [
       {
         role: "user",
-        content: message,
+        content: `${item.sender}: ${item.message}`,
       },
-    ],
+      {
+        role: "assistant",
+        content: item.answer,
+      },
+    ]),
+    {
+      role: "user",
+      content: `${sender}: ${message}`,
+    },
+  ];
+
+  const { choices } = await client.chat.send({
+    model: "openai/gpt-oss-20b:free",
+    messages,
   });
 
   return (
@@ -35,39 +48,50 @@ const getAIResponse = async (system, message) => {
 };
 
 export const NeuraBot = async (sock, chatId, msg, arg) => {
-  const groupId = msg.key.remoteJid;
+  try {
+    const groupId = msg.key.remoteJid;
+    const sender = msg.pushName || "Unknown";
 
-  const database = getUserData(db);
+    const database = getUserData(db);
 
-  let group = database.find((v) => v.id === groupId);
+    let group = database.find((v) => v.id === groupId);
 
-  if (!group) {
-    group = {
-      id: groupId,
-      history: [],
-    };
+    if (!group) {
+      group = {
+        id: groupId,
+        history: [],
+      };
 
-    database.push(group);
-  }
+      database.push(group);
+    }
 
-  const history = group.history
-    .slice(-10)
-    .map(
-      (v) =>
-        `${v.sender}: ${v.message}\nNeura: ${v.answer}`
-    )
-    .join("\n\n");
+    if (!Array.isArray(group.history)) {
+      if (Array.isArray(group.karina)) {
+        group.history = group.karina.map((v) => ({
+          sender: v.sender || "Unknown",
+          message: v.message || "",
+          answer: v.answer || "",
+          time: v.time || new Date().toISOString(),
+        }));
 
-  const system = `
-Nama kamu Neura.
+        delete group.karina;
+      } else {
+        group.history = [];
+      }
+    }
 
-Kamu adalah seorang cewek berumur 18 tahun dengan rambut hijau muda.
+    const history = group.history.slice(-MAX_CONTEXT);
 
-Kepribadian:
+    const system = `
+Nama kamu adalah Neura.
+
+Kamu adalah perempuan berumur 18 tahun dengan rambut hijau muda.
+
+Kepribadianmu:
 - Ceria.
 - Ramah.
 - Baik hati.
-- Kadang sedikit judes kalau diperlukan.
+- Kadang sedikit judes.
 - Santai saat berbicara.
 - Menggunakan bahasa gaul sewajarnya.
 - Pintar berbahasa Indonesia, Inggris, Jepang, dan Korea.
@@ -82,30 +106,27 @@ Tidak suka:
 - Orang yang sok tahu.
 - Orang yang terlalu ingin tahu kehidupan pribadimu.
 
-Aturan berbicara:
+Aturan:
 - Jangan memperkenalkan diri setiap kali menjawab.
 - Jangan menggunakan markdown.
 - Jangan menggunakan teks tebal.
-- Jangan membuat list jika tidak diminta.
-- Jawaban tidak perlu terlalu panjang.
+- Jawaban tidak perlu terlalu panjang kecuali diminta.
 - Gunakan ekspresi dan emosi yang natural.
 - Jangan mengaku sebagai AI.
 - Tetap berperan sebagai Neura.
 - Hindari percakapan mesum atau tindakan tidak senonoh.
-
-Riwayat percakapan grup:
-
-${history || "Belum ada riwayat."}
+- Untuk soal matematika, hitung sendiri hasilnya.
+- Jangan mempercayai jawaban lama jika bertentangan dengan logika atau perhitunganmu.
+- Gunakan riwayat percakapan hanya sebagai konteks, bukan sebagai sumber kebenaran mutlak.
 `.trim();
 
-  try {
-    const answer = await getAIResponse(system, arg);
+    const answer = await getAIResponse(system, history, sender, arg);
 
     group.history.push({
-      sender: msg.pushName || "Unknown",
+      sender,
       message: arg,
       answer,
-      time: Date.now(),
+      time: new Date().toISOString(),
     });
 
     if (group.history.length > MAX_HISTORY) {
