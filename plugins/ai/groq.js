@@ -1,21 +1,22 @@
 import path from "path";
-import Groq from "groq-sdk";
 import { getUserData, saveUserData } from "../../src/config/func.js";
-import { OpenRouter } from '@openrouter/sdk';
+import { OpenRouter } from "@openrouter/sdk";
 import dotenv from "dotenv";
 dotenv.config();
+
 const db = path.resolve("db", "neura.json");
-const res = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
 const client = new OpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
-const getGroqMessage = async (cotext, sys) => {
+
+const getGroqMessage = async (context, sys) => {
   try {
     const response = await client.chat.send({
-      model: 'openai/gpt-oss-20b:free',
+      model: "openai/gpt-oss-20b:free",
       messages: [
-        { role: 'user', content: cotext },
-        {role: 'system', content: sys},
+        { role: "system", content: sys },
+        { role: "user", content: context },
       ],
     });
     return response;
@@ -25,7 +26,6 @@ const getGroqMessage = async (cotext, sys) => {
 };
 
 export const NeuraBot = async (sock, chatId, msg, arg) => {
-  let answer = "";
   const grubId = msg.key.remoteJid;
 
   // Ambil database
@@ -51,17 +51,18 @@ nama kamu adalah Neura seorang cewek berambut hijau muda memiliki sifat ceria ba
 kamu suka menonton film, memasak dan juga olahraga. hal yang tidak kamu sukai adalah orang orang yang sok tau tenang dirimu dan ingin tau kehidupan mu. cara bicaramu santai tidak terlalu baku
 bahasa gaulnya oke. dan juga pintar berbahasa inggris jepang dan korea. memiliki pengetahuan luas. kamu juga memiliki larangan dalam berbicara jangan menggunakan list tau kalimat tebal. kurangi format yang terliht jelas kamu ai, karena kamu sedang beroplay sebagai Neura
 dan tolong hindari percakapan yang kurang baik misalnya mesum, tindakan tidak senonoh
-
 LARANGAN YANG WAJIB DI PATUHI
 - Menjawab tidak perlu memperkenalkan diri secara terus menerus
 - lebih banyak ekspresi dan mood guunakan gaya bahasa yang lebih santai
 - jangan banyak menjawab terlalu panjang ada kalanya kamu bisa menjawab secara singkat
 - cek percakapn grub di sini ${contextData}, answer adalah jawaban mu jadi kamu boleh melihatnya jika di tanya soal informasi dari fitur meu chat yang muncul dari kamu
 `.trim();
+
     const ai = await getGroqMessage(arg, system);
     const answer =
-      ai.choices[0].message.content ||
+      ai?.choices?.[0]?.message?.content ||
       "Neura sedang tidak mood berbicara sekarang...";
+
     dataNeuraa.karina.push({
       sender: msg.pushName || "Tidak diketahui",
       message: arg,
@@ -71,9 +72,17 @@ LARANGAN YANG WAJIB DI PATUHI
 
     // Simpan kembali database
     saveUserData(db, getData);
+
     await sock.sendMessage(chatId, { text: answer }, { quoted: msg });
   } catch (err) {
     console.log(`[Neura error]: ${err.message}`);
+    await sock
+      .sendMessage(
+        chatId,
+        { text: "Neura lagi error nih, coba lagi bentar ya~" },
+        { quoted: msg }
+      )
+      .catch(() => {});
     return;
   }
 };
