@@ -10,41 +10,30 @@ const TIMEZONE = "Asia/Jakarta";
 const db_path = path.resolve("db", "mt.json");
 const cache_path = path.resolve("db", "mt_cache.json");
 
+// Lock sederhana supaya cron tidak overlap (penyebab utama pesan terkirim 2x)
+let isRunning = false;
+
 const loadCache = () => {
   try {
     if (!fs.existsSync(cache_path)) {
-      return {
-        set: new Set(),
-        raw: [],
-      };
+      return { set: new Set(), raw: [] };
     }
 
     const raw = JSON.parse(fs.readFileSync(cache_path, "utf8"));
 
     if (!Array.isArray(raw)) {
-      return {
-        set: new Set(),
-        raw: [],
-      };
+      return { set: new Set(), raw: [] };
     }
 
     const cutoff = moment().tz(TIMEZONE).subtract(7, "days");
-
-    const filtered = raw.filter((item) =>
-      moment(item.sentAt).isAfter(cutoff),
-    );
+    const filtered = raw.filter((item) => moment(item.sentAt).isAfter(cutoff));
 
     return {
-      set: new Set(
-        filtered.map((item) => `${item.url}|${item.groupId}`),
-      ),
+      set: new Set(filtered.map((item) => `${item.url}|${item.groupId}`)),
       raw: filtered,
     };
   } catch {
-    return {
-      set: new Set(),
-      raw: [],
-    };
+    return { set: new Set(), raw: [] };
   }
 };
 
@@ -56,6 +45,14 @@ const saveCache = (raw) => {
   }
 };
 
+// ─── Bersihkan teks dari simbol kurung yang tidak perlu ─────────────────────
+
+const cleanText = (text = "") =>
+  text
+    .replace(/[［］【】〔〕\[\]（）()『』「」]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
 // ─── Cek tanggal posting = hari ini (WIB) ────────────────────────────────────
 
 const isToday = (dateStr) => {
@@ -64,11 +61,7 @@ const isToday = (dateStr) => {
     return false;
   }
 
-  const cleaned = dateStr
-    .replace(/［/g, "")
-    .replace(/］/g, "")
-    .replace(/[\[\]【】〔〕]/g, "")
-    .trim();
+  const cleaned = cleanText(dateStr);
 
   if (!cleaned) {
     console.warn("[cronMt] Tanggal kosong setelah dibersihkan:", dateStr);
@@ -77,7 +70,6 @@ const isToday = (dateStr) => {
 
   const today = moment().tz(TIMEZONE);
 
-  // Format umum yang dipakai website Toram ID
   const formats = [
     "YYYY.MM.DD",
     "YYYY/MM/DD",
@@ -100,11 +92,10 @@ const isToday = (dateStr) => {
     }
   }
 
-  // Fallback parse bebas
   const fallback = moment(cleaned);
   if (fallback.isValid()) {
     const match = fallback.isSame(today, "day");
-    console.warn(`[cronMt] Fallback parse "${cleaned}" → match: ${match}`);
+    console.warn(`[cronMt] Fallback parse "${cleaned}" -> match: ${match}`);
     return match;
   }
 
@@ -139,7 +130,7 @@ const scrapeMtList = async (limit = 5) => {
       .trim();
 
     list.push({
-      title: title.replace(/\s+/g, " ").trim(),
+      title: cleanText(title),
       url: href.startsWith("http") ? href : BASE_URL + href,
       date: dateText,
     });
@@ -158,13 +149,9 @@ const scrapeDetail = async (url) => {
 
   const $ = cheerio.load(res.data);
 
-  // Ambil konten utama dari #news div
   const raw = $("#news").find("div").text().trim();
+  const content = cleanText(raw.split("Kembali ke atas")[0]);
 
-  // Potong sebelum "Kembali ke atas"
-  const content = raw.split("Kembali ke atas")[0].trim();
-
-  // Coba ambil thumbnail/gambar pertama di dalam #news
   const imgSrc = $("#news img").first().attr("src") || "";
   const thumbnailUrl = imgSrc
     ? imgSrc.startsWith("http")
@@ -176,6 +163,7 @@ const scrapeDetail = async (url) => {
 };
 
 // ─── Kirim notifikasi ke semua grup aktif ─────────────────────────────────────
+// Diperbaiki: loop SEMUA grup aktif, tidak berhenti setelah kirim pertama.
 
 const sendMtNotif = async (conn, latest, detail, sentRaw, sentSet) => {
   let db = [];
@@ -194,11 +182,10 @@ const sendMtNotif = async (conn, latest, detail, sentRaw, sentSet) => {
     return;
   }
 
-  let msg = "";
-  msg += `${latest.title}\n`;
-
+  const title = cleanText(latest.title);
+  let msg = title;
   if (detail.content) {
-    msg += `\n${detail.content}`;
+    msg += `\n\n${detail.content}`;
   }
 
   for (const group of activeGroups) {
@@ -212,15 +199,11 @@ const sendMtNotif = async (conn, latest, detail, sentRaw, sentSet) => {
     try {
       if (detail.thumbnailUrl) {
         await conn.sendMessage(group.id, {
-          image: {
-            url: detail.thumbnailUrl,
-          },
+          image: { url: detail.thumbnailUrl },
           caption: msg,
         });
       } else {
-        await conn.sendMessage(group.id, {
-          text: msg,
-        });
+        await conn.sendMessage(group.id, { text: msg });
       }
 
       console.log(`[cronMt] Notif terkirim ke ${group.id}`);
@@ -233,8 +216,9 @@ const sendMtNotif = async (conn, latest, detail, sentRaw, sentSet) => {
 
       sentSet.add(cacheKey);
 
+      // Simpan cache SEGERA setelah tiap kirim sukses supaya jika terjadi
+      // error di tengah loop, grup yang sudah terkirim tidak dikirim ulang.
       saveCache(sentRaw);
-      return
     } catch (err) {
       console.error(`[cronMt] Gagal kirim ke ${group.id}:`, err.message);
     }
@@ -244,6 +228,13 @@ const sendMtNotif = async (conn, latest, detail, sentRaw, sentSet) => {
 // ─── Main cron ────────────────────────────────────────────────────────────────
 
 export const cronMt = async (conn) => {
+  if (isRunning) {
+    console.log("[cronMt] Masih berjalan, lewati eksekusi ini.");
+    return;
+  }
+
+  isRunning = true;
+
   try {
     const { set: sentSet, raw: sentRaw } = loadCache();
 
@@ -254,32 +245,32 @@ export const cronMt = async (conn) => {
     }
 
     for (const latest of list) {
-      // 1. Skip jika sudah pernah dikirim (persistent cache)
-      if (sentSet.has(latest.url)) {
-        console.log(`[cronMt] Skip (sudah dikirim): ${latest.title}`);
-        continue;
-      }
-
-      // 2. Skip jika bukan hari ini
+      // Skip jika bukan hari ini
       if (!isToday(latest.date)) {
-        console.log(
-          `[cronMt] Skip (bukan hari ini): ${latest.title} [${latest.date}]`,
-        );
+        console.log(`[cronMt] Skip (bukan hari ini): ${latest.title} [${latest.date}]`);
         continue;
       }
 
-      console.log("[cronMt] ✅ Update hari ini belum dikirim:", latest.title);
+      // Skip jika SEMUA grup aktif sudah pernah menerima berita ini
+      const db = getUserData(db_path);
+      const activeGroups = db.filter((item) => item.status === true);
+      const alreadySentToAll =
+        activeGroups.length > 0 &&
+        activeGroups.every((group) => sentSet.has(`${latest.url}|${group.id}`));
 
-      // 3. Ambil detail konten
+      if (alreadySentToAll) {
+        console.log(`[cronMt] Skip (sudah dikirim ke semua grup): ${latest.title}`);
+        continue;
+      }
+
+      console.log("[cronMt] Update hari ini akan diproses:", latest.title);
+
       const detail = await scrapeDetail(latest.url);
-
-      // 4. Kirim ke semua grup aktif
       await sendMtNotif(conn, latest, detail, sentRaw, sentSet);
-
-      // Kirim 1 update per cron run, stop setelah berhasil
-      return
     }
   } catch (err) {
     console.error("[cronMt] Error:", err.message);
+  } finally {
+    isRunning = false;
   }
 };
