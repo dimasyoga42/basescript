@@ -110,6 +110,7 @@ const start = async () => {
       await runCommand(sock, m, plugins);
       await cronLive(sock);
       await cronMt(sock);
+      await cronCode(sock);
       // setInterval(
       //   () => {
       //     cronCode(sock);
