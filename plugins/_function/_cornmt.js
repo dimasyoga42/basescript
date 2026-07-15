@@ -234,6 +234,7 @@ const sendMtNotif = async (conn, latest, detail, sentRaw, sentSet) => {
       sentSet.add(cacheKey);
 
       saveCache(sentRaw);
+      return
     } catch (err) {
       console.error(`[cronMt] Gagal kirim ke ${group.id}:`, err.message);
     }
