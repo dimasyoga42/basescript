@@ -148,9 +148,27 @@ const scrapeDetail = async (url) => {
   });
 
   const $ = cheerio.load(res.data);
+  const newsDiv = $("#news").find("div").first();
 
-  const raw = $("#news").find("div").text().trim();
-  const content = cleanText(raw.split("Kembali ke atas")[0]);
+  // Ubah tag yang membentuk list/baris jadi newline eksplisit SEBELUM
+  // ambil teks, supaya list tidak menyatu jadi satu blok paragraf.
+  newsDiv.find("br").replaceWith("\n");
+  newsDiv.find("li").each((i, el) => {
+    const text = $(el).text().trim();
+    $(el).text(`- ${text}`);
+  });
+  newsDiv.find("li, p, tr, h1, h2, h3, h4").after("\n");
+
+  const raw = newsDiv.text();
+  const rawBeforeCut = raw.split("Kembali ke atas")[0];
+
+  // Bersihkan tiap baris satu-satu supaya newline antar baris list tetap ada,
+  // tapi spasi/simbol tidak perlu di dalam tiap baris tetap dirapikan.
+  const content = rawBeforeCut
+    .split("\n")
+    .map((line) => cleanText(line))
+    .filter((line) => line.length > 0)
+    .join("\n");
 
   const imgSrc = $("#news img").first().attr("src") || "";
   const thumbnailUrl = imgSrc
