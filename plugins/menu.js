@@ -114,7 +114,7 @@ const handler = async (m, { conn }) => {
     "Neura Sama",
     result,
     "Neura Inc",
-    "selalu ada",
+    config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
     randomThumb,
   );
 };
