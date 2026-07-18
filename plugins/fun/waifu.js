@@ -12,10 +12,6 @@ const handler = async (m, { conn }) => {
     const data = res.data;
     console.log(data);
 
-    if (!data?.success || !data?.image) {
-      throw new Error("Gagal mengambil data waifu, response tidak valid.");
-    }
-
     const caption = `Waifu anda hari ini`;
 
     await sendImage(conn, m.chat, data.url, caption, m);
