@@ -60,7 +60,7 @@ export const config = {
   owner: ["272206605082689@lid", "179573169848377@lid"],
   admin: "179573169848377@lid",
   pembolong: `
-  *extract*: 5 - 7M
+  *extract*: 5 - 6M
   Fairy Silk 4-5M
 
   *OHS*
@@ -81,7 +81,7 @@ export const config = {
 
   *MD*
   0-1 10-15M
-  1-2 40-50M
+  1-2 60-80M
 
   *KTN*
   0-1: 20-35M
@@ -92,14 +92,14 @@ export const config = {
   1-2: 110- 120m
 
   *HB*
-  0-1 10-15M
+  0-1 15-25M
   1-2: 100M
   Spirit Needle 6-8M
-  leg Piercer 100M+
+  leg Piercer 65-80M+
   High-Grade Ornament 2M+
   legendary needle 550M - 700M
-  leg ornament: 580-600M
-  leg silk: 1,2B
+  leg ornament: 600-650M
+  leg silk: 800M
 
   Ini hanya perkiraan, jika kalian punya info bisa .saran nama pembolong + harga contoh: .saran leg silk 1,4B. Terima kasih
   `,
