@@ -8,7 +8,7 @@ import {
 
 const handler = async (m, { conn }) => {
   try {
-    const res = await axios.get("https://neurapi.mochinime.cyou/api/etc/waifu");
+    const res = await axios.get("https://api.nekosapi.com/v4/images/random?rating=safe&limit=1");
     const data = res.data;
     console.log(data);
 
@@ -16,9 +16,9 @@ const handler = async (m, { conn }) => {
       throw new Error("Gagal mengambil data waifu, response tidak valid.");
     }
 
-    const caption = `Waifu anda adalah ${data.character}`;
+    const caption = `Waifu anda hari ini`;
 
-    await sendImage(conn, m.chat, data.image, caption, m);
+    await sendImage(conn, m.chat, data.url, caption, m);
   } catch (err) {
     console.error("[waifu]", err);
     sendText(conn, m.chat, `log: ${err.message}`, m);
