@@ -10,11 +10,14 @@ const handler = async (m, { conn }) => {
   try {
     const res = await axios.get("https://api.nekosapi.com/v4/images/random?rating=safe&limit=1");
     const data = res.data;
-    console.log(data);
 
+    if (!Array.isArray(data) || data.length === 0) {
+      return sendText(conn, m.chat, "Gagal mendapatkan gambar waifu, coba lagi.", m);
+    }
+
+    const image = data[0];
     const caption = `Waifu anda hari ini`;
-
-    await sendImage(conn, m.chat, data.url, caption, m);
+    await sendImage(conn, m.chat, image.url, caption, m);
   } catch (err) {
     console.error("[waifu]", err);
     sendText(conn, m.chat, `log: ${err.message}`, m);
