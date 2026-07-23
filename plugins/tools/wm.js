@@ -6,7 +6,7 @@ const db = path.resolve("db", "packname.json");
 
 const handler = (m, { conn }) => {
   try {
-    const [pack, author] = m.text.split("|").map((v) => v.trim());
+    const [pack, author] = m.text.replace(/\.setwm/, "").split("|").map((v) => v.trim());
 
     if (!pack || !author) {
       return sendText(
