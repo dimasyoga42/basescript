@@ -1,6 +1,6 @@
 import { getUserData, saveUserData } from "../../../src/config/func.js";
 import path from "path";
-import { sendFancyText } from "../../../src/config/message.js";
+import { sendFancyText, sendText } from "../../../src/config/message.js";
 import { config, thumbnail } from "../../../config.js";
 import { isAdmin } from "../../_function/_admin.js";
 
@@ -11,7 +11,7 @@ const handler = async (m, { conn }) => {
     const arg = m.text.split(" ");
     const ele = arg[1];
     const price = arg[2];
-    if (!ele || !price) return;
+    if (!ele || !price) return sendText(conn, m.chat, "gunakan .createraid element bos hadiah, contoh .createraid bumi 50m", m);
     const data = await getUserData(db);
     const raidReady = data.find((item) => item.id === m.chat);
     if (raidReady)
@@ -19,16 +19,7 @@ const handler = async (m, { conn }) => {
         m.chat,
         {
           text: "Party Raid sudah di buat harap hapus terlebih dahulu jika ingin membuatnya kembali",
-          contextInfo: {
-            externalAdReply: {
-              title: config.BotName,
-              body: "Developer By Dimas Yoga",
-              thumbnailUrl: config.thumbnail,
-              mediaType: 1,
-              renderLargerThumbnail: false, // 🔥 kecil di samping
-              showAdAttribution: false,
-            },
-          },
+
         },
         { quoted: m },
       );
@@ -56,13 +47,7 @@ const handler = async (m, { conn }) => {
       { quoted: m },
     );
   } catch (err) {
-    sendFancyText(conn, m.chat, {
-      title: config.BotName,
-      body: `develop by ${config.OwnerName}`,
-      thumbnail,
-      text: config.message.error,
-      quoted: m,
-    });
+    sendText(conn, m.chat, config.message.error, m);
   }
 };
 
