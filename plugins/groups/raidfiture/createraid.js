@@ -14,8 +14,7 @@ const handler = async (m, { conn }) => {
     if (!ele || !price) return sendText(conn, m.chat, "gunakan .createraid element bos hadiah, contoh .createraid bumi 50m", m);
     const data = await getUserData(db);
     const raidReady = data.find((item) => item.id === m.chat);
-    if (raidReady)
-      return await conn.sendMessage(
+    if (raidReady) return await conn.sendMessage(
         m.chat,
         {
           text: "Party Raid sudah di buat harap hapus terlebih dahulu jika ingin membuatnya kembali",
