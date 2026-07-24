@@ -50,6 +50,6 @@ const handler = async (m, { conn }) => {
 }
 
 handler.category = "Menu Admin"
-handler.command = /^poll$/i
+handler.command = "poll"
 
 export default handler
