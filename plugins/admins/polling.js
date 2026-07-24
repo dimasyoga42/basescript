@@ -3,7 +3,7 @@ import { isAdmin } from "../_function/_admin.js"
 
 const handler = async (m, { conn }) => {
   try {
-    if (!isAdmin(conn, m)) return sendText(conn, m.chat, "Anda bukan admin", m)
+    if (!isAdmin(conn, m)) return
 
     const text = m.text.replace(/^\.poll\s*/i, "").trim()
     if (!text) {
