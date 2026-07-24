@@ -307,7 +307,7 @@ const handler = async (m, { conn }) => {
       ? resolveStatEntry(statName)
       : resolveStatEntry(query);
 
-    let db = supa.from("xtal").select("name, stats").limit(100);
+    let db = supa.from("xtal").select("name, type ,stats").limit(100);
 
     if (statEntry) {
       db = db.or(statEntry.patterns.map((p) => `stats.ilike.%${p}%`).join(","));
@@ -381,7 +381,7 @@ Pilih salah satu:`,
               : (formatStats(item.stats).split("\n")[0] ?? "Tidak ada stat");
 
             return {
-              title: item.name,
+              title: `${item.name} ${item.type}`,
               description: statText.slice(0, 72),
               id: `.xtal ${item.name}`,
             };
