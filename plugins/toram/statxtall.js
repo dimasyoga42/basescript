@@ -33,7 +33,7 @@ const STAT_PATTERNS = [
     exact: true,
   },
   {
-    aliases: ["mp", "maxmp", "max mp"],
+    aliases: ["maxmp", "max mp"],
     patterns: ["MaxMP%", "MaxMP"],
     exact: true,
   },
@@ -56,7 +56,7 @@ const STAT_PATTERNS = [
     patterns: ["Physical Pierce%"],
   },
   {
-    aliases: ["mpierce", "magic pierce"],
+    aliases: ["mp", "magic pierce"],
     patterns: ["Magic Pierce%"],
   },
   {
@@ -142,6 +142,10 @@ const STAT_PATTERNS = [
   {
     aliases: ["anticipate"],
     patterns: ["Anticipate%", "Anticipate %", "anticipate %"],
+  },
+  {
+    aliases: ["stab"],
+    patterns: ["stability%", "Stability %", "stability %"],
   },
 ];
 

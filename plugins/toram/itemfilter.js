@@ -74,6 +74,9 @@
 //     patterns: ["Magic Resistance %"],
 //   },
 //   {
+//     aliases: [""],
+//   },
+//   {
 //     aliases: ["aggro"],
 //     patterns: ["Aggro %"],
 //   },
