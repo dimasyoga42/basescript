@@ -1,4 +1,5 @@
-import { getUserData, saveUserData } from "../../src/config/func.js";
+import { getUserData, saveUserData } from "../../../../src/config/func.js";
+
 
 export default class MemoryEngine {
   constructor(dbPath) {
