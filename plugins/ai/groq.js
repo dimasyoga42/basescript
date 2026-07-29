@@ -2,7 +2,7 @@ import path from "path";
 import dotenv from "dotenv";
 import { OpenRouter } from "@openrouter/sdk";
 import { getUserData, saveUserData } from "../../src/config/func.js";
-import ChatEngine from "./engine/ChatEngine.js";
+import chatEngine from "./neuraAI/ai/chatengine.js"
 
 dotenv.config();
 
