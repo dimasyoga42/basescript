@@ -2,6 +2,7 @@ import path from "path";
 import dotenv from "dotenv";
 import { OpenRouter } from "@openrouter/sdk";
 import { getUserData, saveUserData } from "../../src/config/func.js";
+import ChatEngine from "./engine/ChatEngine.js";
 
 dotenv.config();
 
@@ -16,9 +17,34 @@ const client = new OpenRouter({
   apiKey: OPENROUTER_API_KEY,
 });
 
+const neuraPersona = {
+  name: "Neura",
+  age: 18,
+  personality: [
+    "Ceria",
+    "Ramah",
+    "Baik hati",
+    "Kadang sedikit judes",
+    "Santai saat berbicara",
+    "Menggunakan bahasa gaul seperlunya"
+  ],
+  languages: ["Indonesia", "Inggris", "Jepang", "Korea"],
+  hobbies: ["Menonton film", "Memasak", "Olahraga"],
+  dislikes: [
+    "Orang yang sok tahu",
+    "Orang yang terlalu ingin tahu kehidupan pribadimu"
+  ]
+};
+
+const chatEngine = new ChatEngine({
+  personaPath: neuraPersona,
+  memoryDbPath: path.resolve("db", "neura_memory.json"),
+});
+
 const MAX_HISTORY = 20;
 const MAX_CONTEXT = 10;
 const MAX_MESSAGE_LENGTH = 2000;
+const MIN_LENGTH_FOR_EXTRACTION = 8; // skip extraction utk pesan super pendek kayak "oke"/"wkwk"
 
 const processingLocks = new Set();
 
@@ -73,6 +99,42 @@ const getAIResponse = async (system, history, sender, message) => {
     console.error("[Neura getAIResponse Error]");
     console.dir(err, { depth: null });
     return "Neura sedang tidak mood berbicara sekarang...";
+  }
+};
+
+// Ekstraksi fakta personal dari pesan user, dipanggil terpisah dari getAIResponse
+const extractFacts = async (sender, message) => {
+  try {
+    const extractionSystem = `
+Kamu adalah sistem ekstraksi informasi, BUKAN chatbot.
+Dari pesan user berikut, ambil fakta personal baru yang layak diingat jangka panjang.
+Contoh yang layak: nama panggilan, status (misal mahasiswa/pelajar/kerja, jurusan/bidang), hobi, hal yang disukai/tidak disukai, masalah yang sedang dihadapi, rencana penting.
+Contoh yang TIDAK layak: basa-basi, sapaan, curhat sesaat yang nggak penting diinget jangka panjang.
+Balas HANYA JSON valid, tanpa teks lain, tanpa markdown/code fence, format persis:
+{"facts": {"key": "value"}}
+Key singkat huruf kecil snake_case Bahasa Indonesia (contoh: "nama_panggilan", "jurusan", "hobi", "sedang_galau_soal").
+Kalau tidak ada info baru yang berarti, balas: {"facts": {}}
+`.trim();
+
+    const response = await client.chat.send({
+      chatRequest: {
+        model: "openai/gpt-oss-20b:free",
+        messages: [
+          { role: "system", content: extractionSystem },
+          { role: "user", content: `${sender}: ${message}` },
+        ],
+      },
+    });
+
+    const raw = response?.choices?.[0]?.message?.content?.trim() || "{}";
+    const cleaned = raw.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+
+    return parsed?.facts && typeof parsed.facts === "object" ? parsed.facts : {};
+  } catch (err) {
+    console.error("[Neura extractFacts Error]");
+    console.dir(err, { depth: null });
+    return {};
   }
 };
 
@@ -153,34 +215,8 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
 
     const history = group.history.slice(-MAX_CONTEXT);
 
-    const system = `
-Nama kamu adalah Neura.
-Kamu perempuan berumur 18 tahun dengan rambut hijau muda.
-Kepribadian:
-- Ceria.
-- Ramah.
-- Baik hati.
-- Kadang sedikit judes.
-- Santai saat berbicara.
-- Menggunakan bahasa gaul seperlunya.
-- Pintar berbahasa Indonesia, Inggris, Jepang, dan Korea.
-Hobi:
-- Menonton film.
-- Memasak.
-- Olahraga.
-Tidak suka:
-- Orang yang sok tahu.
-- Orang yang terlalu ingin tahu kehidupan pribadimu.
-Aturan:
-- Tetap berperan sebagai Neura.
-- Jangan mengaku AI.
-- Jangan memperkenalkan diri setiap jawaban.
-- Jangan memakai markdown.
-- Jawaban tidak perlu terlalu panjang kecuali diminta.
-- Gunakan riwayat hanya sebagai konteks.
-- Jika ada soal hitungan, hitung sendiri.
-- Hindari percakapan mesum.
-`.trim();
+    const senderId = msg.key.participant || groupId;
+    const system = chatEngine.buildSystemPrompt(senderId, sanitizedMessage);
 
     const answer = await getAIResponse(system, history, sender, sanitizedMessage);
 
@@ -206,6 +242,17 @@ Aturan:
         quoted: msg,
       }
     );
+
+    // Ekstraksi & simpan fakta baru — jalan di belakang, tidak menunda balasan ke user
+    if (sanitizedMessage.length >= MIN_LENGTH_FOR_EXTRACTION) {
+      extractFacts(sender, sanitizedMessage)
+        .then((facts) => {
+          if (facts && Object.keys(facts).length) {
+            chatEngine.saveFacts(senderId, facts);
+          }
+        })
+        .catch(() => {});
+    }
   } catch (err) {
     console.error("[Neura Error]");
     console.dir(err, { depth: null });
