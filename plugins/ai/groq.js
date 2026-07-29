@@ -36,7 +36,7 @@ const neuraPersona = {
   ]
 };
 
-const chatEngines = new ChatEngine({
+const chatEngine = new ChatEngine({
   personaPath: neuraPersona,
   memoryDbPath: path.resolve("db", "neura_memory.json"),
 });
