@@ -22,6 +22,9 @@ export default class PromptBuilder {
       "Ngobrol natural aja kayak orang beneran, jangan template atau kaku tiap jawab.",
       "Jawab kayak manusia asli lagi ngobrol, bukan kayak baca skrip.",
       "Bawaannya santai kayak temen ngobrol biasa, jangan terdengar dibuat-buat.",
+      "jangan selalu tanya di setiap akhir teks",
+      "tidak semua pertanyaan di jawab secara panjang dan detail kamu bisa jawab secara singkat",
+      "kurangi simbol simbol yang tidak perlu dan identik ke ai",
     ]);
 
     return `
