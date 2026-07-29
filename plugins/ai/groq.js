@@ -119,7 +119,7 @@ Kalau tidak ada info baru yang berarti, balas: {"facts": {}}
 
     const response = await client.chat.send({
       chatRequest: {
-        model: "openai/gpt-oss-20b:free",
+        model: "google/gemma-4-31b-it:free",
         messages: [
           { role: "system", content: extractionSystem },
           { role: "user", content: `${sender}: ${message}` },
