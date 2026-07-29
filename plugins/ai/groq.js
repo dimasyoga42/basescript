@@ -112,7 +112,7 @@ ikuti praturan yang sudah tersedia dan jangan melakukan hal yang tidak perlu
 
     const response = await client.chat.send({
       chatRequest: {
-        model: "google/gemma-4-31b-it:free",
+        model: "openai/gpt-oss-20b:free",
         messages: [
           { role: "system", content: extractionSystem },
           { role: "user", content: `${sender}: ${message}` },
