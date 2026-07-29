@@ -39,6 +39,7 @@ const neuraPersona = {
 const chatEngine = new ChatEngine({
   personaPath: neuraPersona,
   memoryDbPath: path.resolve("db", "neura_memory.json"),
+  evolutionDbPath: path.resolve("db", "neura_evolution.json"),
 });
 
 const MAX_HISTORY = 20;
