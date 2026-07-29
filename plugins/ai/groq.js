@@ -107,14 +107,7 @@ const getAIResponse = async (system, history, sender, message) => {
 const extractFacts = async (sender, message) => {
   try {
     const extractionSystem = `
-Kamu adalah sistem ekstraksi informasi, BUKAN chatbot.
-Dari pesan user berikut, ambil fakta personal baru yang layak diingat jangka panjang.
-Contoh yang layak: nama panggilan, status (misal mahasiswa/pelajar/kerja, jurusan/bidang), hobi, hal yang disukai/tidak disukai, masalah yang sedang dihadapi, rencana penting.
-Contoh yang TIDAK layak: basa-basi, sapaan, curhat sesaat yang nggak penting diinget jangka panjang.
-Balas HANYA JSON valid, tanpa teks lain, tanpa markdown/code fence, format persis:
-{"facts": {"key": "value"}}
-Key singkat huruf kecil snake_case Bahasa Indonesia (contoh: "nama_panggilan", "jurusan", "hobi", "sedang_galau_soal").
-Kalau tidak ada info baru yang berarti, balas: {"facts": {}}
+ikuti praturan yang sudah tersedia dan jangan melakukan hal yang tidak perlu
 `.trim();
 
     const response = await client.chat.send({
