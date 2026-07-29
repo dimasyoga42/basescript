@@ -2,7 +2,7 @@ import path from "path";
 import dotenv from "dotenv";
 import { OpenRouter } from "@openrouter/sdk";
 import { getUserData, saveUserData } from "../../src/config/func.js";
-import chatEngine from "./neuraAI/ai/chatengine.js"
+import ChatEngine from "./neuraAI/ai/chatengine.js";
 
 dotenv.config();
 
@@ -36,7 +36,7 @@ const neuraPersona = {
   ]
 };
 
-const chatEngine = new ChatEngine({
+const chatEngines = new ChatEngine({
   personaPath: neuraPersona,
   memoryDbPath: path.resolve("db", "neura_memory.json"),
 });
