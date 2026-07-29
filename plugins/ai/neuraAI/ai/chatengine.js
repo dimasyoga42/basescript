@@ -24,15 +24,9 @@ export default class ChatEngine {
     const persona = this.persona.getPersona();
     const stored = this.memoryEngine.get(userId);
     const mood = this.moodEngine.update(
-          { ...DEFAULT_MOOD, ...(stored.mood || {}) },
-          message
-        );
-        // Preserve previous mood for future reference
-        const previousMood = stored.mood || DEFAULT_MOOD;
-        // Merge to keep history of mood changes
-        const moodHistory = stored.moodHistory || [];
-        moodHistory.push({ time: new Date().toISOString(), mood: { ...mood } });
-        this.memoryEngine.save(userId, { mood, relationship, moodHistory });
+      { ...DEFAULT_MOOD, ...(stored.mood || {}) },
+      message
+    );
     const relationship = this.relationshipEngine.update(
       stored.relationship ?? DEFAULT_RELATIONSHIP,
       message
