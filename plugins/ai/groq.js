@@ -234,15 +234,16 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
 
     saveUserData(db, database);
 
-    await sock.sendMessage(
-      chatId,
-      {
-        text: answer,
-      },
-      {
-        quoted: msg,
-      }
-    );
+    // Send answer in chunks to avoid long messages
+        const sendChunks = async (text) => {
+          const sentences = text.match(/[^.!?]+[.!?]/g) || [text];
+          for (const s of sentences) {
+            await sock.sendMessage(chatId, { text: s.trim() }, { quoted: msg });
+            // small delay to avoid rate limits
+            await new Promise((r) => setTimeout(r, 500));
+          }
+        };
+        await sendChunks(answer);
 
     // Ekstraksi & simpan fakta baru — jalan di belakang, tidak menunda balasan ke user
     if (sanitizedMessage.length >= MIN_LENGTH_FOR_EXTRACTION) {
