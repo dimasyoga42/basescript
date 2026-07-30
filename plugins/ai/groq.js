@@ -1,9 +1,8 @@
 import path from "path";
 import dotenv from "dotenv";
-import { OpenRouter } from "@openrouter/sdk";
 import { getUserData, saveUserData } from "../../src/config/func.js";
 import { Ollama } from "ollama";
-import { runTools } from "./neuraAI/tools/toolsRouter.js";
+import { runTools } from "./neuraAI/tools/toolRouter.js";
 import ChatEngine from "./neuraAI/ai/chatengine.js";
 
 dotenv.config();
@@ -11,12 +10,7 @@ dotenv.config();
 const db = path.resolve("db", "neura.json");
 const ollama = new Ollama();
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-if (!OPENROUTER_API_KEY) {
-  console.error("[Neura Error] OPENROUTER_API_KEY tidak ditemukan di environment variable");
-}
-
-const client = new OpenRouter({ apiKey: OPENROUTER_API_KEY });
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen3.5:4b";
 
 const neuraPersona = {
   name: "Neura",
@@ -47,12 +41,14 @@ const MIN_LENGTH_FOR_EXTRACTION = 8;
 
 const processingLocks = new Set();
 
+function stripThinking(text) {
+  return String(text || "")
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .trim();
+}
+
 const getAIResponse = async (system, history, sender, message) => {
   try {
-    if (!OPENROUTER_API_KEY) {
-      throw new Error("OPENROUTER_API_KEY tidak dikonfigurasi");
-    }
-
     const messages = [{ role: "system", content: String(system ?? "") }];
 
     for (const item of history) {
@@ -69,11 +65,13 @@ const getAIResponse = async (system, history, sender, message) => {
 
     messages.push({ role: "user", content: `${sender}: ${String(message ?? "").trim()}` });
 
-    const response = await client.chat.send({
-      chatRequest: { model: "openai/gpt-oss-20b:free", messages },
+    const response = await ollama.chat({
+      model: OLLAMA_MODEL,
+      messages,
+      think: false,
     });
 
-    const content = response?.choices?.[0]?.message?.content?.trim();
+    const content = stripThinking(response?.message?.content);
     return content?.length ? content : "Neura sedang tidak mood berbicara sekarang...";
   } catch (err) {
     console.error("[Neura getAIResponse Error]");
@@ -95,7 +93,7 @@ Kalau tidak ada info baru, balas: {"facts": {}}
 `.trim();
 
     const response = await ollama.chat({
-      model: "qwen3.5:4b",
+      model: OLLAMA_MODEL,
       messages: [
         { role: "system", content: extractionSystem },
         { role: "user", content: `${sender}: ${message}` },
@@ -104,7 +102,7 @@ Kalau tidak ada info baru, balas: {"facts": {}}
       think: false,
     });
 
-    const raw = response?.message?.content?.trim() || "{}";
+    const raw = stripThinking(response?.message?.content) || "{}";
     const cleaned = raw.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleaned);
 
