@@ -3,19 +3,20 @@ import dotenv from "dotenv";
 import { OpenRouter } from "@openrouter/sdk";
 import { getUserData, saveUserData } from "../../src/config/func.js";
 import ChatEngine from "./neuraAI/ai/chatengine.js";
+import { runTools } from "./neuraAI/tools/toolsRouter.js";
+import { Ollama } from "ollama";
 
 dotenv.config();
 
 const db = path.resolve("db", "neura.json");
+const ollama = new Ollama();
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 if (!OPENROUTER_API_KEY) {
   console.error("[Neura Error] OPENROUTER_API_KEY tidak ditemukan di environment variable");
 }
 
-const client = new OpenRouter({
-  apiKey: OPENROUTER_API_KEY,
-});
+const client = new OpenRouter({ apiKey: OPENROUTER_API_KEY });
 
 const neuraPersona = {
   name: "Neura",
@@ -26,14 +27,11 @@ const neuraPersona = {
     "Baik hati",
     "Kadang sedikit judes",
     "Santai saat berbicara",
-    "Menggunakan bahasa gaul seperlunya"
+    "Menggunakan bahasa gaul seperlunya",
   ],
   languages: ["Indonesia", "Inggris", "Jepang", "Korea"],
   hobbies: ["Menonton film", "Memasak", "Olahraga"],
-  dislikes: [
-    "Orang yang sok tahu",
-    "Orang yang terlalu ingin tahu kehidupan pribadimu"
-  ]
+  dislikes: ["Orang yang sok tahu", "Orang yang terlalu ingin tahu kehidupan pribadimu"],
 };
 
 const chatEngine = new ChatEngine({
@@ -45,7 +43,7 @@ const chatEngine = new ChatEngine({
 const MAX_HISTORY = 20;
 const MAX_CONTEXT = 10;
 const MAX_MESSAGE_LENGTH = 2000;
-const MIN_LENGTH_FOR_EXTRACTION = 8; // skip extraction utk pesan super pendek kayak "oke"/"wkwk"
+const MIN_LENGTH_FOR_EXTRACTION = 8;
 
 const processingLocks = new Set();
 
@@ -55,43 +53,24 @@ const getAIResponse = async (system, history, sender, message) => {
       throw new Error("OPENROUTER_API_KEY tidak dikonfigurasi");
     }
 
-    const messages = [
-      {
-        role: "system",
-        content: String(system ?? ""),
-      },
-    ];
+    const messages = [{ role: "system", content: String(system ?? "") }];
 
     for (const item of history) {
-      const userMessage =
-        typeof item?.message === "string" ? item.message.trim() : "";
-      const assistantMessage =
-        typeof item?.answer === "string" ? item.answer.trim() : "";
+      const userMessage = typeof item?.message === "string" ? item.message.trim() : "";
+      const assistantMessage = typeof item?.answer === "string" ? item.answer.trim() : "";
 
       if (userMessage.length) {
-        messages.push({
-          role: "user",
-          content: `${item.sender || "Unknown"}: ${userMessage}`,
-        });
+        messages.push({ role: "user", content: `${item.sender || "Unknown"}: ${userMessage}` });
       }
       if (assistantMessage.length) {
-        messages.push({
-          role: "assistant",
-          content: assistantMessage,
-        });
+        messages.push({ role: "assistant", content: assistantMessage });
       }
     }
 
-    messages.push({
-      role: "user",
-      content: `${sender}: ${String(message ?? "").trim()}`,
-    });
+    messages.push({ role: "user", content: `${sender}: ${String(message ?? "").trim()}` });
 
     const response = await client.chat.send({
-      chatRequest: {
-        model: "openai/gpt-oss-20b:free",
-        messages,
-      },
+      chatRequest: { model: "openai/gpt-oss-20b:free", messages },
     });
 
     const content = response?.choices?.[0]?.message?.content?.trim();
@@ -103,24 +82,28 @@ const getAIResponse = async (system, history, sender, message) => {
   }
 };
 
-// Ekstraksi fakta personal dari pesan user, dipanggil terpisah dari getAIResponse
 const extractFacts = async (sender, message) => {
   try {
     const extractionSystem = `
-ikuti praturan yang sudah tersedia dan jangan melakukan hal yang tidak perlu
+Kamu adalah sistem ekstraksi informasi, BUKAN chatbot.
+Dari pesan user berikut, ambil fakta personal baru yang layak diingat jangka panjang.
+Contoh layak: nama panggilan, status (mahasiswa/kerja/jurusan), hobi, suka/tidak suka, masalah yang sedang dihadapi.
+Contoh TIDAK layak: basa-basi, sapaan.
+Balas HANYA JSON valid, tanpa teks lain, format persis:
+{"facts": {"key": "value"}}
+Kalau tidak ada info baru, balas: {"facts": {}}
 `.trim();
 
-    const response = await client.chat.send({
-      chatRequest: {
-        model: "openai/gpt-oss-20b:free",
-        messages: [
-          { role: "system", content: extractionSystem },
-          { role: "user", content: `${sender}: ${message}` },
-        ],
-      },
+    const response = await ollama.chat({
+      model: "qwen3.5:4b",
+      messages: [
+        { role: "system", content: extractionSystem },
+        { role: "user", content: `${sender}: ${message}` },
+      ],
+      format: "json",
     });
 
-    const raw = response?.choices?.[0]?.message?.content?.trim() || "{}";
+    const raw = response?.message?.content?.trim() || "{}";
     const cleaned = raw.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleaned);
 
@@ -132,6 +115,33 @@ ikuti praturan yang sudah tersedia dan jangan melakukan hal yang tidak perlu
   }
 };
 
+// kirim balasan bertahap kayak orang ngetik, plus presence "composing"
+const sendNaturally = async (sock, chatId, msg, text) => {
+  const sentences = text.match(/[^.!?\n]+[.!?\n]*/g) || [text];
+
+  for (const s of sentences) {
+    const trimmed = s.trim();
+    if (!trimmed) continue;
+
+    try {
+      await sock.sendPresenceUpdate("composing", chatId);
+    } catch {
+      // abaikan kalau presence gagal, jangan ganggu alur utama
+    }
+
+    const typingDelay = Math.min(2500, Math.max(400, trimmed.length * 25));
+    await new Promise((r) => setTimeout(r, typingDelay));
+
+    await sock.sendMessage(chatId, { text: trimmed }, { quoted: msg });
+
+    await new Promise((r) => setTimeout(r, 300));
+  }
+
+  try {
+    await sock.sendPresenceUpdate("paused", chatId);
+  } catch {}
+};
+
 export const NeuraBot = async (sock, chatId, msg, arg) => {
   const groupId = msg?.key?.remoteJid;
 
@@ -139,33 +149,20 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
     console.error("[Neura Error] msg.key atau msg.message tidak valid");
     return;
   }
-
   if (!groupId) {
     console.error("[Neura Error] groupId tidak ditemukan");
     return;
   }
-
-  if (processingLocks.has(groupId)) {
-    return;
-  }
+  if (processingLocks.has(groupId)) return;
   processingLocks.add(groupId);
 
   try {
-    const sender = typeof msg.pushName === "string" && msg.pushName.trim().length
-      ? msg.pushName.trim()
-      : "Unknown";
+    const sender =
+      typeof msg.pushName === "string" && msg.pushName.trim().length ? msg.pushName.trim() : "Unknown";
 
     const rawMessage = String(arg ?? "").trim();
     if (!rawMessage.length) {
-      await sock.sendMessage(
-        chatId,
-        {
-          text: "Mau ngomong apa emangnya? Ketik dulu pesannya~",
-        },
-        {
-          quoted: msg,
-        }
-      );
+      await sock.sendMessage(chatId, { text: "Mau ngomong apa emangnya? Ketik dulu pesannya~" }, { quoted: msg });
       return;
     }
 
@@ -178,10 +175,7 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
 
     let group = database.find((v) => v?.id === groupId);
     if (!group) {
-      group = {
-        id: groupId,
-        history: [],
-      };
+      group = { id: groupId, history: [] };
       database.push(group);
     }
 
@@ -200,11 +194,7 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
     }
 
     group.history = group.history.filter(
-      (v) =>
-        v &&
-        typeof v.sender === "string" &&
-        typeof v.message === "string" &&
-        typeof v.answer === "string"
+      (v) => v && typeof v.sender === "string" && typeof v.message === "string" && typeof v.answer === "string"
     );
 
     const history = group.history.slice(-MAX_CONTEXT);
@@ -212,7 +202,8 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
     const senderId = msg.key.participant || groupId;
     const system = chatEngine.buildSystemPrompt(senderId, sanitizedMessage);
 
-    const answer = await getAIResponse(system, history, sender, sanitizedMessage);
+    let answer = await getAIResponse(system, history, sender, sanitizedMessage);
+    answer = await runTools(answer); // ganti {{tool:...}} jadi hasil asli
 
     group.history.push({
       sender,
@@ -227,18 +218,8 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
 
     saveUserData(db, database);
 
-    // Send answer in chunks to avoid long messages
-        const sendChunks = async (text) => {
-          const sentences = text.match(/[^.!?]+[.!?]/g) || [text];
-          for (const s of sentences) {
-            await sock.sendMessage(chatId, { text: s.trim() }, { quoted: msg });
-            // small delay to avoid rate limits
-            await new Promise((r) => setTimeout(r, 500));
-          }
-        };
-        await sendChunks(answer);
+    await sendNaturally(sock, chatId, msg, answer);
 
-    // Ekstraksi & simpan fakta baru — jalan di belakang, tidak menunda balasan ke user
     if (sanitizedMessage.length >= MIN_LENGTH_FOR_EXTRACTION) {
       extractFacts(sender, sanitizedMessage)
         .then((facts) => {
@@ -252,15 +233,7 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
     console.error("[Neura Error]");
     console.dir(err, { depth: null });
     await sock
-      .sendMessage(
-        chatId,
-        {
-          text: "Neura lagi error nih, coba lagi bentar ya~",
-        },
-        {
-          quoted: msg,
-        }
-      )
+      .sendMessage(chatId, { text: "Neura lagi error nih, coba lagi bentar ya~" }, { quoted: msg })
       .catch(() => {});
   } finally {
     processingLocks.delete(groupId);

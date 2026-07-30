@@ -1,5 +1,4 @@
-import { getUserData, saveUserData } from "../../../../src/config/func.js";
-
+import { getUserData, saveUserData } from "../../src/config/func.js";
 
 export default class MemoryEngine {
   constructor(dbPath) {
@@ -26,7 +25,6 @@ export default class MemoryEngine {
 
     for (const [key, value] of Object.entries(patch)) {
       if (key === "facts" && value && typeof value === "object") {
-        // merge, jangan timpa fakta lama
         entry.facts = { ...(entry.facts || {}), ...value };
       } else {
         entry[key] = value;

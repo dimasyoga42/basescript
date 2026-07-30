@@ -1,7 +1,6 @@
-import { getUserData, saveUserData } from "../../../../src/config/func.js";
+import { getUserData, saveUserData } from "../../src/config/func.js";
 
 const GLOBAL_ID = "global";
-
 const DEFAULT_TRAITS = {
   playfulness: 60,
   warmth: 65,
@@ -10,7 +9,6 @@ const DEFAULT_TRAITS = {
   curiosity: 55,
   openness: 50,
 };
-
 const TRAIT_STEP = 0.5;
 
 export default class PersonalityEvolutionEngine {
@@ -69,7 +67,7 @@ export default class PersonalityEvolutionEngine {
       bump("warmth", -TRAIT_STEP * 0.5);
       bump("confidence", TRAIT_STEP * 0.3);
     }
-    if (/kenapa|gimana|caranya|apa itu|kok bisa|maksudnya|kok bisa/.test(text)) {
+    if (/kenapa|gimana|caranya|apa itu|kok bisa|maksudnya/.test(text)) {
       bump("curiosity", TRAIT_STEP);
     }
     if (/aneh|beda|unik|nyoba|baru|nggak biasa/.test(text)) {
@@ -79,7 +77,6 @@ export default class PersonalityEvolutionEngine {
     const knownSenders = Array.from(new Set([...current.knownSenders, senderId]));
     const confidenceCeiling = Math.min(95, 45 + knownSenders.length * 0.4);
     const opennessCeiling = Math.min(90, 50 + current.interactionCount * 0.02);
-
     traits.confidence += (confidenceCeiling - traits.confidence) * 0.015;
     traits.openness += (opennessCeiling - traits.openness) * 0.01;
 
@@ -94,13 +91,11 @@ export default class PersonalityEvolutionEngine {
       entry = { id: GLOBAL_ID };
       data.push(entry);
     }
-
     entry.traits = traits;
     entry.interactionCount = current.interactionCount + 1;
     entry.knownSenders = knownSenders;
     entry.firstInteractionAt = current.firstInteractionAt || now;
     entry.lastInteractionAt = now;
-
     this._save(data);
 
     return {

@@ -23,25 +23,27 @@ export default class ChatEngine {
   buildSystemPrompt(userId, message) {
     const persona = this.persona.getPersona();
     const stored = this.memoryEngine.get(userId);
+    const evolution = this.evolutionEngine.update(userId, message);
+
+    // baseline mood dipengaruhi karakter global yang udah berkembang
+    const evolvedBaseline = {
+      happiness: DEFAULT_MOOD.happiness,
+      patience: DEFAULT_MOOD.patience,
+      playfulness: (DEFAULT_MOOD.playfulness + evolution.traits.playfulness) / 2,
+    };
+
     const mood = this.moodEngine.update(
-      { ...DEFAULT_MOOD, ...(stored.mood || {}) },
+      { ...evolvedBaseline, ...(stored.mood || {}) },
       message
     );
     const relationship = this.relationshipEngine.update(
       stored.relationship ?? DEFAULT_RELATIONSHIP,
       message
     );
-    const evolution = this.evolutionEngine.update(userId, message);
 
     this.memoryEngine.save(userId, { mood, relationship });
 
-    return this.promptBuilder.build({
-      persona,
-      mood,
-      relationship,
-      memory: stored,
-      evolution,
-    });
+    return this.promptBuilder.build({ persona, mood, relationship, memory: stored, evolution });
   }
 
   saveFacts(userId, facts) {
