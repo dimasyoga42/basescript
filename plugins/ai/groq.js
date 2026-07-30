@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { OpenRouter } from "@openrouter/sdk";
 import { getUserData, saveUserData } from "../../src/config/func.js";
 import ChatEngine from "./neuraAI/ai/chatengine.js";
-import { runTools } from "./neuraAI/tools/toolsRouter.js";
+import { runTools } from "./neuraAI/tools/toolRouter.js";
 import { Ollama } from "ollama";
 
 dotenv.config();
@@ -116,26 +116,63 @@ Kalau tidak ada info baru, balas: {"facts": {}}
   }
 };
 
-// kirim balasan bertahap kayak orang ngetik, plus presence "composing"
-const sendNaturally = async (sock, chatId, msg, text) => {
-  const sentences = text.match(/[^.!?\n]+[.!?\n]*/g) || [text];
+const randomBetween = (min, max) => Math.random() * (max - min) + min;
 
-  for (const s of sentences) {
-    const trimmed = s.trim();
-    if (!trimmed) continue;
+// pecah teks jadi chunk-chunk yang random ukurannya
+function chunkMessage(text) {
+  const sentences = (text.match(/[^.!?\n]+[.!?\n]*/g) || [text])
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  // kalau kalimatnya sedikit, atau lagi "males mecah" (30% peluang), kirim sekaligus
+  if (sentences.length <= 2 || Math.random() < 0.3) {
+    return [text.trim()];
+  }
+
+  const chunks = [];
+  let i = 0;
+  while (i < sentences.length) {
+    const roll = Math.random();
+    // 55% gabung 1 kalimat, 30% gabung 2 kalimat, 15% gabung 3 kalimat
+    const groupSize = roll < 0.55 ? 1 : roll < 0.85 ? 2 : 3;
+    const group = sentences.slice(i, i + groupSize).join(" ").trim();
+    if (group) chunks.push(group);
+    i += groupSize;
+  }
+  return chunks;
+}
+
+// kirim balasan bertahap kayak orang ngetik, dengan variasi random
+const sendNaturally = async (sock, chatId, msg, text) => {
+  const chunks = chunkMessage(text);
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    if (!chunk) continue;
 
     try {
       await sock.sendPresenceUpdate("composing", chatId);
     } catch {
-      // abaikan kalau presence gagal, jangan ganggu alur utama
+      // abaikan kalau presence gagal
     }
 
-    const typingDelay = Math.min(2500, Math.max(400, trimmed.length * 25));
+    // kecepatan ngetik manusia bervariasi (15-40ms per karakter)
+    const typingSpeed = randomBetween(15, 40);
+    let typingDelay = Math.min(4000, Math.max(350, chunk.length * typingSpeed));
+
+    // sesekali (15% peluang) ada jeda "mikir dulu" yang lebih lama
+    if (Math.random() < 0.15) {
+      typingDelay += randomBetween(800, 2000);
+    }
+
     await new Promise((r) => setTimeout(r, typingDelay));
 
-    await sock.sendMessage(chatId, { text: trimmed }, { quoted: msg });
+    // quote cuma di pesan pertama, biar nggak keliatan kaku
+    await sock.sendMessage(chatId, { text: chunk }, i === 0 ? { quoted: msg } : {});
 
-    await new Promise((r) => setTimeout(r, 300));
+    // jeda antar pesan juga random, biar polanya nggak ketebak
+    const gap = randomBetween(250, 900);
+    await new Promise((r) => setTimeout(r, gap));
   }
 
   try {
