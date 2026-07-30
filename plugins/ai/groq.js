@@ -101,6 +101,7 @@ Kalau tidak ada info baru, balas: {"facts": {}}
         { role: "user", content: `${sender}: ${message}` },
       ],
       format: "json",
+      think: false,
     });
 
     const raw = response?.message?.content?.trim() || "{}";
