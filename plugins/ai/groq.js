@@ -2,8 +2,8 @@ import path from "path";
 import dotenv from "dotenv";
 import { getUserData, saveUserData } from "../../src/config/func.js";
 import { Ollama } from "ollama";
-import { runTools } from "./neuraAI/tools/toolRouter.js";
 import ChatEngine from "./neuraAI/ai/chatengine.js";
+import { runTools } from "./neuraAI/tools/toolsRouter.js";
 
 dotenv.config();
 
