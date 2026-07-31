@@ -8,26 +8,11 @@ import { runTools } from "./neuraAI/tools/toolsRouter.js";
 dotenv.config();
 
 const db = path.resolve("db", "neura.json");
-
-// -----------------------------------------------------------------------
-// KONFIGURASI OLLAMA
-// Bisa di-override lewat .env, jadi kamu nggak perlu edit kode kalau
-// pindah environment (lokal, Colab+ngrok, VPS, dll).
-//
-// .env contoh:
-// OLLAMA_HOST=http://127.0.0.1:11434
-// OLLAMA_MODEL=mistral:latest
-// -----------------------------------------------------------------------
-const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://127.0.0.1:11435";
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "mistral:7b";
+const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://127.0.0.1:11434";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2:3b";
 
 const ollama = new Ollama({ host: OLLAMA_HOST });
 
-// -----------------------------------------------------------------------
-// CEK KONEKSI + MODEL SAAT STARTUP
-// Ini penting supaya kalau ada masalah (server mati / model salah nama),
-// errornya keliatan JELAS di log dari awal, bukan baru ketauan pas user chat.
-// -----------------------------------------------------------------------
 async function verifyOllamaSetup() {
   try {
     const { models } = await ollama.list();
