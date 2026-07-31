@@ -94,6 +94,11 @@ export const config = {
   *HB*
   0-1 15-25M
   1-2: 100M
+
+  *BOW*
+  0-1: 10M - 15M
+  1-2: 45-60M
+
   Spirit Needle 6-8M
   leg Piercer 65-80M+
   High-Grade Ornament 2M+
