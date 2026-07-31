@@ -8,9 +8,51 @@ import { runTools } from "./neuraAI/tools/toolsRouter.js";
 dotenv.config();
 
 const db = path.resolve("db", "neura.json");
-const ollama = new Ollama();
 
-const OLLAMA_MODEL = "mistral:7b";
+// -----------------------------------------------------------------------
+// KONFIGURASI OLLAMA
+// Bisa di-override lewat .env, jadi kamu nggak perlu edit kode kalau
+// pindah environment (lokal, Colab+ngrok, VPS, dll).
+//
+// .env contoh:
+// OLLAMA_HOST=http://127.0.0.1:11434
+// OLLAMA_MODEL=mistral:latest
+// -----------------------------------------------------------------------
+const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://127.0.0.1:11435";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "mistral:7b";
+
+const ollama = new Ollama({ host: OLLAMA_HOST });
+
+// -----------------------------------------------------------------------
+// CEK KONEKSI + MODEL SAAT STARTUP
+// Ini penting supaya kalau ada masalah (server mati / model salah nama),
+// errornya keliatan JELAS di log dari awal, bukan baru ketauan pas user chat.
+// -----------------------------------------------------------------------
+async function verifyOllamaSetup() {
+  try {
+    const { models } = await ollama.list();
+    const modelNames = models.map((m) => m.name);
+
+    console.log(`[Neura] Terhubung ke Ollama di ${OLLAMA_HOST}`);
+    console.log(`[Neura] Model tersedia: ${modelNames.join(", ") || "(kosong)"}`);
+
+    if (!modelNames.includes(OLLAMA_MODEL)) {
+      console.warn(
+        `[Neura] PERINGATAN: Model "${OLLAMA_MODEL}" tidak ditemukan di daftar model.\n` +
+          `        Jalankan: ollama pull ${OLLAMA_MODEL.split(":")[0]}\n` +
+          `        Atau sesuaikan OLLAMA_MODEL di .env dengan salah satu dari: ${modelNames.join(", ")}`
+      );
+    }
+  } catch (err) {
+    console.error(
+      `[Neura] GAGAL connect ke Ollama di ${OLLAMA_HOST}.\n` +
+        `        Pastikan server jalan ("ollama serve") dan host/port benar.\n` +
+        `        Error asli:`,
+      err?.message || err
+    );
+  }
+}
+verifyOllamaSetup();
 
 const neuraPersona = {
   name: "Neura",
@@ -47,6 +89,15 @@ function stripThinking(text) {
     .trim();
 }
 
+// Deteksi apakah model butuh param "think" (khusus model reasoning
+// seperti deepseek-r1, qwen3-thinking, dll). Mistral/Llama/Gemma biasa
+// TIDAK butuh ini, dan mengirimnya bisa memicu error di beberapa versi
+// Ollama server yang lebih lama. Jadi kita hanya kirim kalau nama model
+// mengindikasikan model reasoning.
+function supportsThinkParam(modelName) {
+  return /deepseek-r1|qwen3.*thinking|thinking/i.test(modelName);
+}
+
 const getAIResponse = async (system, history, sender, message) => {
   try {
     const messages = [{ role: "system", content: String(system ?? "") }];
@@ -65,17 +116,34 @@ const getAIResponse = async (system, history, sender, message) => {
 
     messages.push({ role: "user", content: `${sender}: ${String(message ?? "").trim()}` });
 
-    const response = await ollama.chat({
+    const chatOptions = {
       model: OLLAMA_MODEL,
       messages,
-      think: false,
-    });
+    };
+    if (supportsThinkParam(OLLAMA_MODEL)) {
+      chatOptions.think = false;
+    }
+
+    const response = await ollama.chat(chatOptions);
 
     const content = stripThinking(response?.message?.content);
     return content?.length ? content : "Neura sedang tidak mood berbicara sekarang...";
   } catch (err) {
     console.error("[Neura getAIResponse Error]");
     console.dir(err, { depth: null });
+
+    // Pesan error yang lebih spesifik untuk kasus paling umum
+    if (err?.cause?.code === "ECONNREFUSED" || err?.message?.includes("fetch failed")) {
+      console.error(
+        `[Neura] Tidak bisa connect ke Ollama di ${OLLAMA_HOST}. Cek apakah "ollama serve" sedang jalan.`
+      );
+    } else if (err?.message?.toLowerCase().includes("not found")) {
+      console.error(
+        `[Neura] Model "${OLLAMA_MODEL}" tidak ditemukan. Jalankan "ollama pull ${OLLAMA_MODEL}" ` +
+          `atau cek nama model dengan "ollama list".`
+      );
+    }
+
     return "Neura sedang tidak mood berbicara sekarang...";
   }
 };
@@ -99,7 +167,6 @@ Kalau tidak ada info baru, balas: {"facts": {}}
         { role: "user", content: `${sender}: ${message}` },
       ],
       format: "json",
-      think: false,
     });
 
     const raw = stripThinking(response?.message?.content) || "{}";
