@@ -10,7 +10,7 @@ dotenv.config();
 const db = path.resolve("db", "neura.json");
 const ollama = new Ollama();
 
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen3.5:4b";
+const OLLAMA_MODEL = "mistral:7b";
 
 const neuraPersona = {
   name: "Neura",
