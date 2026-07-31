@@ -8,7 +8,7 @@ import { runTools } from "./neuraAI/tools/toolsRouter.js";
 dotenv.config();
 
 const db = path.resolve("db", "neura.json");
-const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://127.0.0.1:11434/api/chat";
+const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2:3b";
 
 const ollama = new Ollama({ host: OLLAMA_HOST });
