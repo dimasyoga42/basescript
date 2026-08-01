@@ -151,15 +151,14 @@ export async function demoAIRich(sock, m) {
 
 export const thumb = async (conn, m, title, body, footter, sub, img)  => {
   try {
-    await conn.messageBuilder(m.chat)
-        .setType("Button")
+    await new ButtonV2(conn)
         .setTitle(title)
         .setSubtitle(sub)
         .setBody(body)
         .setFooter(footter)
         .setThumbnail(img)
         .addButton('cekvip', '.cekvip')
-        .send();
+        .send(m.chat);
   } catch (err) {
     console.log("terjadi Kesalahan saat load message" + err)
   }
