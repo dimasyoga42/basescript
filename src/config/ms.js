@@ -161,7 +161,7 @@ export const thumb = async (conn, m, title, body, footter, sub, img)  => {
             ['Assisten Pintar', 'Guide'],
             ['Bot', 'Assistant']
         ])
-        .addPost(Array(5).fill({
+        .addPost(Array(1).fill({
             profile_url: "https://api.ryuu-dev.my.id/logo.png",
             username: footter,
             title: title,
