@@ -83,12 +83,17 @@ const start = async () => {
     if (type !== "notify") return;
 
     const m = messages[0];
-    if (m.message?.reactionMessage.text === "🗑️") {
-      if (!(await isAdmin(sock, m.message?.reactionMessage.key.participant))) return
-      if (m.message?.reactionMessage.key.remoteJid.endsWith("@g,us")) return
-      await sock.sendMessage(m.message?.reactionMessage.key.remoteJid, {
-        delete: m.message?.reactionMessage.key
-      })
+    const reaction = m.message?.reactionMessage;
+
+    if (reaction?.text === "🗑️") {
+      const { remoteJid, participant } = reaction.key;
+
+      if (!remoteJid?.endsWith("@g.us")) return; // fitur ini cuma buat grup
+      if (!(await isAdmin(sock, remoteJid, participant))) return; // cek admin
+
+      await sock.sendMessage(remoteJid, {
+        delete: reaction.key,
+      });
     }
     console.log(m);
     //console.log(m);
