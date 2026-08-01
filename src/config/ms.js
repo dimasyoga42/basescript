@@ -154,11 +154,22 @@ export const thumb = async (conn, m, title, body, footter, sub, img) => {
     await conn.messageBuilder(m.chat, { quoted: m })
         .setType('AIRich')
         .setTitle(title)
-        .setSubtitle(sub)     // OK, valid (dari BaseBuilder)
-        .setFooter(footter)   // OK, valid (dari BaseBuilder)
+        .setSubtitle(sub)
+        .setFooter(footter)
         .addText(body)
-        .addImage(img)        // <- ganti .setThumbnail(img)
         .addSuggest(["Neura", "Toram Online", "guide"])
+        .setContextInfo({
+          isForwarded: true,
+          forwardingScore: 999,
+          externalAdReply: {
+            title: title,
+            body: sub,
+            thumbnailUrl: img,
+            mediaType: 1,          // 1 = image
+            renderLargerThumbnail: true,
+            sourceUrl: "https://wa.me/"
+          }
+        })
         .send();
   } catch (err) {
     console.log("terjadi Kesalahan saat load message: " + err)
