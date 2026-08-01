@@ -83,18 +83,6 @@ const start = async () => {
     if (type !== "notify") return;
 
     const m = messages[0];
-    const reaction = m.message?.reactionMessage;
-
-    if (reaction?.text === "🗑️") {
-      const { remoteJid, participant } = reaction.key;
-
-      if (!remoteJid?.endsWith("@g.us")) return; // fitur ini cuma buat grup
-      if (!(await isAdmin(sock, m))) return; // cek admin
-
-      await sock.sendMessage(remoteJid, {
-        delete: reaction.key,
-      });
-    }
     console.log(m);
     //console.log(m);
     if (!m?.message) return;
@@ -123,6 +111,18 @@ const start = async () => {
       await cronLive(sock);
       await cronMt(sock);
       await cronCode(sock);
+      const reaction = m.message?.reactionMessage;
+
+      if (reaction?.text === "🗑️") {
+        const { remoteJid, participant } = reaction.key;
+
+        if (!remoteJid?.endsWith("@g.us")) return; // fitur ini cuma buat grup
+        if (!(await isAdmin(sock, m))) return; // cek admin
+
+        await sock.sendMessage(remoteJid, {
+          delete: reaction.key,
+        });
+      }
       // setInterval(
       //   () => {
       //     cronCode(sock);
