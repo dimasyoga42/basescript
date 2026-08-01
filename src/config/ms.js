@@ -152,6 +152,7 @@ export async function demoAIRich(sock, m) {
 export const thumb = async (conn, m, title, body, footter, sub, img)  => {
   try {
     await conn.messageBuilder(m.chat)
+        .setType()
         .setTitle(title)
         .setSubtitle(sub)
         .setBody(body)
