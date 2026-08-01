@@ -149,18 +149,18 @@ export async function demoAIRich(sock, m) {
   }
 }
 
-export const thumb = async (conn, m, title, body, footter, sub, img)  => {
+export const thumb = async (conn, m, title, body, footter, sub, img) => {
   try {
     await conn.messageBuilder(m.chat, { quoted: m })
         .setType('AIRich')
         .setTitle(title)
-        .setFooter(footter)
+        .setSubtitle(sub)     // OK, valid (dari BaseBuilder)
+        .setFooter(footter)   // OK, valid (dari BaseBuilder)
         .addText(body)
+        .addImage(img)        // <- ganti .setThumbnail(img)
         .addSuggest(["Neura", "Toram Online", "guide"])
-        .setThumbnail(`${img}`)
-        .setSubtitle(sub)
         .send();
   } catch (err) {
-    console.log("terjadi Kesalahan saat load message" + err)
+    console.log("terjadi Kesalahan saat load message: " + err)
   }
 }
