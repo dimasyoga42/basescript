@@ -151,14 +151,36 @@ export async function demoAIRich(sock, m) {
 
 export const thumb = async (conn, m, title, body, footter, sub, img)  => {
   try {
-    await new ButtonV2(conn)
+    await sock.messageBuilder(m.chat, { quoted: m })
+        .setType('AIRich')
         .setTitle(title)
-        .setSubtitle(sub)
-        .setBody(body)
-        .setFooter(footter)
-        .setThumbnail(img)
-        .addButton('cekvip', '.cekvip')
-        .send(m.chat);
+        .setFooter(sub)
+       .addText(body)
+        .addTable([
+            ['Neura', 'Toram Online'],
+            ['Assisten Pintar', 'Guide'],
+            ['Bot', 'Assistant']
+        ])
+        .addPost(Array(5).fill({
+            profile_url: "https://api.ryuu-dev.my.id/logo.png",
+            username: footter,
+            title: title,
+            subtitle: sub,
+            caption: "Jangan lupa makan",
+            verified: true,
+            url: 'https://neurasama.my.id/',
+            thumbnail: img,
+            source: 'YOUTUBE',
+            footer: footter,
+            deeplink: 'https://neurasama.my.id/',
+            icon: "https://api.ryuu-dev.my.id/logo.png",
+            orientation: 'LANDSCAPE',
+            post_type: 'PHOTO',
+            comment: 1100,
+            share: 1100,
+            like: 1100
+        }))
+        .send();
   } catch (err) {
     console.log("terjadi Kesalahan saat load message" + err)
   }
