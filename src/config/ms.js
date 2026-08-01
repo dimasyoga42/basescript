@@ -156,7 +156,7 @@ export const thumb = async (conn, m, title, body, footter, sub, img) => {
         .setTitle(title)
         .setSubtitle(sub)
         .setFooter(footter)
-        .addCode(body)
+        .addCode(`markdown`, `${body}`)
         .addSuggest(["Neura", "Toram Online", "guide"])
         .setContextInfo({
           isForwarded: true,
