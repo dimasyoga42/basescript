@@ -157,7 +157,7 @@ export const thumb = async (conn, m, title, body, footter, sub, img)  => {
         .setFooter(footter)
         .addText(body)
         .addSuggest(["Neura", "Toram Online", "guide"])
-        .setThumbnail(img)
+        .setThumbnail(`${img}`)
         .setSubtitle(sub)
         .send();
   } catch (err) {
