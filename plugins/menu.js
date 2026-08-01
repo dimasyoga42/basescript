@@ -4,7 +4,7 @@ import { sendFancyText, sendFancyTextModif } from "../src/config/message.js";
 import { supa } from "../src/config/supa.js";
 import { buildAvaGrid } from "./_function/_format.js";
 import axios from "axios";
-import { demoButtonV2 } from "../src/config/ms.js";
+import { demoButtonV2, thumb } from "../src/config/ms.js";
 
 const handler = async (m, { conn }) => {
   let image = null;
@@ -117,6 +117,7 @@ const handler = async (m, { conn }) => {
     config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
     randomThumb,
   );
+  await thumb(conn, m, config.BotName, result, config.OwnerName, config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)], randomThumb)
 };
 
 handler.command = "menu";

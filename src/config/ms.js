@@ -148,3 +148,17 @@ export async function demoAIRich(sock, m) {
     console.error("Stack:", err?.stack);
   }
 }
+
+export const thumb = async (conn, m, title, body, footter, sub, img)  => {
+  try {
+    await conn.messageBuilder(m.chat, { quoted: m })
+      .setTitle(title)
+      .setSubtitle(sub)
+      .setBody(body)
+      .setFooter(footter)
+      .setThumbnail(img)
+      .send()
+  } catch (err) {
+    console.log("terjadi Kesalahan saat load message" + err)
+  }
+}
