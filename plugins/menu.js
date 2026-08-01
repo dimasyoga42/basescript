@@ -108,15 +108,15 @@ const handler = async (m, { conn }) => {
   //   quoted: m,
   // });
 
-  await demoButtonV2(
-    conn,
-    m,
-    "Neura Sama",
-    result,
-    "Neura Inc",
-    config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
-    randomThumb,
-  );
+  // await demoButtonV2(
+  //   conn,
+  //   m,
+  //   "Neura Sama",
+  //   result,
+  //   "Neura Inc",
+  //   config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
+  //   randomThumb,
+  // );
   await thumb(conn, m, config.BotName, result, config.OwnerName, config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)], randomThumb)
 };
 
