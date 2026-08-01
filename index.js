@@ -89,7 +89,7 @@ const start = async () => {
       const { remoteJid, participant } = reaction.key;
 
       if (!remoteJid?.endsWith("@g.us")) return; // fitur ini cuma buat grup
-      if (!(await isAdmin(sock, remoteJid, participant))) return; // cek admin
+      if (!(await isAdmin(sock, m))) return; // cek admin
 
       await sock.sendMessage(remoteJid, {
         delete: reaction.key,
