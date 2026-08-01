@@ -154,28 +154,11 @@ export const thumb = async (conn, m, title, body, footter, sub, img)  => {
     await conn.messageBuilder(m.chat, { quoted: m })
         .setType('AIRich')
         .setTitle(title)
-        .setFooter(sub)
-      .setBody(body)
-      .addSuggest(["Neura", "Toram Online", "guide"])
-      .addPost(Array(1).fill({
-            profile_url: "https://api.ryuu-dev.my.id/logo.png",
-            username: footter,
-            title: title,
-            subtitle: sub,
-            caption: "Jangan lupa makan",
-            verified: true,
-            url: 'https://neurasama.my.id/',
-            thumbnail: img,
-            source: 'YOUTUBE',
-            footer: footter,
-            deeplink: 'https://neurasama.my.id/',
-            icon: "https://api.ryuu-dev.my.id/logo.png",
-            orientation: 'LANDSCAPE',
-            post_type: 'PHOTO',
-            comment: 1100,
-            share: 1100,
-            like: 1100
-        }))
+        .setFooter(footter)
+        .addText(body)
+        .addSuggest(["Neura", "Toram Online", "guide"])
+        .setThumbnail(thumb)
+        .setSubtitle(sub)
         .send();
   } catch (err) {
     console.log("terjadi Kesalahan saat load message" + err)
