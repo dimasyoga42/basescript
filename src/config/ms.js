@@ -155,13 +155,9 @@ export const thumb = async (conn, m, title, body, footter, sub, img)  => {
         .setType('AIRich')
         .setTitle(title)
         .setFooter(sub)
-       .addText(body)
-        .addTable([
-            ['Neura', 'Toram Online'],
-            ['Assisten Pintar', 'Guide'],
-            ['Bot', 'Assistant']
-        ])
-        .addPost(Array(1).fill({
+      .setBody(body)
+      .addSuggest(["Neura", "Toram Online", "guide"])
+      .addPost(Array(1).fill({
             profile_url: "https://api.ryuu-dev.my.id/logo.png",
             username: footter,
             title: title,
