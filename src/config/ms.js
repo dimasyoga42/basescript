@@ -156,7 +156,7 @@ export const thumb = async (conn, m, title, body, footter, sub, img) => {
         .setTitle(title)
         .setSubtitle(sub)
         .setFooter(footter)
-        .addCode(`markdown`, `${body}`)
+        .addText(`${body}`)
         .addSuggest(["Neura", "Toram Online", "guide"])
         .send();
   } catch (err) {

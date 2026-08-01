@@ -92,9 +92,9 @@ const handler = async (m, { conn }) => {
   const commandSection = Object.entries(categories)
     .map(
       ([cat, cmds]) =>
-        `╭─ *${cat}*\n` + cmds.map((c) => `│ .${c}`).join("\n") + `\n╰────`,
+        `╭─ ${cat}\n` + cmds.map((c) => `│ .${c}`).join("\n") + `\n╰────`,
     )
-    .join("\n\n");
+    .join("\n\n").trim();
 
   const result = `${bossSection}\n\n${ava}\n\n${commandSection}`;
 
