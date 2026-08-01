@@ -1,4 +1,4 @@
-import { config, thumbnail } from "../config.js";
+import { config } from "../config.js";
 import { scrapeBoostBoss } from "./toram/boost.js";
 import { sendFancyText, sendFancyTextModif } from "../src/config/message.js";
 import { supa } from "../src/config/supa.js";
@@ -117,13 +117,7 @@ const handler = async (m, { conn }) => {
   //   config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
   //   randomThumb,
   // );
-  await sendFancyText(conn, m.chat, {
-    title: config.BotName,
-    body:config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
-    text: result,
-    thumbnail: thumbnail,
-    quoted: m
-  })
+  await thumb(conn, m, config.BotName, result, config.OwnerName, config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)], randomThumb)
 };
 
 handler.command = "menu";
