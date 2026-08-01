@@ -30,6 +30,7 @@ import { messageHandler } from "./plugins/ai/neura.js";
 import { cronLive } from "./plugins/_function/_cornlive.js";
 import { cronMt } from "./plugins/_function/_cornmt.js";
 import { cronCode } from "./plugins/_function/_codes.js";
+import { isAdmin } from "./plugins/_function/_admin.js";
 dotenv.config();
 const start = async () => {
   // Load semua plugin dulu sebelum bot jalan
@@ -66,7 +67,6 @@ const start = async () => {
       );
       if (params.id) return params.id;
     } catch {}
-
     return (
       msg.conversation ||
       msg.extendedTextMessage?.text ||
@@ -83,6 +83,13 @@ const start = async () => {
     if (type !== "notify") return;
 
     const m = messages[0];
+    if (m.message?.reactionMessage.text === "🗑️") {
+      if (!(await isAdmin(sock, m.message?.reactionMessage.key.participant))) return
+      if (m.message?.reactionMessage.key.remoteJid.endsWith("@g,us")) return
+      await sock.sendMessage(m.message?.reactionMessage.key.remoteJid, {
+        delete: m.message?.reactionMessage.key
+      })
+    }
     console.log(m);
     //console.log(m);
     if (!m?.message) return;
