@@ -1,22 +1,49 @@
 import fs from "fs";
 import { downloadContentFromMessage } from "@whiskeysockets/baileys";
+import { config } from "../../config.js";
 
 const ensure = (v, name) => {
   if (!v) throw new Error(`${name} is required`);
 };
 
-const messagetxt = (name) => {
-  const CHANNEL = {
-    forwardingScore: 999,
+// Satu-satunya tempat yang bikin contextInfo (isForwarded + externalAdReply).
+// Semua fungsi "fancy" (sendFancyText, sendMenu, sendBtns, sendFancyTextModif)
+// tinggal panggil ini, gak perlu bikin object externalAdReply sendiri-sendiri lagi.
+//
+// FIXED:
+// 1. "fisForwarded" -> "isForwarded" (typo)
+// 2. "Math.random() * config.thumbnail" -> "Math.random() * config.thumbnail.length"
+//    (sebelumnya array dikaliin number langsung -> NaN -> index jadi undefined
+//    -> thumbnailUrl selalu undefined -> context/card gak pernah muncul)
+// 3. Semua opsi sekarang bisa di-override per pemanggilan, fallback ke config kalau kosong.
+const messagetxt = ({
+  title,
+  body,
+  thumbnailUrl,
+  sourceUrl,
+  mediaType = 1, // 1 = image
+  previewType = "PHOTO",
+  renderLargerThumbnail = true,
+  showAdAttribution = true,
+} = {}) => {
+  return {
     isForwarded: true,
-    forwardedNewsletterMessageInfo: {
-      newsletterJid: "120363401312267152@newsletter",
-      newsletterName: `hello ${name}`,
-      serverMessageId: 1,
+    forwardingScore: 999,
+    externalAdReply: {
+      title: title || config.BotName,
+      body:
+        body || config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
+      thumbnailUrl:
+        thumbnailUrl ||
+        config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)],
+      mediaType,
+      previewType,
+      renderLargerThumbnail,
+      showAdAttribution,
+      sourceUrl: sourceUrl || "https://neurasama.my.id",
+      containsAutoReply: true,
     },
   };
-
-  return CHANNEL;
 };
 
 export const sendText = async (sock, jid, text, quoted = null) => {
@@ -214,33 +241,14 @@ export const sendFancyText = async (
   sock,
   jid,
   {
-    title = "Bot",
-    body = "Message",
+    title,
+    body,
     text = "",
     thumbnail = null,
     renderLargerThumbnail = true,
     quoted = null,
   } = {},
 ) => {
-  let externalAdReply = {
-    title,
-    body,
-    mediaType: 1,
-    previewType: "PHOTO",
-    renderLargerThumbnail,
-    showAdAttribution: true,
-    sourceUrl: "https://whatsapp.com",
-    containsAutoReply: true,
-  };
-
-  if (thumbnail) {
-    if (Buffer.isBuffer(thumbnail)) {
-      externalAdReply.thumbnail = thumbnail;
-    } else {
-      externalAdReply.thumbnailUrl = thumbnail;
-    }
-  }
-
   await sock.sendPresenceUpdate("composing", jid);
   await new Promise((r) => setTimeout(r, 100));
 
@@ -248,9 +256,13 @@ export const sendFancyText = async (
     jid,
     {
       text,
-      contextInfo: {
-        externalAdReply,
-      },
+      contextInfo: messagetxt({
+        title,
+        body,
+        thumbnailUrl: thumbnail,
+        renderLargerThumbnail,
+        sourceUrl: "https://whatsapp.com",
+      }),
     },
     { quoted },
   );
@@ -258,16 +270,13 @@ export const sendFancyText = async (
   return await sock.sendPresenceUpdate("paused", jid);
 };
 
+// FIXED: variabel "externalAdReply" lokal yang lama tidak pernah dipakai (dead code) -> dihapus.
+// Konteks yang benar-benar dikirim adalah hasil dari messagetxt(name).
 export const sendFancyTextModif = async (
   sock,
   jid,
   { name = "neura", image = "", caption = "", quoted = null } = {},
 ) => {
-  let externalAdReply = {
-    mediaType: 1,
-    containsAutoReply: true,
-  };
-
   await sock.sendPresenceUpdate("composing", jid);
   await new Promise((r) => setTimeout(r, 100));
 
@@ -276,9 +285,7 @@ export const sendFancyTextModif = async (
     {
       image: { url: image },
       caption: caption,
-      contextInfo: {
-        ...messagetxt(name),
-      },
+      contextInfo: messagetxt({ title: name }),
     },
     { quoted },
   );
@@ -290,33 +297,14 @@ export const sendMenu = async (
   sock,
   jid,
   {
-    title = "Bot",
-    body = "Message",
+    title,
+    body,
     text = "",
     thumbnail = null,
     renderLargerThumbnail = true,
     quoted = null,
   } = {},
 ) => {
-  let externalAdReply = {
-    title,
-    body,
-    mediaType: 1,
-    previewType: "PHOTO",
-    renderLargerThumbnail,
-    showAdAttribution: false,
-    sourceUrl: "https://whatsapp.com",
-    containsAutoReply: true,
-  };
-
-  if (thumbnail) {
-    if (Buffer.isBuffer(thumbnail)) {
-      externalAdReply.thumbnail = thumbnail;
-    } else {
-      externalAdReply.thumbnailUrl = thumbnail;
-    }
-  }
-
   await sock.sendPresenceUpdate("composing", jid);
   await new Promise((r) => setTimeout(r, 100));
 
@@ -324,9 +312,14 @@ export const sendMenu = async (
     jid,
     {
       text,
-      contextInfo: {
-        externalAdReply,
-      },
+      contextInfo: messagetxt({
+        title,
+        body,
+        thumbnailUrl: thumbnail,
+        renderLargerThumbnail,
+        showAdAttribution: false,
+        sourceUrl: "https://whatsapp.com",
+      }),
     },
     { quoted },
   );
@@ -372,8 +365,8 @@ export const sendBtns = async (
   sock,
   jid,
   {
-    title = "Bot",
-    body = "Message",
+    title,
+    body,
     text = "",
     footer = "Dimasyoga",
     buttons = [],
@@ -382,25 +375,6 @@ export const sendBtns = async (
     quoted = null,
   } = {},
 ) => {
-  let externalAdReply = {
-    title,
-    body,
-    mediaType: 1,
-    previewType: "PHOTO",
-    renderLargerThumbnail,
-    showAdAttribution: true,
-    sourceUrl: "https://whatsapp.com",
-    containsAutoReply: true,
-  };
-
-  if (thumbnail) {
-    if (Buffer.isBuffer(thumbnail)) {
-      externalAdReply.thumbnail = thumbnail;
-    } else {
-      externalAdReply.thumbnailUrl = thumbnail;
-    }
-  }
-
   await sock.sendPresenceUpdate("composing", jid);
   await new Promise((r) => setTimeout(r, 100));
 
@@ -411,9 +385,13 @@ export const sendBtns = async (
       footer,
       buttons,
       headerType: 1,
-      contextInfo: {
-        externalAdReply,
-      },
+      contextInfo: messagetxt({
+        title,
+        body,
+        thumbnailUrl: thumbnail,
+        renderLargerThumbnail,
+        sourceUrl: "https://whatsapp.com",
+      }),
     },
     { quoted },
   );
