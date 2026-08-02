@@ -1,5 +1,5 @@
 import axios from "axios"
-import { sendText } from "../../src/config/message"
+import { sendText } from "../../src/config/message.js"
 /**
  * Fungsi untuk request langsung ke endpoint chatbot (hasil convert dari TS ke JS biasa)
  * @param {Array<{role: "system"|"user"|"assistant", content: string}>} messages
@@ -28,7 +28,7 @@ async function scrapeGpt3(messages) {
   }
 }
 
-let handler = async (m, {conn}) => {
+const handler = async (m, {conn}) => {
   if (!text) {
     throw `Contoh: .ai Halo, siapa kamu?`
   }
