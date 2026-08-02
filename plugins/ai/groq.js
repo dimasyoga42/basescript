@@ -154,21 +154,70 @@ const getAIResponse = async (system, history, sender, message) => {
 const extractFacts = async (sender, message) => {
   try {
     const extractionSystem = `
-Kamu adalah sistem ekstraksi informasi, BUKAN chatbot.
-Dari pesan user berikut, ambil fakta personal baru yang layak diingat jangka panjang.
-Contoh layak: nama panggilan, status (mahasiswa/kerja/jurusan), hobi, suka/tidak suka, masalah yang sedang dihadapi.
-Contoh TIDAK layak: basa-basi, sapaan.
-Balas HANYA JSON valid, tanpa teks lain, format persis:
-{"facts": {"key": "value"}}
-Kalau tidak ada info baru, balas: {"facts": {}}
+Kamu adalah sistem ekstraksi informasi.
+
+Balas HANYA JSON valid.
+
+Format WAJIB:
+
+{"facts":{"key":"value"}}
+
+Jika tidak ada fakta baru:
+
+{"facts":{}}
+
+Jangan menambahkan penjelasan.
+Jangan memakai markdown.
+Jangan memakai codeblock.
 `.trim();
 
-    const rawContent = await fetchAIText(extractionSystem, `${sender}: ${message}`);
-    const raw = stripThinking(rawContent) || "{}";
-    const cleaned = raw.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(cleaned);
+    const rawContent = await fetchAIText(
+      extractionSystem,
+      `${sender}: ${message}`,
+    );
 
-    return parsed?.facts && typeof parsed.facts === "object" ? parsed.facts : {};
+    const raw = stripThinking(rawContent || "").trim();
+
+    if (!raw) {
+      return {};
+    }
+
+    console.log("[extractFacts raw]");
+    console.log(raw);
+
+    const match = raw.match(/\{[\s\S]*\}/);
+
+    if (!match) {
+      return {};
+    }
+
+    let parsed;
+
+    try {
+      parsed = JSON.parse(match[0]);
+    } catch (err) {
+      console.error("[extractFacts] JSON invalid");
+      console.error(match[0]);
+      return {};
+    }
+
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      Array.isArray(parsed)
+    ) {
+      return {};
+    }
+
+    if (
+      !parsed.facts ||
+      typeof parsed.facts !== "object" ||
+      Array.isArray(parsed.facts)
+    ) {
+      return {};
+    }
+
+    return parsed.facts;
   } catch (err) {
     console.error("[Neura extractFacts Error]");
     console.dir(err, { depth: null });
