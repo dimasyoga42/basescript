@@ -2,19 +2,18 @@ import { supa } from "../../../../src/config/supa.js";
 
 export const xtalFinder = async (name) => {
   const keyword = String(name ?? "").trim();
-
   if (!keyword) {
     return "Masukkan nama xtal.";
   }
 
+  // escape karakter spesial ilike agar tidak dianggap wildcard
+  const escaped = keyword.replace(/[%_]/g, (c) => `\\${c}`);
+
   const { data, error } = await supa
     .from("xtal")
-    .select(
-      "name, type, upgrade_route, stats, max_upgrade_route",
-    )
-    .ilike("name", `%${name}%`);
-
-  console.log({data})
+    .select("name, type, upgrade_route, stats, max_upgrade_route")
+    .ilike("name", `%${escaped}%`)
+    .limit(20);
 
   if (error) {
     throw error;
@@ -31,14 +30,10 @@ export const xtalFinder = async (name) => {
   }
 
   const item = data[0];
-
   return `${item.name}
-
-*${item.type ?? "-" }*
-
+*${item.type ?? "-"}*
 Stat Effect:
 ${item.stats ?? "-"}
-
 Rute:
 - ${item.upgrade_route ?? "-"}
 - ${item.max_upgrade_route ?? "-"}`;

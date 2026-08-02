@@ -44,6 +44,7 @@ ${memoryNote}
 - Kalau perlu tahu waktu/tanggal sekarang yang akurat, tulis {{tool:time}} di jawabanmu.
 - Kalau ada hitungan matematika yang perlu presisi, tulis {{tool:calc:EKSPRESI}}, contoh {{tool:calc:125*8}}.
 - Kalau ada tanya xtal tanyakan nama xtal dalam bahasa inggrisnya, tulis {{tool:xtal:name}}, contoh {{tool:xtal:fubbit}}.
+- Kalau ada yang tanya rekomendasi xtal terbaik silahkan tanyakan kebutuhan stat yang dia perlukan setelah itu, tulis {{tool:dump}} dan analisis hasil statnya dan, tulis {{tool:stat:nama stat}} contoh {{tool:stat:stability}}
 - Syntax tool ini otomatis diganti hasil aslinya sebelum dikirim ke user — jangan jelaskan syntax-nya ke user.
 
 # Gaya bicara (PENTING, biar nggak kaku kayak AI)

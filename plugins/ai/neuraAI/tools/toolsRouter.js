@@ -1,5 +1,6 @@
 import { safeCalc, currentTime } from "./basicTools.js";
 import { xtalFinder } from "./toramTools.js";
+import { xtalStatsDump, xtalStatSearch } from "./xtalsearch.js";
 
 const TOOL_PATTERN = /\{\{tool:([a-zA-Z0-9_]+)(?::([\s\S]*?))?\}\}/g;
 
@@ -7,6 +8,8 @@ const registry = {
   calc: async (arg) => safeCalc(arg),
   time: async () => currentTime(),
   xtal: async (arg) => xtalFinder(arg),
+  dump: async () => xtalStatsDump(),
+  stat: async (arg) => xtalStatSearch(arg)
 };
 
 export async function runTools(text) {
