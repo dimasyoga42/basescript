@@ -427,7 +427,7 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
     // jawaban ini berasal dari tool (mis. dump/list stat xtal) dan tidak boleh dipotong.
     const isToolAnswer = TOOL_CALL_PATTERN.test(answer);
 
-    answer = await runTools(answer);
+    answer = await runTools(answer, {msg, sock});
 
     group.history.push({
       sender,
