@@ -10,7 +10,28 @@ const db = path.resolve("db", "neura.json");
 
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
 const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.8";
-const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 160000;
+const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 1060000;
+
+// API membatasi field "prompt" maksimal 4000 karakter (lihat error: "Prompt must be less than 4000 characters").
+// Kasih margin aman di bawah 4000 supaya tidak mepet dan tetap lolos meski ada perhitungan karakter yang beda.
+const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 3800;
+// System prompt juga dijaga supaya tidak ikut membengkak (facts, persona, dll dari chatEngine).
+const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 3000;
+
+// Dipakai untuk mendeteksi apakah jawaban AI berisi pemanggilan tool (misal {{tool:dump}}),
+// SEBELUM diganti oleh runTools() menjadi hasil asli. Kalau iya, pesan akan dikirim utuh
+// tanpa dipecah/diketik bertahap oleh sendNaturally, supaya data tool (misal list stat xtal) tidak terpotong.
+const TOOL_CALL_PATTERN = /\{\{tool:[^}]+\}\}/i;
+
+/**
+ * Pangkas teks dari depan (buang bagian paling lama), simpan bagian akhir
+ * (konteks paling baru) supaya tetap utuh dan tidak melebihi batas karakter.
+ */
+function truncateFromStart(text, maxChars) {
+  const str = String(text ?? "");
+  if (str.length <= maxChars) return str;
+  return `...(dipotong)...\n${str.slice(str.length - maxChars)}`;
+}
 
 function extractTextFromApiResponse(data) {
   if (typeof data === "string") return data;
@@ -47,6 +68,9 @@ function extractTextFromApiResponse(data) {
 }
 
 async function fetchAIText(system, prompt) {
+  const safeSystem = truncateFromStart(system, MAX_SYSTEM_CHARS);
+  const safePrompt = truncateFromStart(prompt, MAX_PROMPT_CHARS);
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
 
@@ -55,8 +79,8 @@ async function fetchAIText(system, prompt) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        prompt,
-        system,
+        prompt: safePrompt,
+        system: safeSystem,
         temperature: Number(AI_TEMPERATURE),
       }),
       signal: controller.signal,
@@ -115,7 +139,7 @@ const chatEngine = new ChatEngine({
 const MAX_HISTORY = 3;
 const MAX_CONTEXT = 4;
 const MAX_MESSAGE_LENGTH = 2000;
-const MIN_LENGTH_FOR_EXTRACTION = 1000;
+const MIN_LENGTH_FOR_EXTRACTION = 5;
 
 const processingLocks = new Set();
 
@@ -306,7 +330,7 @@ const sendNaturally = async (sock, chatId, msg, text) => {
       await sock.sendPresenceUpdate("composing", chatId);
     } catch {}
 
-    const typingSpeed = randomBetween(15, 50);
+    const typingSpeed = randomBetween(15, 40);
 
     let typingDelay = Math.min(
       4000,
@@ -398,6 +422,11 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
     const system = chatEngine.buildSystemPrompt(senderId, sanitizedMessage);
 
     let answer = await getAIResponse(system, history, sender, sanitizedMessage);
+
+    // Deteksi pemanggilan tool SEBELUM diganti runTools, supaya bisa tahu
+    // jawaban ini berasal dari tool (mis. dump/list stat xtal) dan tidak boleh dipotong.
+    const isToolAnswer = TOOL_CALL_PATTERN.test(answer);
+
     answer = await runTools(answer);
 
     group.history.push({
@@ -413,7 +442,13 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
 
     saveUserData(db, database);
 
-    await sendNaturally(sock, chatId, msg, answer);
+    if (isToolAnswer) {
+      // Jawaban dari tool dikirim utuh (tidak dipecah/diketik bertahap)
+      // supaya data seperti list stat xtal tidak terpotong.
+      await sock.sendMessage(chatId, { text: answer }, { quoted: msg });
+    } else {
+      await sendNaturally(sock, chatId, msg, answer);
+    }
 
     if (sanitizedMessage.length >= MIN_LENGTH_FOR_EXTRACTION) {
       extractFacts(sender, sanitizedMessage)
