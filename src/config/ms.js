@@ -155,7 +155,6 @@ export const thumb = async (conn, m, title, body, footter, sub, img) => {
     await conn.messageBuilder(m.chat, { quoted: m })
         .setType("ButtonV2")
         .setTitle(title)
-        .setSubtitle(subtitle)
         .setBody(body)
         .setFooter(footter)
         .setImage(img)
