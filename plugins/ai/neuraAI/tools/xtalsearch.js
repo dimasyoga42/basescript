@@ -65,3 +65,36 @@ export const xtalStatSearch = async (statKeyword) => {
     )
     .join("\n\n")}`;
 };
+
+/**
+ * List ringkas: hanya nama xtal + stat efek yang cocok dengan kata kunci pencarian.
+ * Lebih ringan dari xtalStatSearch (tanpa rute upgrade), cocok untuk AI
+ * yang cuma butuh nama & stat untuk langsung membandingkan/merekomendasikan.
+ */
+export const xtalStatList = async (statKeyword) => {
+  const keyword = String(statKeyword ?? "").trim();
+  if (!keyword) {
+    return "Masukkan stat yang ingin dicari (misal: critical damage, attack speed).";
+  }
+
+  const escaped = keyword.replace(/[%_]/g, (c) => `\\${c}`);
+
+  const { data, error } = await supa
+    .from("xtal")
+    .select("name, stats")
+    .ilike("stats", `%${escaped}%`)
+    .order("name", { ascending: true })
+    .limit(50);
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data?.length) {
+    return `Tidak ada xtal dengan stat mengandung "${keyword}".`;
+  }
+
+  return data
+    .map((item) => `- ${item.name}: ${item.stats ?? "-"}`)
+    .join("\n");
+};
