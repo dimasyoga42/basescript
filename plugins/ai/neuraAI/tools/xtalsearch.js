@@ -44,7 +44,7 @@ export const xtalStatSearch = async (statKeyword) => {
     .from("xtal")
     .select("name, type, stats, upgrade_route, max_upgrade_route")
     .ilike("stats", `%${escaped}%`)
-    .limit(30);
+    .limit(20);
 
   if (error) {
     throw error;
@@ -84,7 +84,7 @@ export const xtalStatList = async (statKeyword) => {
     .select("name, stats")
     .ilike("stats", `%${escaped}%`)
     .order("name", { ascending: true })
-    .limit(50);
+    .limit(10);
 
   if (error) {
     throw error;
