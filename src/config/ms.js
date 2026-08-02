@@ -153,12 +153,12 @@ export async function demoAIRich(sock, m) {
 export const thumb = async (conn, m, title, body, footter, sub, img) => {
   try {
     await conn.messageBuilder(m.chat, { quoted: m })
-        .setType('Button')
+        .setType("ButtonV2")
         .setTitle(title)
-        .setSubtitle(sub)
-        .setFooter(footter)
-        .setThumbnail(`${thumbnail}`)
+        .setSubtitle(subtitle)
         .setBody(body)
+        .setFooter(footter)
+        .setImage(img)
         .addButton("cekvip", ".cekvip")
         .send();
   } catch (err) {
