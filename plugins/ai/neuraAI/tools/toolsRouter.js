@@ -17,7 +17,7 @@ export async function runTools(text) {
 
   for (const match of matches) {
     const [full, name, arg] = match;
-    const handler = registry[name];
+    const handler = await registry[name];
     let value;
     try {
       value = handler ? handler(arg) : `[tool ${name} tidak dikenal]`;
