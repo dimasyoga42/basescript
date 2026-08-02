@@ -104,8 +104,6 @@ const start = async () => {
                }
              }
            }
-           return; // stop di sini, jangan lanjut ke afk/ai/command
-
     } catch (err) {
       throw err
     }
