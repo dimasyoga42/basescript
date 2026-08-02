@@ -52,7 +52,7 @@ export const replyReader = async (ctx) => {
   };
 
   const text = extractText(quotedMessage).trim();
-
+  console.log(text)
   if (!text) {
     return "Pesan yang di-reply tidak mengandung teks yang bisa dibaca.";
   }
