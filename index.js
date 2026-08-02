@@ -86,6 +86,7 @@ const start = async () => {
     const m = messages[0];
     try {
       const reactionMsg = m.message.reactionMessage;
+      console.log(reactionMsg)
          if (reactionMsg) {
            const emoji = reactionMsg.text?.trim();
            const targetKey = reactionMsg.key;
