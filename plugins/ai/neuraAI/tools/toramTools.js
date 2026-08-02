@@ -5,7 +5,7 @@ export const xtalFinder = async (name) => {
     const { data, error } = await supa
       .from("xtal")
       .select("name, type, upgrade_rute, stats, max_upgrade_route")
-      .ilike("name", `%${name}%`).limit(1);
+      .ilike("name", `%${name}%`);
 
     if (error) throw error;
 
@@ -13,16 +13,23 @@ export const xtalFinder = async (name) => {
       return "xtal tidak ada";
     }
 
-    return data.map(
-      (item) => `${item.name}
+    if (data.length > 1) {
+      return `Ditemukan ${data.length} xtal:\n\n${data
+        .map((item, i) => `${i + 1}. ${item.name}`)
+        .join("\n")}`;
+    }
+
+    const item = data[0];
+
+    return `${item.name}
 *${item.type}*
+
 Stat Effect:
 ${item.stats}
 
 Rute:
 - ${item.upgrade_rute ?? "-"}
-- ${item.max_upgrade_route ?? "-"}`
-    );
+- ${item.max_upgrade_route ?? "-"}`;
   } catch (err) {
     throw err;
   }
