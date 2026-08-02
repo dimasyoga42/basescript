@@ -183,37 +183,74 @@ function chunkMessage(text) {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  if (sentences.length <= 2 || Math.random() < 0.3) {
+  if (sentences.length <= 2) {
+    return [text.trim()];
+  }
+
+  // hanya 35% kemungkinan dipecah
+  if (Math.random() >= 0.35) {
     return [text.trim()];
   }
 
   const chunks = [];
   let i = 0;
+
   while (i < sentences.length) {
-    const roll = Math.random();
-    const groupSize = roll < 0.55 ? 1 : roll < 0.85 ? 2 : 3;
-    const group = sentences.slice(i, i + groupSize).join(" ").trim();
-    if (group) chunks.push(group);
+    const remain = sentences.length - i;
+
+    let groupSize;
+
+    if (remain === 1) {
+      groupSize = 1;
+    } else {
+      const roll = Math.random();
+
+      if (roll < 0.55) {
+        groupSize = 1;
+      } else if (roll < 0.85) {
+        groupSize = 2;
+      } else {
+        groupSize = 3;
+      }
+
+      groupSize = Math.min(groupSize, remain);
+    }
+
+    chunks.push(
+      sentences.slice(i, i + groupSize).join(" ").trim(),
+    );
+
     i += groupSize;
   }
+
   return chunks;
 }
 
 const sendNaturally = async (sock, chatId, msg, text) => {
   const chunks = chunkMessage(text);
 
+  if (chunks.length === 1) {
+    await sock.sendMessage(
+      chatId,
+      { text: chunks[0] },
+      { quoted: msg },
+    );
+    return;
+  }
+
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
-    if (!chunk) continue;
 
     try {
       await sock.sendPresenceUpdate("composing", chatId);
-    } catch {
-      // abaikan kalau presence gagal
-    }
+    } catch {}
 
     const typingSpeed = randomBetween(15, 40);
-    let typingDelay = Math.min(4000, Math.max(350, chunk.length * typingSpeed));
+
+    let typingDelay = Math.min(
+      4000,
+      Math.max(350, chunk.length * typingSpeed),
+    );
 
     if (Math.random() < 0.15) {
       typingDelay += randomBetween(800, 2000);
@@ -221,10 +258,17 @@ const sendNaturally = async (sock, chatId, msg, text) => {
 
     await new Promise((r) => setTimeout(r, typingDelay));
 
-    await sock.sendMessage(chatId, { text: chunk }, i === 0 ? { quoted: msg } : {});
+    await sock.sendMessage(
+      chatId,
+      { text: chunk },
+      i === 0 ? { quoted: msg } : {},
+    );
 
-    const gap = randomBetween(250, 900);
-    await new Promise((r) => setTimeout(r, gap));
+    if (i !== chunks.length - 1) {
+      await new Promise((r) =>
+        setTimeout(r, randomBetween(250, 900)),
+      );
+    }
   }
 
   try {
