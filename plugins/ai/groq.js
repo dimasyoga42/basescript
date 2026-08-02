@@ -1,6 +1,5 @@
 import path from "path";
 import dotenv from "dotenv";
-import axios from "axios";
 import { getUserData, saveUserData } from "../../src/config/func.js";
 import ChatEngine from "./neuraAI/ai/chatengine.js";
 import { runTools } from "./neuraAI/tools/toolsRouter.js";
@@ -11,19 +10,7 @@ const db = path.resolve("db", "neura.json");
 
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
 const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.4";
-
-// ==== Anti-overload config ====
-// Batas jumlah request yang boleh jalan bersamaan ke AI API.
-// Sisanya akan antre otomatis (mencegah 429/431/overload saat banyak grup aktif bareng).
-const AI_MAX_CONCURRENT_REQUESTS = Number(process.env.AI_MAX_CONCURRENT_REQUESTS) || 3;
-
-// Batas panjang karakter system prompt & full prompt sebelum dikirim.
-// GET request menaruh semuanya di query string URL, jadi kalau kepanjangan
-// server bisa balas 431 (Request Header Fields Too Large).
-const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 3000;
-const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 4000;
-
-const AI_MAX_RETRIES = Number(process.env.AI_MAX_RETRIES) || 2;
+const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 30000;
 
 function extractTextFromApiResponse(data) {
   if (typeof data === "string") return data;
@@ -59,122 +46,27 @@ function extractTextFromApiResponse(data) {
   return "";
 }
 
-/**
- * Concurrency limiter sederhana (tanpa dependency tambahan).
- * Memastikan maksimal N request ke AI API berjalan bersamaan;
- * request lain menunggu giliran di antrian.
- */
-class ConcurrencyLimiter {
-  constructor(maxConcurrent) {
-    this.maxConcurrent = Math.max(1, maxConcurrent);
-    this.running = 0;
-    this.queue = [];
-  }
-
-  run(task) {
-    return new Promise((resolve, reject) => {
-      const attempt = async () => {
-        this.running++;
-        try {
-          const result = await task();
-          resolve(result);
-        } catch (err) {
-          reject(err);
-        } finally {
-          this.running--;
-          this._next();
-        }
-      };
-
-      if (this.running < this.maxConcurrent) {
-        attempt();
-      } else {
-        this.queue.push(attempt);
-      }
-    });
-  }
-
-  _next() {
-    if (this.queue.length === 0) return;
-    if (this.running >= this.maxConcurrent) return;
-    const next = this.queue.shift();
-    next();
-  }
-}
-
-const aiLimiter = new ConcurrencyLimiter(AI_MAX_CONCURRENT_REQUESTS);
-
-/**
- * Pangkas teks dari depan (buang bagian paling lama) supaya
- * konteks paling baru tetap utuh, tapi total panjang tidak melebihi limit.
- */
-function truncateFromStart(text, maxChars) {
-  const str = String(text ?? "");
-  if (str.length <= maxChars) return str;
-  return `...(dipotong)...\n${str.slice(str.length - maxChars)}`;
-}
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-async function requestAIOnce(system, prompt) {
-  const response = await axios.get(AI_API_ENDPOINT, {
-    params: {
-      prompt,
-      system,
-      temperature: String(AI_TEMPERATURE),
-    },
-    timeout: 0,
-  });
-
-  return extractTextFromApiResponse(response.data);
-}
-
 async function fetchAIText(system, prompt) {
-  let safeSystem = truncateFromStart(system, MAX_SYSTEM_CHARS);
-  let safePrompt = truncateFromStart(prompt, MAX_PROMPT_CHARS);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
 
-  return aiLimiter.run(async () => {
-    let lastErr;
+  try {
+    const url = new URL(AI_API_ENDPOINT);
+    url.searchParams.set("prompt", prompt);
+    url.searchParams.set("system", system);
+    url.searchParams.set("temperature", String(AI_TEMPERATURE));
 
-    for (let attempt = 0; attempt <= AI_MAX_RETRIES; attempt++) {
-      try {
-        return await requestAIOnce(safeSystem, safePrompt);
-      } catch (err) {
-        lastErr = err;
+    const response = await fetch(url.toString(), { signal: controller.signal });
 
-        const status = err?.response?.status;
-        const isHeaderTooLarge = status === 431;
-        const isRateLimited = status === 429;
-        const isServerError = status >= 500 && status < 600;
-
-        if (isHeaderTooLarge) {
-          // Pangkas lebih agresif lalu coba lagi.
-          safeSystem = truncateFromStart(safeSystem, Math.floor(safeSystem.length * 0.6));
-          safePrompt = truncateFromStart(safePrompt, Math.floor(safePrompt.length * 0.6));
-          console.error(`[Neura] 431 diterima, memangkas prompt dan mencoba lagi (percobaan ${attempt + 1}).`);
-          continue;
-        }
-
-        if ((isRateLimited || isServerError) && attempt < AI_MAX_RETRIES) {
-          const backoffMs = 500 * Math.pow(2, attempt);
-          console.error(`[Neura] Status ${status}, retry dalam ${backoffMs}ms (percobaan ${attempt + 1}).`);
-          await sleep(backoffMs);
-          continue;
-        }
-
-        if (status) {
-          throw new Error(`AI API merespons dengan status ${status}`);
-        }
-
-        throw err;
-      }
+    if (!response.ok) {
+      throw new Error(`AI API merespons dengan status ${response.status}`);
     }
 
-    if (lastErr?.response?.status) {
-      throw new Error(`AI API merespons dengan status ${lastErr.response.status}`);
-    }
-    throw lastErr;
-  });
+    const data = await response.json();
+    return extractTextFromApiResponse(data);
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 const neuraPersona = {
@@ -208,8 +100,8 @@ const chatEngine = new ChatEngine({
   evolutionDbPath: path.resolve("db", "neura_evolution.json"),
 });
 
-const MAX_HISTORY = 100;
-const MAX_CONTEXT = 5;
+const MAX_HISTORY = 500;
+const MAX_CONTEXT = 10;
 const MAX_MESSAGE_LENGTH = 2000;
 const MIN_LENGTH_FOR_EXTRACTION = 8;
 
@@ -249,7 +141,9 @@ const getAIResponse = async (system, history, sender, message) => {
     console.error("[Neura getAIResponse Error]");
     console.dir(err, { depth: null });
 
-    if (err?.code === "ECONNREFUSED" || err?.code === "ENOTFOUND") {
+    if (err?.name === "AbortError") {
+      console.error(`[Neura] Request ke AI API timeout setelah ${AI_REQUEST_TIMEOUT_MS}ms.`);
+    } else if (err?.cause?.code === "ECONNREFUSED" || err?.message?.includes("fetch failed")) {
       console.error(`[Neura] Tidak bisa connect ke AI API di ${AI_API_ENDPOINT}.`);
     }
 
