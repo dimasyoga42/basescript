@@ -57,5 +57,5 @@ export const replyReader = async (ctx) => {
     return "Pesan yang di-reply tidak mengandung teks yang bisa dibaca.";
   }
 
-  return `Isi pesan yang di-reply: "${text.slice(0, 500)}"`;
+  return `"${text.slice(0, 500)}"`;
 };
