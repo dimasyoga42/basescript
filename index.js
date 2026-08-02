@@ -113,27 +113,29 @@ const start = async () => {
       await cronMt(sock);
       await cronCode(sock);
       try {
-          // === Handle reaksi hapus pesan (🗑️) — proses duluan & return ===
-          const reactionMsg = m.message.reactionMessage;
-          if (reactionMsg) {
-            const emoji = reactionMsg.text?.trim();
-            const targetKey = reactionMsg.key;
-            const chatId = targetKey?.remoteJid;
+        const reactionMsg = m.message.reactionMessage;
+           if (reactionMsg) {
+             const emoji = reactionMsg.text?.trim();
+             const targetKey = reactionMsg.key;
+             const chatId = targetKey?.remoteJid;
 
-            if (emoji === "🗑️" && chatId?.endsWith("@g.us")) {
-              m.chat = chatId;
-              m.sender = m.key.participant || m.key.remoteJid;
+             if (emoji === "🗑️" && chatId?.endsWith("@g.us")) {
+               m.chat = chatId;
+               m.sender = m.key.participant || m.key.remoteJid;
 
-              if (await isAdmin(sock, m)) {
-                try {
-                  await sock.sendMessage(chatId, { delete: targetKey });
-                } catch (err) {
-                  console.error("Gagal hapus pesan lewat reaksi:", err);
-                }
-              }
-            }
-            return; // stop di sini, jangan lanjut ke afk/ai/command
-          }
+               if (await isAdmin(sock, m)) {
+                 try {
+                   await sock.sendMessage(chatId, { delete: targetKey });
+                 } catch (err) {
+                   console.error("Gagal hapus pesan lewat reaksi:", err);
+                 }
+               }
+             }
+             return; // stop di sini, jangan lanjut ke afk/ai/command
+           }
+      } catch (err) {
+        throw err
+      }
       // setInterval(
       //   () => {
       //     cronCode(sock);
