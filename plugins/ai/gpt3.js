@@ -28,8 +28,9 @@ async function scrapeGpt3(messages) {
   }
 }
 
-const handler = async (m, {conn}) => {
-  if (!text) {
+const handler = async (m, { conn }) => {
+  const texts = m.text.replace(/\.ai/, "").trim();
+  if (!texts) {
     throw `Contoh: .ai Halo, siapa kamu?`
   }
 
@@ -42,7 +43,7 @@ const handler = async (m, {conn}) => {
         content:
           "Kamu adalah Neura, asisten AI yang ramah, santai, dan membantu. Jawab dalam Bahasa Indonesia yang jelas.",
       },
-      { role: "user", content: text },
+      { role: "user", content: texts },
     ])
 
     if (!result) {
