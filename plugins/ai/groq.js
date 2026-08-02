@@ -135,6 +135,7 @@ const getAIResponse = async (system, history, sender, message) => {
 
     const rawContent = await fetchAIText(String(system ?? ""), fullPrompt);
     const content = stripThinking(rawContent);
+    console.log(content);
 
     return content?.length ? content : "Neura sedang tidak mood berbicara sekarang...";
   } catch (err) {
