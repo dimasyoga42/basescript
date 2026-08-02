@@ -1,58 +1,97 @@
 import path from "path";
 import dotenv from "dotenv";
 import { getUserData, saveUserData } from "../../src/config/func.js";
-import { Ollama } from "ollama";
 import ChatEngine from "./neuraAI/ai/chatengine.js";
 import { runTools } from "./neuraAI/tools/toolsRouter.js";
 
 dotenv.config();
 
 const db = path.resolve("db", "neura.json");
-const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://127.0.0.1:11434";
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2:3b";
 
-const ollama = new Ollama({ host: OLLAMA_HOST });
+const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
+const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.4";
+const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 30000;
 
-async function verifyOllamaSetup() {
-  try {
-    const { models } = await ollama.list();
-    const modelNames = models.map((m) => m.name);
+function extractTextFromApiResponse(data) {
+  if (typeof data === "string") return data;
 
-    console.log(`[Neura] Terhubung ke Ollama di ${OLLAMA_HOST}`);
-    console.log(`[Neura] Model tersedia: ${modelNames.join(", ") || "(kosong)"}`);
-
-    if (!modelNames.includes(OLLAMA_MODEL)) {
-      console.warn(
-        `[Neura] PERINGATAN: Model "${OLLAMA_MODEL}" tidak ditemukan di daftar model.\n` +
-          `        Jalankan: ollama pull ${OLLAMA_MODEL.split(":")[0]}\n` +
-          `        Atau sesuaikan OLLAMA_MODEL di .env dengan salah satu dari: ${modelNames.join(", ")}`
+  if (data && typeof data === "object") {
+    if (data.status === false) {
+      console.error(
+        "[Neura] AI API mengembalikan status false:",
+        data.message || data.error || "(tanpa pesan error)"
       );
+      return "";
     }
-  } catch (err) {
-    console.error(
-      `[Neura] GAGAL connect ke Ollama di ${OLLAMA_HOST}.\n` +
-        `        Pastikan server jalan ("ollama serve") dan host/port benar.\n` +
-        `        Error asli:`,
-      err?.message || err
-    );
+
+    if (data.data && typeof data.data === "object" && typeof data.data.response === "string") {
+      return data.data.response;
+    }
+
+    if (typeof data.data === "string") return data.data;
+
+    if (data.data && typeof data.data === "object") {
+      if (typeof data.data.message === "string") return data.data.message;
+      if (typeof data.data.content === "string") return data.data.content;
+      if (typeof data.data.text === "string") return data.data.text;
+      if (typeof data.data.result === "string") return data.data.result;
+    }
+
+    if (typeof data.response === "string") return data.response;
+    if (typeof data.result === "string") return data.result;
+    if (typeof data.message === "string") return data.message;
+    if (typeof data.content === "string") return data.content;
+  }
+
+  return "";
+}
+
+async function fetchAIText(system, prompt) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+
+  try {
+    const url = new URL(AI_API_ENDPOINT);
+    url.searchParams.set("prompt", prompt);
+    url.searchParams.set("system", system);
+    url.searchParams.set("temperature", String(AI_TEMPERATURE));
+
+    const response = await fetch(url.toString(), { signal: controller.signal });
+
+    if (!response.ok) {
+      throw new Error(`AI API merespons dengan status ${response.status}`);
+    }
+
+    const data = await response.json();
+    return extractTextFromApiResponse(data);
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
-verifyOllamaSetup();
 
 const neuraPersona = {
   name: "Neura",
   age: 18,
   personality: [
-    "Ceria",
-    "Ramah",
-    "Baik hati",
-    "Kadang sedikit judes",
-    "Santai saat berbicara",
-    "Menggunakan bahasa gaul seperlunya",
+    "Judes",
+    "Nyolot",
+    "Cuek",
+    "Sarkastik",
+    "Blak-blakan",
+    "Susah akrab sama orang baru",
+    "Lumayan keras kepala",
+    "Logis",
+    "Iseng kalau lagi mood",
+    "Nggak gampang baper",
   ],
   languages: ["Indonesia", "Inggris", "Jepang", "Korea"],
   hobbies: ["Menonton film", "Memasak", "Olahraga"],
-  dislikes: ["Orang yang sok tahu", "Orang yang terlalu ingin tahu kehidupan pribadimu"],
+  dislikes: [
+    "Orang yang sok tahu",
+    "Orang yang terlalu ingin tahu kehidupan pribadimu",
+    "Orang yang nyolot duluan tanpa alasan",
+    "Basa-basi kepanjangan",
+  ],
 };
 
 const chatEngine = new ChatEngine({
@@ -74,59 +113,38 @@ function stripThinking(text) {
     .trim();
 }
 
-// Deteksi apakah model butuh param "think" (khusus model reasoning
-// seperti deepseek-r1, qwen3-thinking, dll). Mistral/Llama/Gemma biasa
-// TIDAK butuh ini, dan mengirimnya bisa memicu error di beberapa versi
-// Ollama server yang lebih lama. Jadi kita hanya kirim kalau nama model
-// mengindikasikan model reasoning.
-function supportsThinkParam(modelName) {
-  return /deepseek-r1|qwen3.*thinking|thinking/i.test(modelName);
-}
-
 const getAIResponse = async (system, history, sender, message) => {
   try {
-    const messages = [{ role: "system", content: String(system ?? "") }];
+    const conversationLines = [];
 
     for (const item of history) {
       const userMessage = typeof item?.message === "string" ? item.message.trim() : "";
       const assistantMessage = typeof item?.answer === "string" ? item.answer.trim() : "";
 
       if (userMessage.length) {
-        messages.push({ role: "user", content: `${item.sender || "Unknown"}: ${userMessage}` });
+        conversationLines.push(`${item.sender || "Unknown"}: ${userMessage}`);
       }
       if (assistantMessage.length) {
-        messages.push({ role: "assistant", content: assistantMessage });
+        conversationLines.push(`Neura: ${assistantMessage}`);
       }
     }
 
-    messages.push({ role: "user", content: `${sender}: ${String(message ?? "").trim()}` });
+    conversationLines.push(`${sender}: ${String(message ?? "").trim()}`);
 
-    const chatOptions = {
-      model: OLLAMA_MODEL,
-      messages,
-    };
-    if (supportsThinkParam(OLLAMA_MODEL)) {
-      chatOptions.think = false;
-    }
+    const fullPrompt = conversationLines.join("\n");
 
-    const response = await ollama.chat(chatOptions);
+    const rawContent = await fetchAIText(String(system ?? ""), fullPrompt);
+    const content = stripThinking(rawContent);
 
-    const content = stripThinking(response?.message?.content);
     return content?.length ? content : "Neura sedang tidak mood berbicara sekarang...";
   } catch (err) {
     console.error("[Neura getAIResponse Error]");
     console.dir(err, { depth: null });
 
-    // Pesan error yang lebih spesifik untuk kasus paling umum
-    if (err?.cause?.code === "ECONNREFUSED" || err?.message?.includes("fetch failed")) {
-      console.error(
-        `[Neura] Tidak bisa connect ke Ollama di ${OLLAMA_HOST}. Cek apakah "ollama serve" sedang jalan.`
-      );
-    } else if (err?.message?.toLowerCase().includes("not found")) {
-      console.error(
-        `[Neura] Model "${OLLAMA_MODEL}" tidak ditemukan. Jalankan "ollama pull ${OLLAMA_MODEL}" ` +
-          `atau cek nama model dengan "ollama list".`
-      );
+    if (err?.name === "AbortError") {
+      console.error(`[Neura] Request ke AI API timeout setelah ${AI_REQUEST_TIMEOUT_MS}ms.`);
+    } else if (err?.cause?.code === "ECONNREFUSED" || err?.message?.includes("fetch failed")) {
+      console.error(`[Neura] Tidak bisa connect ke AI API di ${AI_API_ENDPOINT}.`);
     }
 
     return "Neura sedang tidak mood berbicara sekarang...";
@@ -145,16 +163,8 @@ Balas HANYA JSON valid, tanpa teks lain, format persis:
 Kalau tidak ada info baru, balas: {"facts": {}}
 `.trim();
 
-    const response = await ollama.chat({
-      model: OLLAMA_MODEL,
-      messages: [
-        { role: "system", content: extractionSystem },
-        { role: "user", content: `${sender}: ${message}` },
-      ],
-      format: "json",
-    });
-
-    const raw = stripThinking(response?.message?.content) || "{}";
+    const rawContent = await fetchAIText(extractionSystem, `${sender}: ${message}`);
+    const raw = stripThinking(rawContent) || "{}";
     const cleaned = raw.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleaned);
 
@@ -168,13 +178,11 @@ Kalau tidak ada info baru, balas: {"facts": {}}
 
 const randomBetween = (min, max) => Math.random() * (max - min) + min;
 
-// pecah teks jadi chunk-chunk yang random ukurannya
 function chunkMessage(text) {
   const sentences = (text.match(/[^.!?\n]+[.!?\n]*/g) || [text])
     .map((s) => s.trim())
     .filter(Boolean);
 
-  // kalau kalimatnya sedikit, atau lagi "males mecah" (30% peluang), kirim sekaligus
   if (sentences.length <= 2 || Math.random() < 0.3) {
     return [text.trim()];
   }
@@ -183,7 +191,6 @@ function chunkMessage(text) {
   let i = 0;
   while (i < sentences.length) {
     const roll = Math.random();
-    // 55% gabung 1 kalimat, 30% gabung 2 kalimat, 15% gabung 3 kalimat
     const groupSize = roll < 0.55 ? 1 : roll < 0.85 ? 2 : 3;
     const group = sentences.slice(i, i + groupSize).join(" ").trim();
     if (group) chunks.push(group);
@@ -192,7 +199,6 @@ function chunkMessage(text) {
   return chunks;
 }
 
-// kirim balasan bertahap kayak orang ngetik, dengan variasi random
 const sendNaturally = async (sock, chatId, msg, text) => {
   const chunks = chunkMessage(text);
 
@@ -206,21 +212,17 @@ const sendNaturally = async (sock, chatId, msg, text) => {
       // abaikan kalau presence gagal
     }
 
-    // kecepatan ngetik manusia bervariasi (15-40ms per karakter)
     const typingSpeed = randomBetween(15, 40);
     let typingDelay = Math.min(4000, Math.max(350, chunk.length * typingSpeed));
 
-    // sesekali (15% peluang) ada jeda "mikir dulu" yang lebih lama
     if (Math.random() < 0.15) {
       typingDelay += randomBetween(800, 2000);
     }
 
     await new Promise((r) => setTimeout(r, typingDelay));
 
-    // quote cuma di pesan pertama, biar nggak keliatan kaku
     await sock.sendMessage(chatId, { text: chunk }, i === 0 ? { quoted: msg } : {});
 
-    // jeda antar pesan juga random, biar polanya nggak ketebak
     const gap = randomBetween(250, 900);
     await new Promise((r) => setTimeout(r, gap));
   }
@@ -291,7 +293,7 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
     const system = chatEngine.buildSystemPrompt(senderId, sanitizedMessage);
 
     let answer = await getAIResponse(system, history, sender, sanitizedMessage);
-    answer = await runTools(answer); // ganti {{tool:...}} jadi hasil asli
+    answer = await runTools(answer);
 
     group.history.push({
       sender,
