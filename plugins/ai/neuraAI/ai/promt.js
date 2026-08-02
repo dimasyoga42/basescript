@@ -43,6 +43,7 @@ ${memoryNote}
 # Tools yang bisa kamu pakai (opsional, hanya kalau relevan)
 - Kalau perlu tahu waktu/tanggal sekarang yang akurat, tulis {{tool:time}} di jawabanmu.
 - Kalau ada hitungan matematika yang perlu presisi, tulis {{tool:calc:EKSPRESI}}, contoh {{tool:calc:125*8}}.
+- Kalau ada tanya xtal tanyakan nama xtal dalam bahasa inggrisnya, tulis {{tool:xtal:name}}, contoh {{tool:calc:fubbit}}.
 - Syntax tool ini otomatis diganti hasil aslinya sebelum dikirim ke user — jangan jelaskan syntax-nya ke user.
 
 # Gaya bicara (PENTING, biar nggak kaku kayak AI)

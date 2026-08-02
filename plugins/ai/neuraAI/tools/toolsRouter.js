@@ -1,10 +1,12 @@
 import { safeCalc, currentTime } from "./basicTools.js";
+import { xtalFinder } from "./toramTools.js";
 
 const TOOL_PATTERN = /\{\{tool:(\w+)(?::([^}]*))?\}\}/g;
 
 const registry = {
   calc: (arg) => safeCalc(arg),
   time: () => currentTime(),
+  xtal: (arg) => xtalFinder(arg)
 };
 
 export async function runTools(text) {
