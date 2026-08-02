@@ -9,8 +9,8 @@ dotenv.config();
 const db = path.resolve("db", "neura.json");
 
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
-const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.4";
-const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 30000;
+const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.8";
+const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 60000;
 
 function extractTextFromApiResponse(data) {
   if (typeof data === "string") return data;
@@ -100,10 +100,10 @@ const chatEngine = new ChatEngine({
   evolutionDbPath: path.resolve("db", "neura_evolution.json"),
 });
 
-const MAX_HISTORY = 500;
-const MAX_CONTEXT = 10;
+const MAX_HISTORY = 20;
+const MAX_CONTEXT = 12;
 const MAX_MESSAGE_LENGTH = 2000;
-const MIN_LENGTH_FOR_EXTRACTION = 8;
+const MIN_LENGTH_FOR_EXTRACTION = 5;
 
 const processingLocks = new Set();
 
