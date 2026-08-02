@@ -31,6 +31,7 @@ import { cronLive } from "./plugins/_function/_cornlive.js";
 import { cronMt } from "./plugins/_function/_cornmt.js";
 import { cronCode } from "./plugins/_function/_codes.js";
 import { isAdmin } from "./plugins/_function/_admin.js";
+import { getDevice } from "@whiskeysockets/baileys";
 dotenv.config();
 const start = async () => {
   // Load semua plugin dulu sebelum bot jalan
@@ -119,7 +120,7 @@ const start = async () => {
         if (!remoteJid?.endsWith("@g.us")) return; // fitur ini cuma buat grup
         if (!(await isAdmin(sock, m))) return; // cek admin
 
-        await sock.sendMessage(remoteJid, {
+        await sock.sendMessage(m.chat, {
           delete: reaction.key,
         });
       }

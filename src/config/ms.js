@@ -7,6 +7,7 @@
 // =========================================================
 
 import { Button, ButtonV2, Carousel, AIRich } from "@ryuu-reinzz/luna-lib";
+import { thumbnail } from "../../config.js";
 
 // -------------------------------------------------------
 // 1. BUTTON (Native Flow Message) - via messageBuilder
@@ -152,12 +153,13 @@ export async function demoAIRich(sock, m) {
 export const thumb = async (conn, m, title, body, footter, sub, img) => {
   try {
     await conn.messageBuilder(m.chat, { quoted: m })
-        .setType('AIRich')
+        .setType('Button')
         .setTitle(title)
         .setSubtitle(sub)
         .setFooter(footter)
-        .addText(`${body}`)
-        .addSuggest(["Neura", "Toram Online", "guide"])
+        .setThumbnail(`${thumbnail}`)
+        .setBody({body)
+        .addButton("cekvip", ".cekvip")
         .send();
   } catch (err) {
     console.log("terjadi Kesalahan saat load message: " + err)
