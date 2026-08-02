@@ -17,13 +17,18 @@ export async function runTools(text) {
 
   for (const match of matches) {
     const [full, name, arg] = match;
-    const handler = await registry[name];
+    const handler = registry[name];
+
     let value;
+
     try {
-      value = handler ? handler(arg) : `[tool ${name} tidak dikenal]`;
+      value = handler
+        ? await handler(arg)
+        : `[tool ${name} tidak dikenal]`;
     } catch {
       value = `[tool ${name} error]`;
     }
+
     result = result.replace(full, String(value));
   }
 
