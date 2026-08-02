@@ -12,7 +12,9 @@ export const xtalFinder = async (name) => {
     .select(
       "name, type, upgrade_route, stats, max_upgrade_route",
     )
-    .ilike("name", `%${keyword}%`);
+    .ilike("name", `%${name}%`);
+
+  console.log({data})
 
   if (error) {
     throw error;
