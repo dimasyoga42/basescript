@@ -100,7 +100,7 @@ const chatEngine = new ChatEngine({
   evolutionDbPath: path.resolve("db", "neura_evolution.json"),
 });
 
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 500;
 const MAX_CONTEXT = 10;
 const MAX_MESSAGE_LENGTH = 2000;
 const MIN_LENGTH_FOR_EXTRACTION = 8;
