@@ -51,19 +51,31 @@ async function fetchAIText(system, prompt) {
   const timeoutId = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
 
   try {
-    const url = new URL(AI_API_ENDPOINT);
-    url.searchParams.set("prompt", prompt);
-    url.searchParams.set("system", system);
-    url.searchParams.set("temperature", String(AI_TEMPERATURE));
-
-    const response = await fetch(url.toString(), { signal: controller.signal });
+    const response = await fetch(AI_API_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt,
+        system,
+        temperature: Number(AI_TEMPERATURE),
+      }),
+      signal: controller.signal,
+    });
 
     if (!response.ok) {
+      const errBody = await response.text().catch(() => "");
+      console.error(`[Neura] AI API status ${response.status}: ${errBody.slice(0, 500)}`);
       throw new Error(`AI API merespons dengan status ${response.status}`);
     }
 
     const data = await response.json();
-    return extractTextFromApiResponse(data);
+    const text = extractTextFromApiResponse(data);
+
+    if (!text) {
+      console.error("[Neura] Response kosong dari API, raw data:", JSON.stringify(data).slice(0, 500));
+    }
+
+    return text;
   } finally {
     clearTimeout(timeoutId);
   }
@@ -100,8 +112,8 @@ const chatEngine = new ChatEngine({
   evolutionDbPath: path.resolve("db", "neura_evolution.json"),
 });
 
-const MAX_HISTORY = 5;
-const MAX_CONTEXT = 10;
+const MAX_HISTORY = 2;
+const MAX_CONTEXT = 4;
 const MAX_MESSAGE_LENGTH = 2000;
 const MIN_LENGTH_FOR_EXTRACTION = 10;
 

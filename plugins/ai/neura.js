@@ -16,7 +16,7 @@ export const messageHandler = async (sock, chatId, msg) => {
 
   // Normalisasi pesan
   const lowerText = text?.toLowerCase().trim() || "";
-  const botName = "bot";
+  const botName = "neura";
 
   // Cek apakah pesan adalah replay ke bot
   const isReplyToBot =
