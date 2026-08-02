@@ -38,6 +38,6 @@ Stat Effect:
 ${item.stats ?? "-"}
 
 Rute:
-- ${item.upgrade_rute ?? "-"}
+- ${item.upgrade_route ?? "-"}
 - ${item.max_upgrade_route ?? "-"}`;
 };
