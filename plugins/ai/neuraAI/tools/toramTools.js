@@ -1,36 +1,43 @@
 import { supa } from "../../../../src/config/supa.js";
 
 export const xtalFinder = async (name) => {
-  try {
-    const { data, error } = await supa
-      .from("xtal")
-      .select("name, type, upgrade_rute, stats, max_upgrade_route")
-      .ilike("name", `%${name}%`);
+  const keyword = String(name ?? "").trim();
 
-    if (error) throw error;
+  if (!keyword) {
+    return "Masukkan nama xtal.";
+  }
 
-    if (!data || data.length === 0) {
-      return "xtal tidak ada";
-    }
+  const { data, error } = await supa
+    .from("xtal")
+    .select(
+      "name, type, upgrade_rute, stats, max_upgrade_route",
+    )
+    .ilike("name", `%${keyword}%`);
 
-    if (data.length > 1) {
-      return `Ditemukan ${data.length} xtal:\n\n${data
-        .map((item, i) => `${i + 1}. ${item.name}`)
-        .join("\n")}`;
-    }
+  if (error) {
+    throw error;
+  }
 
-    const item = data[0];
+  if (!data?.length) {
+    return "Xtal tidak ditemukan.";
+  }
 
-    return `${item.name}
-*${item.type}*
+  if (data.length > 1) {
+    return `Ditemukan ${data.length} xtal:\n\n${data
+      .map((item, index) => `${index + 1}. ${item.name}`)
+      .join("\n")}`;
+  }
+
+  const item = data[0];
+
+  return `${item.name}
+
+*${item.type ?? "-" }*
 
 Stat Effect:
-${item.stats}
+${item.stats ?? "-"}
 
 Rute:
 - ${item.upgrade_rute ?? "-"}
 - ${item.max_upgrade_route ?? "-"}`;
-  } catch (err) {
-    throw err;
-  }
 };

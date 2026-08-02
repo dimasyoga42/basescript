@@ -1,32 +1,39 @@
 import { safeCalc, currentTime } from "./basicTools.js";
 import { xtalFinder } from "./toramTools.js";
 
-const TOOL_PATTERN = /\{\{tool:(\w+)(?::([^}]*))?\}\}/g;
+const TOOL_PATTERN = /\{\{tool:([a-zA-Z0-9_]+)(?::([\s\S]*?))?\}\}/g;
 
 const registry = {
-  calc: (arg) => safeCalc(arg),
-  time: () => currentTime(),
-  xtal: (arg) => xtalFinder(arg)
+  calc: async (arg) => safeCalc(arg),
+  time: async () => currentTime(),
+  xtal: async (arg) => xtalFinder(arg),
 };
 
 export async function runTools(text) {
-  if (!text || !text.includes("{{tool:")) return text;
+  if (typeof text !== "string" || !text.includes("{{tool:")) {
+    return text;
+  }
 
   let result = text;
-  const matches = [...text.matchAll(TOOL_PATTERN)];
 
-  for (const match of matches) {
-    const [full, name, arg] = match;
+  for (const match of text.matchAll(TOOL_PATTERN)) {
+    const [full, name, rawArg] = match;
+
+    const arg = rawArg?.trim() ?? "";
+
     const handler = registry[name];
 
     let value;
 
     try {
-      value = handler
-        ? await handler(arg)
-        : `[tool ${name} tidak dikenal]`;
-    } catch {
-      value = `[tool ${name} error]`;
+      if (!handler) {
+        value = `[tool ${name} tidak dikenal]`;
+      } else {
+        value = await handler(arg);
+      }
+    } catch (err) {
+      console.error(`[Tool Error] ${name}`, err);
+      value = `[tool ${name} error: ${err.message}]`;
     }
 
     result = result.replace(full, String(value));
