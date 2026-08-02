@@ -1,8 +1,7 @@
 import { safeCalc, currentTime } from "./basicTools.js";
 import { xtalFinder } from "./toramTools.js";
 import { xtalStatsDump, xtalStatSearch } from "./xtalsearch.js";
-import { replyReader } from "./replyReader.js";
-
+import { replyReader } from "./replayrender.js";
 const TOOL_PATTERN = /\{\{tool:([a-zA-Z0-9_]+)(?::([\s\S]*?))?\}\}/g;
 
 const registry = {
