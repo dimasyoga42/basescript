@@ -84,7 +84,31 @@ const start = async () => {
     if (type !== "notify") return;
 
     const m = messages[0];
-    console.log(m);
+    try {
+      const reactionMsg = m.message.reactionMessage;
+         if (reactionMsg) {
+           const emoji = reactionMsg.text?.trim();
+           const targetKey = reactionMsg.key;
+           const chatId = targetKey?.remoteJid;
+
+           if (emoji === "🗑️" && chatId?.endsWith("@g.us")) {
+             m.chat = chatId;
+             m.sender = m.key.participant || m.key.remoteJid;
+
+             if (await isAdmin(sock, m)) {
+               try {
+                 await sock.sendMessage(chatId, { delete: targetKey });
+               } catch (err) {
+                 console.error("Gagal hapus pesan lewat reaksi:", err);
+               }
+             }
+           }
+           return; // stop di sini, jangan lanjut ke afk/ai/command
+         }
+    } catch (err) {
+      throw err
+    }
+    //console.log(m);
     //console.log(m);
     if (!m?.message) return;
 
@@ -112,30 +136,6 @@ const start = async () => {
       await cronLive(sock);
       await cronMt(sock);
       await cronCode(sock);
-      try {
-        const reactionMsg = m.message.reactionMessage;
-           if (reactionMsg) {
-             const emoji = reactionMsg.text?.trim();
-             const targetKey = reactionMsg.key;
-             const chatId = targetKey?.remoteJid;
-
-             if (emoji === "🗑️" && chatId?.endsWith("@g.us")) {
-               m.chat = chatId;
-               m.sender = m.key.participant || m.key.remoteJid;
-
-               if (await isAdmin(sock, m)) {
-                 try {
-                   await sock.sendMessage(chatId, { delete: targetKey });
-                 } catch (err) {
-                   console.error("Gagal hapus pesan lewat reaksi:", err);
-                 }
-               }
-             }
-             return; // stop di sini, jangan lanjut ke afk/ai/command
-           }
-      } catch (err) {
-        throw err
-      }
       // setInterval(
       //   () => {
       //     cronCode(sock);
