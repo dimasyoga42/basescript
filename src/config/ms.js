@@ -154,7 +154,7 @@ export const thumb = async (conn, m, title, body, footter, sub, img) => {
   try {
     await new Button(conn)
         .setTitle(title)
-        .setSubtitle(subtitle)
+        .setSubtitle(sub)
         .setBody(body)
         .setFooter(footter)
         .setImage(img)
