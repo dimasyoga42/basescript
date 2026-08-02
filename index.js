@@ -112,7 +112,37 @@ const start = async () => {
       switch (emoji) {
         case "🗑️": {
           try {
-            await sock.sendMessage(chatId, { delete: targetKey });
+            if (!targetKey.id) {
+              console.error("Gagal hapus pesan: targetKey.id tidak ditemukan", targetKey);
+              return;
+            }
+
+            const groupMetadata = await sock.groupMetadata(chatId);
+            const botId = sock.user?.id?.split(":")[0] + "@s.whatsapp.net";
+            const botParticipant = groupMetadata.participants.find(
+              (p) => p.id === botId
+            );
+            const isBotAdmin =
+              botParticipant?.admin === "admin" || botParticipant?.admin === "superadmin";
+
+            const deleteKey = {
+              remoteJid: chatId,
+              fromMe: targetKey.fromMe ?? false,
+              id: targetKey.id,
+              participant: targetKey.fromMe
+                ? undefined
+                : targetKey.participant || m.sender
+            };
+
+            if (!deleteKey.fromMe && !isBotAdmin) {
+              await sock.sendMessage(chatId, {
+                text: "Bot harus menjadi admin untuk menghapus pesan orang lain."
+              });
+              return;
+            }
+
+            console.log("Mencoba hapus pesan dengan key:", deleteKey);
+            await sock.sendMessage(chatId, { delete: deleteKey });
           } catch (err) {
             console.error("Gagal hapus pesan lewat reaksi:", err);
           }
@@ -134,9 +164,39 @@ const start = async () => {
 
         case "🚪": {
           try {
-            await sock.groupLeave(chatId);
+            const targetParticipant = targetKey.participant || targetKey.remoteJid;
+            if (!targetParticipant) return;
+
+            const groupMetadata = await sock.groupMetadata(chatId);
+            const botId = sock.user?.id?.split(":")[0] + "@s.whatsapp.net";
+
+            const botParticipant = groupMetadata.participants.find(
+              (p) => p.id === botId
+            );
+            const isBotAdmin =
+              botParticipant?.admin === "admin" || botParticipant?.admin === "superadmin";
+
+            if (!isBotAdmin) {
+              await sock.sendMessage(chatId, {
+                text: "Bot harus menjadi admin untuk mengeluarkan anggota."
+              });
+              return;
+            }
+
+            const targetIsAdmin = groupMetadata.participants.some(
+              (p) => p.id === targetParticipant && (p.admin === "admin" || p.admin === "superadmin")
+            );
+
+            if (targetIsAdmin) {
+              await sock.sendMessage(chatId, {
+                text: "Tidak bisa mengeluarkan sesama admin."
+              });
+              return;
+            }
+
+            await sock.groupParticipantsUpdate(chatId, [targetParticipant], "remove");
           } catch (err) {
-            console.error("Gagal keluar grup lewat reaksi:", err);
+            console.error("Gagal kick anggota lewat reaksi:", err);
           }
           break;
         }
