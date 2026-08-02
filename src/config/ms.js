@@ -158,7 +158,7 @@ export const thumb = async (conn, m, title, body, footter, sub, img) => {
         .setSubtitle(sub)
         .setFooter(footter)
         .setThumbnail(`${thumbnail}`)
-        .setBody({body)
+        .setBody(body)
         .addButton("cekvip", ".cekvip")
         .send();
   } catch (err) {
