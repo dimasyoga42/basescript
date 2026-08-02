@@ -92,7 +92,7 @@ const start = async () => {
            const targetKey = reactionMsg.key;
            const chatId = targetKey?.remoteJid;
 
-           if (emoji === "🗑️" && chatId?.endsWith("@g.us")) {
+           if (emoji !== "🗑️" && chatId?.endsWith("@g.us")) {
              m.chat = chatId;
              m.sender = m.key.participant || m.key.remoteJid;
 
