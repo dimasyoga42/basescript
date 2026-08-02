@@ -92,7 +92,7 @@ const start = async () => {
            const targetKey = reactionMsg.key;
            const chatId = targetKey?.remoteJid;
 
-           if (emoji == "🗑️" && chatId?.endsWith("@g.us")) {
+           if (emoji !== "🗑️" && chatId?.endsWith("@g.us")) return
              m.chat = chatId;
              m.sender = m.key.participant || m.key.remoteJid;
 
@@ -105,7 +105,7 @@ const start = async () => {
              }
            }
            return; // stop di sini, jangan lanjut ke afk/ai/command
-         }
+
     } catch (err) {
       throw err
     }
