@@ -1,5 +1,6 @@
 import path from "path";
 import dotenv from "dotenv";
+import axios from "axios";
 import { getUserData, saveUserData } from "../../src/config/func.js";
 import ChatEngine from "./neuraAI/ai/chatengine.js";
 import { runTools } from "./neuraAI/tools/toolsRouter.js";
@@ -47,25 +48,33 @@ function extractTextFromApiResponse(data) {
 }
 
 async function fetchAIText(system, prompt) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
-
   try {
-    const url = new URL(AI_API_ENDPOINT);
-    url.searchParams.set("prompt", prompt);
-    url.searchParams.set("system", system);
-    url.searchParams.set("temperature", String(AI_TEMPERATURE));
+    const response = await axios.get(AI_API_ENDPOINT, {
+      params: {
+        prompt,
+        system,
+        temperature: String(AI_TEMPERATURE),
+      },
+      timeout: AI_REQUEST_TIMEOUT_MS,
+    });
 
-    const response = await fetch(url.toString(), { signal: controller.signal });
-
-    if (!response.ok) {
-      throw new Error(`AI API merespons dengan status ${response.status}`);
+    return extractTextFromApiResponse(response.data);
+  } catch (err) {
+    if (err.code === "ECONNABORTED") {
+      const timeoutErr = new Error(
+        `AI API request timeout setelah ${AI_REQUEST_TIMEOUT_MS}ms`
+      );
+      timeoutErr.name = "AbortError";
+      throw timeoutErr;
     }
 
-    const data = await response.json();
-    return extractTextFromApiResponse(data);
-  } finally {
-    clearTimeout(timeoutId);
+    if (err.response) {
+      throw new Error(
+        `AI API merespons dengan status ${err.response.status}`
+      );
+    }
+
+    throw err;
   }
 }
 
@@ -143,7 +152,7 @@ const getAIResponse = async (system, history, sender, message) => {
 
     if (err?.name === "AbortError") {
       console.error(`[Neura] Request ke AI API timeout setelah ${AI_REQUEST_TIMEOUT_MS}ms.`);
-    } else if (err?.cause?.code === "ECONNREFUSED" || err?.message?.includes("fetch failed")) {
+    } else if (err?.code === "ECONNREFUSED" || err?.code === "ENOTFOUND") {
       console.error(`[Neura] Tidak bisa connect ke AI API di ${AI_API_ENDPOINT}.`);
     }
 
