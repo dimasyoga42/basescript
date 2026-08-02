@@ -10,12 +10,7 @@ const db = path.resolve("db", "neura.json");
 
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
 const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.8";
-const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 1060000;
-
-// Dipakai untuk mendeteksi apakah jawaban AI berisi pemanggilan tool (misal {{tool:dump}}),
-// SEBELUM diganti oleh runTools() menjadi hasil asli. Kalau iya, pesan akan dikirim utuh
-// tanpa dipecah/diketik bertahap oleh sendNaturally, supaya data tool (misal list stat xtal) tidak terpotong.
-const TOOL_CALL_PATTERN = /\{\{tool:[^}]+\}\}/i;
+const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 160000;
 
 function extractTextFromApiResponse(data) {
   if (typeof data === "string") return data;
@@ -120,7 +115,7 @@ const chatEngine = new ChatEngine({
 const MAX_HISTORY = 3;
 const MAX_CONTEXT = 4;
 const MAX_MESSAGE_LENGTH = 2000;
-const MIN_LENGTH_FOR_EXTRACTION = 5;
+const MIN_LENGTH_FOR_EXTRACTION = 1000;
 
 const processingLocks = new Set();
 
@@ -311,7 +306,7 @@ const sendNaturally = async (sock, chatId, msg, text) => {
       await sock.sendPresenceUpdate("composing", chatId);
     } catch {}
 
-    const typingSpeed = randomBetween(15, 40);
+    const typingSpeed = randomBetween(15, 50);
 
     let typingDelay = Math.min(
       4000,
@@ -403,11 +398,6 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
     const system = chatEngine.buildSystemPrompt(senderId, sanitizedMessage);
 
     let answer = await getAIResponse(system, history, sender, sanitizedMessage);
-
-    // Deteksi pemanggilan tool SEBELUM diganti runTools, supaya bisa tahu
-    // jawaban ini berasal dari tool (mis. dump/list stat xtal) dan tidak boleh dipotong.
-    const isToolAnswer = TOOL_CALL_PATTERN.test(answer);
-
     answer = await runTools(answer);
 
     group.history.push({
@@ -423,13 +413,7 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
 
     saveUserData(db, database);
 
-    if (isToolAnswer) {
-      // Jawaban dari tool dikirim utuh (tidak dipecah/diketik bertahap)
-      // supaya data seperti list stat xtal tidak terpotong.
-      await sock.sendMessage(chatId, { text: answer }, { quoted: msg });
-    } else {
-      await sendNaturally(sock, chatId, msg, answer);
-    }
+    await sendNaturally(sock, chatId, msg, answer);
 
     if (sanitizedMessage.length >= MIN_LENGTH_FOR_EXTRACTION) {
       extractFacts(sender, sanitizedMessage)
