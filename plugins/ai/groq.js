@@ -11,7 +11,6 @@ const db = path.resolve("db", "neura.json");
 
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
 const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.4";
-const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 30000;
 
 function extractTextFromApiResponse(data) {
   if (typeof data === "string") return data;
@@ -55,19 +54,11 @@ async function fetchAIText(system, prompt) {
         system,
         temperature: String(AI_TEMPERATURE),
       },
-      timeout: AI_REQUEST_TIMEOUT_MS,
+      timeout: 0,
     });
 
     return extractTextFromApiResponse(response.data);
   } catch (err) {
-    if (err.code === "ECONNABORTED") {
-      const timeoutErr = new Error(
-        `AI API request timeout setelah ${AI_REQUEST_TIMEOUT_MS}ms`
-      );
-      timeoutErr.name = "AbortError";
-      throw timeoutErr;
-    }
-
     if (err.response) {
       throw new Error(
         `AI API merespons dengan status ${err.response.status}`
@@ -150,9 +141,7 @@ const getAIResponse = async (system, history, sender, message) => {
     console.error("[Neura getAIResponse Error]");
     console.dir(err, { depth: null });
 
-    if (err?.name === "AbortError") {
-      console.error(`[Neura] Request ke AI API timeout setelah ${AI_REQUEST_TIMEOUT_MS}ms.`);
-    } else if (err?.code === "ECONNREFUSED" || err?.code === "ENOTFOUND") {
+    if (err?.code === "ECONNREFUSED" || err?.code === "ENOTFOUND") {
       console.error(`[Neura] Tidak bisa connect ke AI API di ${AI_API_ENDPOINT}.`);
     }
 
