@@ -10,7 +10,7 @@ export const xtalFinder = async (name) => {
   const { data, error } = await supa
     .from("xtal")
     .select(
-      "name, type, upgrade_rute, stats, max_upgrade_route",
+      "name, type, upgrade_route, stats, max_upgrade_route",
     )
     .ilike("name", `%${keyword}%`);
 
