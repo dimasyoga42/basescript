@@ -112,18 +112,28 @@ const start = async () => {
       await cronLive(sock);
       await cronMt(sock);
       await cronCode(sock);
-      const reaction = m.message?.reactionMessage;
+      try {
+          // === Handle reaksi hapus pesan (🗑️) — proses duluan & return ===
+          const reactionMsg = m.message.reactionMessage;
+          if (reactionMsg) {
+            const emoji = reactionMsg.text?.trim();
+            const targetKey = reactionMsg.key;
+            const chatId = targetKey?.remoteJid;
 
-      if (reaction?.text === "🗑️") {
-        const { remoteJid, participant } = reaction.key;
+            if (emoji === "🗑️" && chatId?.endsWith("@g.us")) {
+              m.chat = chatId;
+              m.sender = m.key.participant || m.key.remoteJid;
 
-        if (!remoteJid?.endsWith("@g.us")) return; // fitur ini cuma buat grup
-        if (!(await isAdmin(sock, m))) return; // cek admin
-
-        await sock.sendMessage(m.chat, {
-          delete: reaction.key,
-        });
-      }
+              if (await isAdmin(sock, m)) {
+                try {
+                  await sock.sendMessage(chatId, { delete: targetKey });
+                } catch (err) {
+                  console.error("Gagal hapus pesan lewat reaksi:", err);
+                }
+              }
+            }
+            return; // stop di sini, jangan lanjut ke afk/ai/command
+          }
       // setInterval(
       //   () => {
       //     cronCode(sock);
