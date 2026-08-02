@@ -66,8 +66,8 @@ const handler = async (m, { conn }) => {
       : `*Bos Boost:* Tidak ada event aktif saat ini`;
   } else {
     const bossList = dataBoses.bosses
-      .map((b) => `${b.name} (${b.level}): ${b.location || "-"}`)
-      .join("\n- ");
+      .map((b) => `- ${b.name} (${b.level}): ${b.location || "-"}`)
+      .join("\n");
     bossSection = `*Bos Boosting*:\n${bossList}`;
   }
 
@@ -92,7 +92,7 @@ const handler = async (m, { conn }) => {
   const commandSection = Object.entries(categories)
     .map(
       ([cat, cmds]) =>
-        `╭─ ${cat}\n` + cmds.map((c) => `│ .${c}`).join("\n") + `\n╰────`,
+        `_${cat}_\n` + cmds.map((c) => `➤ .${c}`).join("\n") + `\n`,
     )
     .join("\n\n").trim();
 
