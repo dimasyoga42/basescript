@@ -9,7 +9,7 @@ dotenv.config();
 const db = path.resolve("db", "neura.json");
 
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
-const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.8";
+const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.3";
 const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 1060000;
 
 // API membatasi field "prompt" maksimal 4000 karakter (lihat error: "Prompt must be less than 4000 characters").
