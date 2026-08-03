@@ -13,10 +13,14 @@ const db = path.resolve("db", "neura.json");
 
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
 const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.6";
-const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 1060000;
 
-const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 1800;
-const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 1500;
+// Dipangkas dari 1800/1500 -> payload lebih kecil = request lebih cepat diproses server
+const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 900;
+const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 800;
+
+// Retry kalau API balikin response kosong (kejadian intermiten dari sisi server siputzx)
+const AI_EMPTY_RETRY_COUNT = Number(process.env.AI_EMPTY_RETRY_COUNT) || 2;
+const AI_EMPTY_RETRY_DELAY_MS = Number(process.env.AI_EMPTY_RETRY_DELAY_MS) || 400;
 
 const TOOL_CALL_PATTERN = /\{\{tool:[^}]+\}\}/i;
 // pattern khusus untuk tool stiker, dipisah dari TOOL_CALL_PATTERN
@@ -63,42 +67,60 @@ function extractTextFromApiResponse(data) {
   return "";
 }
 
+async function requestAIOnce(safeSystem, safePrompt) {
+  const response = await fetch(AI_API_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      // keep-alive supaya koneksi TCP/TLS ke API dipakai ulang, bukan dibangun dari nol tiap request
+      Connection: "keep-alive",
+    },
+    body: JSON.stringify({
+      prompt: safePrompt,
+      system: safeSystem,
+      temperature: Number(AI_TEMPERATURE),
+    }),
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text().catch(() => "");
+    console.error(`[Neura] AI API status ${response.status}: ${errBody.slice(0, 500)}`);
+    throw new Error(`AI API merespons dengan status ${response.status}`);
+  }
+
+  const data = await response.json();
+  const text = extractTextFromApiResponse(data);
+
+  return { text, data };
+}
+
 async function fetchAIText(system, prompt) {
   const safeSystem = truncateFromStart(system, MAX_SYSTEM_CHARS);
   const safePrompt = truncateFromStart(prompt, MAX_PROMPT_CHARS);
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+  let lastData = null;
 
-  try {
-    const response = await fetch(AI_API_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt: safePrompt,
-        system: safeSystem,
-        temperature: Number(AI_TEMPERATURE),
-      }),
-      signal: controller.signal,
-    });
+  for (let attempt = 0; attempt <= AI_EMPTY_RETRY_COUNT; attempt++) {
+    const { text, data } = await requestAIOnce(safeSystem, safePrompt);
+    lastData = data;
 
-    if (!response.ok) {
-      const errBody = await response.text().catch(() => "");
-      console.error(`[Neura] AI API status ${response.status}: ${errBody.slice(0, 500)}`);
-      throw new Error(`AI API merespons dengan status ${response.status}`);
+    if (text) return text;
+
+    // response kosong tapi status ok -> kemungkinan glitch sesaat di server AI, coba lagi
+    if (attempt < AI_EMPTY_RETRY_COUNT) {
+      console.warn(
+        `[Neura] Response kosong dari API (percobaan ${attempt + 1}/${AI_EMPTY_RETRY_COUNT + 1}), retry...`
+      );
+      await new Promise((r) => setTimeout(r, AI_EMPTY_RETRY_DELAY_MS * (attempt + 1)));
     }
-
-    const data = await response.json();
-    const text = extractTextFromApiResponse(data);
-
-    if (!text) {
-      console.error("[Neura] Response kosong dari API, raw data:", JSON.stringify(data).slice(0, 500));
-    }
-
-    return text;
-  } finally {
-    clearTimeout(timeoutId);
   }
+
+  console.error(
+    "[Neura] Response tetap kosong setelah retry, raw data:",
+    JSON.stringify(lastData).slice(0, 500)
+  );
+
+  return "";
 }
 
 const neuraPersona = {
@@ -166,9 +188,7 @@ const getAIResponse = async (system, history, sender, message) => {
     console.error("[Neura getAIResponse Error]");
     console.dir(err, { depth: null });
 
-    if (err?.name === "AbortError") {
-      console.error(`[Neura] Request ke AI API timeout setelah ${AI_REQUEST_TIMEOUT_MS}ms.`);
-    } else if (err?.cause?.code === "ECONNREFUSED" || err?.message?.includes("fetch failed")) {
+    if (err?.cause?.code === "ECONNREFUSED" || err?.message?.includes("fetch failed")) {
       console.error(`[Neura] Tidak bisa connect ke AI API di ${AI_API_ENDPOINT}.`);
     }
 
