@@ -5,6 +5,7 @@ import ChatEngine from "./neuraAI/ai/chatengine.js";
 import { runTools } from "./neuraAI/tools/toolsRouter.js";
 import { sendStiker } from "./neuraAI/tools/stiker.js";
 import axios from "axios";
+import sharp from "sharp";
 
 dotenv.config();
 
@@ -359,22 +360,36 @@ const sendNaturally = async (sock, chatId, msg, text) => {
  * Kirim stiker ke chat berdasarkan URL gambar.
  * Download dulu jadi buffer, baru dikirim lewat sock.sendMessage.
  */
-const sendStikerToChat = async (sock, chatId, msg, stickerUrl) => {
-  try {
-    // sendStikerToChat yang saya buat, pola sama persis:
-    const res = await axios.get(stickerUrl, {
-      responseType: "arraybuffer",
-    });
+ const sendStikerToChat = async (sock, chatId, msg, stickerUrl) => {
+   try {
+     const res = await axios.get(stickerUrl, {
+       responseType: "arraybuffer",
+       timeout: 30000,
+     });
 
-    await sock.sendSticker(chatId, {
-      sticker: res.data,   // <- ini juga sudah buffer, bukan URL string
-      packname: "nuera",
-      author: "nuera",
-    });
-  } catch (err) {
-    console.error("[Neura] Gagal kirim stiker:", err.message);
-  }
-};
+     if (!res?.data) {
+       throw new Error("Response stiker kosong");
+     }
+
+     const inputBuffer = Buffer.from(res.data);
+
+     const webpBuffer = await sharp(inputBuffer)
+       .resize(512, 512, {
+         fit: "contain",
+         background: { r: 0, g: 0, b: 0, alpha: 0 },
+       })
+       .webp({ quality: 90 })
+       .toBuffer();
+
+     await sock.sendMessage(
+       chatId,
+       { sticker: webpBuffer },
+       { quoted: msg },
+     );
+   } catch (err) {
+     console.error("[Neura] Gagal kirim stiker:", err.message);
+   }
+ };
 
 export const NeuraBot = async (sock, chatId, msg, arg) => {
   const groupId = msg?.key?.remoteJid;
