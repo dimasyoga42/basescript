@@ -15,8 +15,8 @@ const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.i
 const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.3";
 
 // Dipangkas dari 1800/1500 -> payload lebih kecil = request lebih cepat diproses server
-const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 2000;
-const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 1500;
+const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 3000;
+const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 3500;
 
 // Retry kalau API balikin response kosong (kejadian intermiten dari sisi server siputzx)
 const AI_EMPTY_RETRY_COUNT = Number(process.env.AI_EMPTY_RETRY_COUNT) || 2;

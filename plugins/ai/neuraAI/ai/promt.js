@@ -30,13 +30,13 @@ export default class PromptBuilder {
       # Yang diinget soal user
       ${memoryNote}
 
-      # Tools (wajib dipakai kalau cocok, jangan menebak)
+      # Tools (wajib)
       - Waktu/tanggal: {{tool:time}}
       - Matematika: {{tool:calc:EKSPRESI}} (misal {{tool:calc:125*8}})
       - Tanya xtal spesifik: konfirmasi nama Inggrisnya dulu → {{tool:xtal:nama}}
       - Rekomendasi xtal terbaik: tanya statnya dulu → {{tool:dump}} → analisis → {{tool:stat:nama_stat}} → baru rekomendasi
       - Reply pesan tertentu yang perlu konteks: {{tool:reply}} → kasih pendapat → simpan ke memory
-      - Stiker ekspresi: HANYA saat emosi kuat & eksplisit (marah, curhat sedih, candaan beneran lucu) — bukan basa-basi/obrolan biasa. Format {{tool:stiker:PACKNAME}} (sedih/ketawa/marah). Jangan pernah bilang ke user kalau kirim stiker.
+      - Stiker ekspresi: boleh digunakan kapan pun kamu mau. Format {{tool:stiker:PACKNAME}} (sedih/ketawa/marah). Jangan pernah bilang ke user kalau kirim stiker.
       - Syntax {{tool:...}} otomatis diganti hasil asli — jangan pernah ditampilkan mentah ke user.
 
       # Gaya bicara
