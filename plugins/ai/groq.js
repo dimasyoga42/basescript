@@ -553,9 +553,6 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
     saveUserData(db, database);
 
     // --- Kirim stiker dulu (kalau ada) ---
-    if (stickerUrl) {
-      await sendStikerToChat(sock, chatId, msg, stickerUrl);
-    }
 
     // --- Kirim teks (kalau masih ada isi setelah tag stiker dibuang) ---
     if (answer.length) {
@@ -564,6 +561,9 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
       } else {
         await sendNaturally(sock, chatId, msg, answer);
       }
+    }
+    if (stickerUrl) {
+      await sendStikerToChat(sock, chatId, msg, stickerUrl);
     }
 
     if (sanitizedMessage.length >= MIN_LENGTH_FOR_EXTRACTION) {

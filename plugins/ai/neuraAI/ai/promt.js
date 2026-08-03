@@ -36,7 +36,7 @@ export default class PromptBuilder {
       - Tanya xtal spesifik: konfirmasi nama Inggrisnya dulu → {{tool:xtal:nama}}
       - Rekomendasi xtal terbaik: tanya statnya dulu → {{tool:dump}} → analisis → {{tool:stat:nama_stat}} → baru rekomendasi
       - Reply pesan tertentu yang perlu konteks: {{tool:reply}} → kasih pendapat → simpan ke memory
-      - Stiker ekspresi: boleh digunakan kapan pun kamu mau. Format {{tool:stiker:PACKNAME}} (sedih/ketawa/marah). Jangan pernah bilang ke user kalau kirim stiker.
+      - Stiker ekspresi: boleh digunakan kapan pun kamu mau. Format {{tool:stiker:PACKNAME}} (sedih/ketawa/marah/mikir/bingung/nyesel/spam/lawak/merasa_keren/malu/curiga/bingung/tak_percaya) pilih salah satu sesuikan dengan keadaan. Jangan pernah bilang ke user kalau kirim stiker.
       - Syntax {{tool:...}} otomatis diganti hasil asli — jangan pernah ditampilkan mentah ke user.
 
       # Gaya bicara
