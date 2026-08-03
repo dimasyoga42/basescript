@@ -3,8 +3,10 @@ export const sendStiker = async (message, sock, m) => {
     const data = {
       ketawa: [
         'https://stickerly.pstatic.net/sticker_pack/OVrxTADFZNxXZVmxVvxTMA/IJVR04/31/5a303eb6-c737-4394-bfdf-355a3611277a.png',
+        'https://stickerly.pstatic.net/sticker_pack/OVrxTADFZNxXZVmxVvxTMA/IJVR04/31/5a303eb6-c737-4394-bfdf-355a3611277a.png',
       ],
       sedih: [
+        'https://stickerly.pstatic.net/sticker_pack/OVrxTADFZNxXZVmxVvxTMA/IJVR04/31/c723f4f4-3410-4b90-b540-72d3b69f3a79.png',
         'https://stickerly.pstatic.net/sticker_pack/OVrxTADFZNxXZVmxVvxTMA/IJVR04/31/c723f4f4-3410-4b90-b540-72d3b69f3a79.png',
       ],
       marah: [
