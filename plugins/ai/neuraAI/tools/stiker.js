@@ -30,8 +30,9 @@ export const sendStiker = async (message, sock, m) => {
     if (!kategori) return // tidak ada kategori cocok, tidak kirim apa-apa
 
     const daftarStiker = data[kategori]
-    const stikerTerpilih = daftarStiker[Math.floor(Math.random() * daftarStiker.length)]
 
+    const stikerTerpilih = daftarStiker[Math.floor(Math.random() * daftarStiker.length)]
+    console.log(stikerTerpilih)
 
   return  await sock.sendSticker(m.chat, {
       sticker: stikerTerpilih,
