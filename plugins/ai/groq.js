@@ -12,11 +12,11 @@ dotenv.config();
 const db = path.resolve("db", "neura.json");
 
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
-const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.3";
+const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.6";
 
 // Dipangkas dari 1800/1500 -> payload lebih kecil = request lebih cepat diproses server
-const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 3000;
-const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 3500;
+const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 6000;
+const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 5000;
 
 // Retry kalau API balikin response kosong (kejadian intermiten dari sisi server siputzx)
 const AI_EMPTY_RETRY_COUNT = Number(process.env.AI_EMPTY_RETRY_COUNT) || 2;
@@ -264,19 +264,73 @@ Jangan memakai codeblock.
   }
 };
 
+/**
+ * Nyalain status "sedang mengetik" dan jaga tetap nyala selama nunggu
+ * respons AI, karena presence WhatsApp otomatis expired kalau nggak
+ * di-refresh berkala. Kembaliin fungsi stop() buat dipanggil pas respons udah ada.
+ */
+const TYPING_REFRESH_MS = 8000;
+
+function startTypingIndicator(sock, chatId) {
+  let stopped = false;
+
+  const tick = async () => {
+    if (stopped) return;
+    try {
+      await sock.sendPresenceUpdate("composing", chatId);
+    } catch {}
+  };
+
+  tick();
+  const interval = setInterval(tick, TYPING_REFRESH_MS);
+
+  return async () => {
+    stopped = true;
+    clearInterval(interval);
+    try {
+      await sock.sendPresenceUpdate("paused", chatId);
+    } catch {}
+  };
+}
+
 const randomBetween = (min, max) => Math.random() * (max - min) + min;
 
+// Peluang pesan dipecah jadi beberapa bubble, divariasikan sesuai jumlah kalimat.
+// Makin banyak kalimat/makin panjang isinya, makin besar peluang dipecah jadi beberapa pesan.
+function getSplitChance(sentenceCount, textLength) {
+  if (sentenceCount <= 1) {
+    // 1 kalimat doang: kecil kemungkinan dipecah, cuma kalau teksnya lumayan panjang
+    return textLength > 60 ? 0.2 : 0.05;
+  }
+  if (sentenceCount === 2) return 0.45;
+  if (sentenceCount === 3) return 0.6;
+  if (sentenceCount === 4) return 0.7;
+  return 0.8; // 5+ kalimat, kemungkinan besar dipecah jadi beberapa bubble
+}
+
 function chunkMessage(text) {
-  const sentences = (text.match(/[^.!?\n]+[.!?\n]*/g) || [text])
+  const trimmed = text.trim();
+  const sentences = (trimmed.match(/[^.!?\n]+[.!?\n]*/g) || [trimmed])
     .map((s) => s.trim())
     .filter(Boolean);
 
-  if (sentences.length <= 2) {
-    return [text.trim()];
+  const splitChance = getSplitChance(sentences.length, trimmed.length);
+
+  // Kasus 1 kalimat: coba pecah di tanda koma kalau kepilih & memang ada koma
+  if (sentences.length <= 1) {
+    if (Math.random() < splitChance) {
+      const commaParts = trimmed
+        .split(/,\s+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (commaParts.length > 1) return commaParts;
+    }
+    return [trimmed];
   }
 
-  if (Math.random() >= 0.35) {
-    return [text.trim()];
+  if (Math.random() >= splitChance) {
+    return [trimmed];
   }
 
   const chunks = [];
@@ -458,7 +512,13 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
     const senderId = msg.key.participant || groupId;
     const system = chatEngine.buildSystemPrompt(senderId, sanitizedMessage);
 
-    let answer = await getAIResponse(system, history, sender, sanitizedMessage);
+    const stopTyping = startTypingIndicator(sock, chatId);
+    let answer;
+    try {
+      answer = await getAIResponse(system, history, sender, sanitizedMessage);
+    } finally {
+      await stopTyping();
+    }
 
     // --- Intercept tool stiker SEBELUM runTools() ---
     // Karena hasil tool stiker adalah URL gambar (media), bukan teks,
