@@ -12,11 +12,11 @@ dotenv.config();
 const db = path.resolve("db", "neura.json");
 
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
-const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.3";
+const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.6";
 const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 1060000;
 
-const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 3800;
-const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 3000;
+const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 1800;
+const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 1500;
 
 const TOOL_CALL_PATTERN = /\{\{tool:[^}]+\}\}/i;
 // pattern khusus untuk tool stiker, dipisah dari TOOL_CALL_PATTERN
@@ -135,7 +135,7 @@ const chatEngine = new ChatEngine({
 const MAX_HISTORY = 3;
 const MAX_CONTEXT = 4;
 const MAX_MESSAGE_LENGTH = 2000;
-const MIN_LENGTH_FOR_EXTRACTION = 5;
+const MIN_LENGTH_FOR_EXTRACTION = 6;
 
 const processingLocks = new Set();
 
@@ -187,17 +187,11 @@ const extractFacts = async (sender, message) => {
   try {
     const extractionSystem = `
 Kamu adalah sistem ekstraksi informasi.
-
 Balas HANYA JSON valid.
-
 Format WAJIB:
-
 {"facts":{"key":"value"}}
-
 Jika tidak ada fakta baru:
-
 {"facts":{}}
-
 Jangan menambahkan penjelasan.
 Jangan memakai markdown.
 Jangan memakai codeblock.
