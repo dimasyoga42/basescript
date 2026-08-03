@@ -4,6 +4,7 @@ import { getUserData, saveUserData } from "../../src/config/func.js";
 import ChatEngine from "./neuraAI/ai/chatengine.js";
 import { runTools } from "./neuraAI/tools/toolsRouter.js";
 import { sendStiker } from "./neuraAI/tools/stiker.js";
+import axios from "axios";
 
 dotenv.config();
 
