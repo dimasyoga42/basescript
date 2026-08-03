@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { getUserData, saveUserData } from "../../src/config/func.js";
 import ChatEngine from "./neuraAI/ai/chatengine.js";
 import { runTools } from "./neuraAI/tools/toolsRouter.js";
+import { sendStiker } from "./neuraAI/tools/stiker.js";
 
 dotenv.config();
 
@@ -12,21 +13,14 @@ const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.i
 const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.3";
 const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 1060000;
 
-// API membatasi field "prompt" maksimal 4000 karakter (lihat error: "Prompt must be less than 4000 characters").
-// Kasih margin aman di bawah 4000 supaya tidak mepet dan tetap lolos meski ada perhitungan karakter yang beda.
 const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 3800;
-// System prompt juga dijaga supaya tidak ikut membengkak (facts, persona, dll dari chatEngine).
 const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 3000;
 
-// Dipakai untuk mendeteksi apakah jawaban AI berisi pemanggilan tool (misal {{tool:dump}}),
-// SEBELUM diganti oleh runTools() menjadi hasil asli. Kalau iya, pesan akan dikirim utuh
-// tanpa dipecah/diketik bertahap oleh sendNaturally, supaya data tool (misal list stat xtal) tidak terpotong.
 const TOOL_CALL_PATTERN = /\{\{tool:[^}]+\}\}/i;
+// pattern khusus untuk tool stiker, dipisah dari TOOL_CALL_PATTERN
+// karena hasilnya media, bukan teks, dan harus di-handle beda
 const STICKER_PATTERN = /\{\{tool:stiker(?::([\s\S]*?))?\}\}/i;
-/**
- * Pangkas teks dari depan (buang bagian paling lama), simpan bagian akhir
- * (konteks paling baru) supaya tetap utuh dan tidak melebihi batas karakter.
- */
+
 function truncateFromStart(text, maxChars) {
   const str = String(text ?? "");
   if (str.length <= maxChars) return str;
@@ -272,7 +266,6 @@ function chunkMessage(text) {
     return [text.trim()];
   }
 
-  // hanya 35% kemungkinan dipecah
   if (Math.random() >= 0.35) {
     return [text.trim()];
   }
@@ -361,6 +354,29 @@ const sendNaturally = async (sock, chatId, msg, text) => {
   } catch {}
 };
 
+/**
+ * Kirim stiker ke chat berdasarkan URL gambar.
+ * Download dulu jadi buffer, baru dikirim lewat sock.sendMessage.
+ */
+const sendStikerToChat = async (sock, chatId, msg, stickerUrl) => {
+  try {
+    const res = await fetch(stickerUrl);
+    if (!res.ok) {
+      throw new Error(`Gagal download stiker, status ${res.status}`);
+    }
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    await sock.sendMessage(
+      chatId,
+      { sticker: buffer },
+      { quoted: msg },
+    );
+  } catch (err) {
+    console.error("[Neura] Gagal kirim stiker:", err.message);
+  }
+};
+
 export const NeuraBot = async (sock, chatId, msg, arg) => {
   const groupId = msg?.key?.remoteJid;
 
@@ -423,17 +439,24 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
 
     let answer = await getAIResponse(system, history, sender, sanitizedMessage);
 
-    // deteksi & pisahkan tool stiker dari teks
+    // --- Intercept tool stiker SEBELUM runTools() ---
+    // Karena hasil tool stiker adalah URL gambar (media), bukan teks,
+    // dia tidak bisa cuma disisipkan ke dalam string balasan seperti tool lain.
     const stickerMatch = answer.match(STICKER_PATTERN);
     let stickerUrl = null;
 
     if (stickerMatch) {
-      stickerUrl = await sendStiker(stickerMatch[1] || "");
-      answer = answer.replace(stickerMatch[0], "").trim(); // buang tag tool dari teks
+      const stickerArg = stickerMatch[1]?.trim() || "";
+      stickerUrl = await sendStiker(stickerArg);
+      // buang tag {{tool:stiker:...}} dari teks supaya tidak ikut dikirim mentah
+      answer = answer.replace(stickerMatch[0], "").trim();
     }
 
+    // Deteksi tool call lain (calc, time, dump, dll) SEBELUM diganti runTools,
+    // supaya tahu jawaban ini dari tool dan tidak boleh dipotong/diketik bertahap.
     const isToolAnswer = TOOL_CALL_PATTERN.test(answer);
-    answer = await runTools(answer, { msg, sock }); // proses tool lain seperti biasa
+
+    answer = await runTools(answer, { msg, sock });
 
     group.history.push({
       sender,
@@ -448,18 +471,12 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
 
     saveUserData(db, database);
 
-    // kirim stiker dulu (kalau ada)
+    // --- Kirim stiker dulu (kalau ada) ---
     if (stickerUrl) {
-      try {
-        const res = await fetch(stickerUrl);
-        const buffer = Buffer.from(await res.arrayBuffer());
-        await sock.sendMessage(chatId, { sticker: buffer }, { quoted: msg });
-      } catch (err) {
-        console.error("[Neura] Gagal kirim stiker:", err.message);
-      }
+      await sendStikerToChat(sock, chatId, msg, stickerUrl);
     }
 
-    // kirim teks kalau masih ada isi (setelah tag stiker dibuang)
+    // --- Kirim teks (kalau masih ada isi setelah tag stiker dibuang) ---
     if (answer.length) {
       if (isToolAnswer) {
         await sock.sendMessage(chatId, { text: answer }, { quoted: msg });

@@ -1,4 +1,4 @@
-export const sendStiker = async (message) => {
+export const sendStiker = async (teks) => {
   try {
     const data = {
       ketawa: [
@@ -15,28 +15,26 @@ export const sendStiker = async (message) => {
       ]
     }
 
-    // deteksi kategori dari isi pesan
-    const teks = message.text?.toLowerCase() || ''
+    const teksLower = (teks || '').toLowerCase()
     let kategori = null
 
-    if (teks.includes('ketawa') || teks.includes('lucu') || teks.includes('haha')) {
+    if (teksLower.includes('ketawa') || teksLower.includes('lucu') || teksLower.includes('haha')) {
       kategori = 'ketawa'
-    } else if (teks.includes('sedih') || teks.includes('nangis')) {
+    } else if (teksLower.includes('sedih') || teksLower.includes('nangis')) {
       kategori = 'sedih'
-    } else if (teks.includes('marah') || teks.includes('kesal')) {
+    } else if (teksLower.includes('marah') || teksLower.includes('kesal')) {
       kategori = 'marah'
     }
 
-    if (!kategori) return // tidak ada kategori cocok, tidak kirim apa-apa
+    if (!kategori) return null
 
     const daftarStiker = data[kategori]
-
     const stikerTerpilih = daftarStiker[Math.floor(Math.random() * daftarStiker.length)]
-    console.log(stikerTerpilih)
 
-  return  stikerTerpilih
-
+    console.log('[sendStiker]', kategori, stikerTerpilih)
+    return stikerTerpilih
   } catch (err) {
     console.log(err.message)
+    return null
   }
 }

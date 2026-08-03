@@ -3,6 +3,7 @@ import { xtalFinder } from "./toramTools.js";
 import { xtalStatsDump, xtalStatSearch } from "./xtalsearch.js";
 import { replyReader } from "./replayrender.js";
 import { sendStiker } from "./stiker.js";
+
 const TOOL_PATTERN = /\{\{tool:([a-zA-Z0-9_]+)(?::([\s\S]*?))?\}\}/g;
 
 const registry = {
@@ -12,7 +13,10 @@ const registry = {
   dump: async () => xtalStatsDump(),
   stat: async (arg) => xtalStatSearch(arg),
   reply: async (_arg, ctx) => replyReader(ctx),
-  stiker: async (arg) => sendStiker(arg)
+  // catatan: tool "stiker" TIDAK diproses di sini karena hasilnya berupa
+  // media (URL gambar), bukan teks. Tool ini di-intercept lebih dulu
+  // di file Neura sebelum runTools() dipanggil (lihat STICKER_PATTERN).
+  stiker: async (arg) => sendStiker(arg),
 };
 
 export async function runTools(text, ctx = {}) {
@@ -26,7 +30,6 @@ export async function runTools(text, ctx = {}) {
     const [full, name, rawArg] = match;
     const arg = rawArg?.trim() ?? "";
     const handler = registry[name];
-
     let value;
 
     try {
@@ -40,7 +43,7 @@ export async function runTools(text, ctx = {}) {
       value = `[tool ${name} error: ${err.message}]`;
     }
 
-    result = result.replace(full, String(value));
+    result = result.replace(full, String(value ?? ""));
   }
 
   return result;
