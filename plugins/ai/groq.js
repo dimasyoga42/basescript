@@ -22,7 +22,7 @@ const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 3000;
 // SEBELUM diganti oleh runTools() menjadi hasil asli. Kalau iya, pesan akan dikirim utuh
 // tanpa dipecah/diketik bertahap oleh sendNaturally, supaya data tool (misal list stat xtal) tidak terpotong.
 const TOOL_CALL_PATTERN = /\{\{tool:[^}]+\}\}/i;
-
+const STICKER_PATTERN = /\{\{tool:stiker(?::([\s\S]*?))?\}\}/i;
 /**
  * Pangkas teks dari depan (buang bagian paling lama), simpan bagian akhir
  * (konteks paling baru) supaya tetap utuh dan tidak melebihi batas karakter.
