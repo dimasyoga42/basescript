@@ -423,11 +423,17 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
 
     let answer = await getAIResponse(system, history, sender, sanitizedMessage);
 
-    // Deteksi pemanggilan tool SEBELUM diganti runTools, supaya bisa tahu
-    // jawaban ini berasal dari tool (mis. dump/list stat xtal) dan tidak boleh dipotong.
-    const isToolAnswer = TOOL_CALL_PATTERN.test(answer);
+    // deteksi & pisahkan tool stiker dari teks
+    const stickerMatch = answer.match(STICKER_PATTERN);
+    let stickerUrl = null;
 
-    answer = await runTools(answer, {msg, sock});
+    if (stickerMatch) {
+      stickerUrl = await sendStiker(stickerMatch[1] || "");
+      answer = answer.replace(stickerMatch[0], "").trim(); // buang tag tool dari teks
+    }
+
+    const isToolAnswer = TOOL_CALL_PATTERN.test(answer);
+    answer = await runTools(answer, { msg, sock }); // proses tool lain seperti biasa
 
     group.history.push({
       sender,
@@ -442,12 +448,24 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
 
     saveUserData(db, database);
 
-    if (isToolAnswer) {
-      // Jawaban dari tool dikirim utuh (tidak dipecah/diketik bertahap)
-      // supaya data seperti list stat xtal tidak terpotong.
-      await sock.sendMessage(chatId, { text: answer }, { quoted: msg });
-    } else {
-      await sendNaturally(sock, chatId, msg, answer);
+    // kirim stiker dulu (kalau ada)
+    if (stickerUrl) {
+      try {
+        const res = await fetch(stickerUrl);
+        const buffer = Buffer.from(await res.arrayBuffer());
+        await sock.sendMessage(chatId, { sticker: buffer }, { quoted: msg });
+      } catch (err) {
+        console.error("[Neura] Gagal kirim stiker:", err.message);
+      }
+    }
+
+    // kirim teks kalau masih ada isi (setelah tag stiker dibuang)
+    if (answer.length) {
+      if (isToolAnswer) {
+        await sock.sendMessage(chatId, { text: answer }, { quoted: msg });
+      } else {
+        await sendNaturally(sock, chatId, msg, answer);
+      }
     }
 
     if (sanitizedMessage.length >= MIN_LENGTH_FOR_EXTRACTION) {

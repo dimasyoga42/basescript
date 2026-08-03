@@ -1,4 +1,4 @@
-export const sendStiker = async (message, sock, m) => {
+export const sendStiker = async (message) => {
   try {
     const data = {
       ketawa: [
@@ -34,11 +34,7 @@ export const sendStiker = async (message, sock, m) => {
     const stikerTerpilih = daftarStiker[Math.floor(Math.random() * daftarStiker.length)]
     console.log(stikerTerpilih)
 
-  return  await sock.sendSticker(m.chat, {
-      sticker: stikerTerpilih,
-      packname: "Neura ai",
-      author: "neura",
-    });
+  return  stikerTerpilih
 
   } catch (err) {
     console.log(err.message)

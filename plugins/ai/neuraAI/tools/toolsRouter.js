@@ -12,7 +12,7 @@ const registry = {
   dump: async () => xtalStatsDump(),
   stat: async (arg) => xtalStatSearch(arg),
   reply: async (_arg, ctx) => replyReader(ctx),
-  stiker: async (arg, ctx) => sendStiker(arg, ctx.sock, ctx.m)
+  stiker: async (arg) => sendStiker(arg)
 };
 
 export async function runTools(text, ctx = {}) {
