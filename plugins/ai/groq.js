@@ -12,7 +12,7 @@ dotenv.config();
 const db = path.resolve("db", "neura.json");
 
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
-const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.6";
+const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.3";
 
 // Dipangkas dari 1800/1500 -> payload lebih kecil = request lebih cepat diproses server
 const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 900;
