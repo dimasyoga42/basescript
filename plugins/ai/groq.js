@@ -360,18 +360,16 @@ const sendNaturally = async (sock, chatId, msg, text) => {
  */
 const sendStikerToChat = async (sock, chatId, msg, stickerUrl) => {
   try {
-    const res = await fetch(stickerUrl);
-    if (!res.ok) {
-      throw new Error(`Gagal download stiker, status ${res.status}`);
-    }
-    const arrayBuffer = await res.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    // sendStikerToChat yang saya buat, pola sama persis:
+    const res = await axios.get(stickerUrl, {
+      responseType: "arraybuffer",
+    });
 
-    await sock.sendMessage(
-      chatId,
-      { sticker: buffer },
-      { quoted: msg },
-    );
+    await sock.sendSticker(chatId, {
+      sticker: res.data,   // <- ini juga sudah buffer, bukan URL string
+      packname: "nuera",
+      author: "nuera",
+    });
   } catch (err) {
     console.error("[Neura] Gagal kirim stiker:", err.message);
   }
