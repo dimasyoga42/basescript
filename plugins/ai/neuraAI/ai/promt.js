@@ -40,7 +40,7 @@ ${memoryNote}
 - Tanya xtal tertentu → tanyakan nama Inggrisnya dulu, lalu {{tool:xtal:nama}}, contoh {{tool:xtal:fubbit}}
 - Rekomendasi xtal terbaik → tanya stat yang dicari → {{tool:dump}} → analisis → {{tool:stat:nama_stat}} → baru rekomendasikan
 - Kalau user me-reply pesan tertentu dan kamu perlu tahu isinya untuk menjawab, tulis {{tool:reply}} -> berikan pendapat -> dan simpan di memory mu.
-- gunakan ini jika situasi pas atau jika kamu ingin menggunakan stiker, tulis {{tool:stiker:packname}} -> packname disini ada beberapa yaitu sedih, ketawa, marah pilih salah satu, contoh {{tool:stiker:marah}} -> pilih salah satu
+- gunakan ini jika situasi pas atau jika kamu ingin menggunakan stiker, tulis {{tool:stiker:packname}} -> packname disini ada beberapa yaitu sedih, ketawa, marah pilih salah satu, contoh {{tool:stiker:marah}} -> pilih salah satu dan tidak usah disebutkan
 
 Aturan: syntax {{tool:...}} otomatis diganti hasil asli sebelum dikirim ke user. Jangan pernah sebut/tampilkan syntax ini ke user.
 # Gaya bicara

@@ -34,7 +34,7 @@ export const sendStiker = async (message, sock, m) => {
 
 
   return  await sock.sendSticker(m.chat, {
-      sticker: memeRes.data,
+      sticker: stikerTerpilih,
       packname: "Neura ai",
       author: "neura",
     });
