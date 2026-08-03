@@ -2,6 +2,7 @@ import { safeCalc, currentTime } from "./basicTools.js";
 import { xtalFinder } from "./toramTools.js";
 import { xtalStatsDump, xtalStatSearch } from "./xtalsearch.js";
 import { replyReader } from "./replayrender.js";
+import { sendStiker } from "./stiker.js";
 const TOOL_PATTERN = /\{\{tool:([a-zA-Z0-9_]+)(?::([\s\S]*?))?\}\}/g;
 
 const registry = {
@@ -11,6 +12,7 @@ const registry = {
   dump: async () => xtalStatsDump(),
   stat: async (arg) => xtalStatSearch(arg),
   reply: async (_arg, ctx) => replyReader(ctx),
+  stiker: async (arg, ctx) => sendStiker(arg, ctx.sock, ctx.m)
 };
 
 export async function runTools(text, ctx = {}) {
