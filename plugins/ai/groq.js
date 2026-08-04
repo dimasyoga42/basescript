@@ -22,6 +22,15 @@ const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 4500;
 const AI_EMPTY_RETRY_COUNT = Number(process.env.AI_EMPTY_RETRY_COUNT) || 3;
 const AI_EMPTY_RETRY_DELAY_MS = Number(process.env.AI_EMPTY_RETRY_DELAY_MS) || 300;
 
+// Batas token output yang diminta ke API. Beberapa provider men-cutoff jawaban
+// di tengah kalimat kalau default max token-nya kecil, jadi kita paksa naikkan.
+const AI_MAX_TOKENS = Number(process.env.AI_MAX_TOKENS) || 2048;
+
+// Kalau jawaban API kelihatan berhenti di tengah kalimat/kata, kita minta AI
+// melanjutkan dari titik berhenti tersebut, maksimal sekian kali percobaan.
+const AI_CONTINUE_MAX_ROUNDS = Number(process.env.AI_CONTINUE_MAX_ROUNDS) || 2;
+const AI_CONTINUE_MIN_LENGTH = Number(process.env.AI_CONTINUE_MIN_LENGTH) || 20;
+
 const TOOL_CALL_PATTERN = /\{\{tool:[^}]+\}\}/i;
 // pattern khusus untuk tool stiker, dipisah dari TOOL_CALL_PATTERN
 // karena hasilnya media, bukan teks, dan harus di-handle beda
@@ -67,6 +76,48 @@ function extractTextFromApiResponse(data) {
   return "";
 }
 
+function stripThinking(text) {
+  return String(text || "")
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .trim();
+}
+
+// Deteksi heuristik: jawaban dianggap "kelihatan terpotong" kalau cukup
+// panjang tapi tidak diakhiri tanda baca penutup atau emoji penutup.
+// Ini gejala khas server AI berhenti karena kehabisan budget token,
+// bukan karena kalimatnya memang sudah selesai.
+const TERMINAL_PUNCTUATION_REGEX = /[.!?…~"'”’)\]}]\s*$/;
+const EMOJI_END_REGEX = /\p{Extended_Pictographic}\s*$/u;
+
+function looksTruncated(rawText) {
+  const trimmed = stripThinking(rawText).replace(/\s+$/, "");
+  if (!trimmed) return false;
+  if (trimmed.length < AI_CONTINUE_MIN_LENGTH) return false;
+  if (TERMINAL_PUNCTUATION_REGEX.test(trimmed)) return false;
+  if (EMOJI_END_REGEX.test(trimmed)) return false;
+  return true;
+}
+
+function isWordChar(ch) {
+  return /[A-Za-z0-9À-ÿ]/.test(ch || "");
+}
+
+// Gabungkan teks lama + lanjutan tanpa nambah spasi kalau memang
+// potongannya di tengah kata (mis. "makasih ban" + "yak" -> "makasih banyak").
+function joinContinuation(base, continuation) {
+  const trimmedBase = String(base || "").replace(/\s+$/, "");
+  const trimmedContinuation = String(continuation || "").replace(/^\s+/, "");
+
+  if (!trimmedBase) return trimmedContinuation;
+  if (!trimmedContinuation) return trimmedBase;
+
+  const lastChar = trimmedBase.slice(-1);
+  const firstChar = trimmedContinuation.slice(0, 1);
+  const separator = isWordChar(lastChar) && isWordChar(firstChar) ? "" : " ";
+
+  return `${trimmedBase}${separator}${trimmedContinuation}`;
+}
+
 async function requestAIOnce(safeSystem, safePrompt) {
   const response = await fetch(AI_API_ENDPOINT, {
     method: "POST",
@@ -79,6 +130,7 @@ async function requestAIOnce(safeSystem, safePrompt) {
       prompt: safePrompt,
       system: safeSystem,
       temperature: Number(AI_TEMPERATURE),
+      max_tokens: AI_MAX_TOKENS,
     }),
   });
 
@@ -94,17 +146,41 @@ async function requestAIOnce(safeSystem, safePrompt) {
   return { text, data };
 }
 
+async function requestContinuation(safeSystem, safePrompt, currentText) {
+  const continueInstruction = [
+    "Jawaban kamu sebelumnya belum selesai dan berhenti di tengah.",
+    "Lanjutkan PERSIS dari kata/kalimat terakhir di bawah ini.",
+    "Jangan mengulang bagian yang sudah ditulis.",
+    "Jangan menambahkan salam pembuka atau penjelasan apapun.",
+    "Langsung lanjutkan kalimatnya sampai selesai secara wajar.",
+    "",
+    `Jawaban belum selesai: ${currentText}`,
+  ].join("\n");
+
+  const continuePrompt = truncateFromStart(
+    `${safePrompt}\n\n${continueInstruction}`,
+    MAX_PROMPT_CHARS,
+  );
+
+  const { text } = await requestAIOnce(safeSystem, continuePrompt);
+  return stripThinking(text);
+}
+
 async function fetchAIText(system, prompt) {
   const safeSystem = truncateFromStart(system, MAX_SYSTEM_CHARS);
   const safePrompt = truncateFromStart(prompt, MAX_PROMPT_CHARS);
 
   let lastData = null;
+  let finalText = "";
 
   for (let attempt = 0; attempt <= AI_EMPTY_RETRY_COUNT; attempt++) {
     const { text, data } = await requestAIOnce(safeSystem, safePrompt);
     lastData = data;
 
-    if (text) return text;
+    if (text) {
+      finalText = text;
+      break;
+    }
 
     // response kosong tapi status ok -> kemungkinan glitch sesaat di server AI, coba lagi
     if (attempt < AI_EMPTY_RETRY_COUNT) {
@@ -115,12 +191,38 @@ async function fetchAIText(system, prompt) {
     }
   }
 
-  console.error(
-    "[Neura] Response tetap kosong setelah retry, raw data:",
-    JSON.stringify(lastData).slice(0, 500)
-  );
+  if (!finalText) {
+    console.error(
+      "[Neura] Response tetap kosong setelah retry, raw data:",
+      JSON.stringify(lastData).slice(0, 500)
+    );
+    return "";
+  }
 
-  return "";
+  let continueRounds = 0;
+
+  while (continueRounds < AI_CONTINUE_MAX_ROUNDS && looksTruncated(finalText)) {
+    continueRounds += 1;
+
+    console.warn(
+      `[Neura] Jawaban kelihatan terpotong, minta lanjutan (percobaan ${continueRounds}/${AI_CONTINUE_MAX_ROUNDS})...`
+    );
+
+    let continuation = "";
+
+    try {
+      continuation = await requestContinuation(safeSystem, safePrompt, finalText);
+    } catch (err) {
+      console.error("[Neura] Gagal minta lanjutan jawaban:", err.message);
+      break;
+    }
+
+    if (!continuation) break;
+
+    finalText = joinContinuation(finalText, continuation);
+  }
+
+  return finalText;
 }
 
 const neuraPersona = {
@@ -153,12 +255,6 @@ const MAX_MESSAGE_LENGTH = 2000;
 const MIN_LENGTH_FOR_EXTRACTION = 6;
 
 const processingLocks = new Set();
-
-function stripThinking(text) {
-  return String(text || "")
-    .replace(/<think>[\s\S]*?<\/think>/gi, "")
-    .trim();
-}
 
 const getAIResponse = async (system, history, sender, message) => {
   try {
