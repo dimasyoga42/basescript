@@ -12,15 +12,15 @@ dotenv.config();
 const db = path.resolve("db", "neura.json");
 
 const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
-const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.6";
+const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.4";
 
 // Dipangkas dari 1800/1500 -> payload lebih kecil = request lebih cepat diproses server
 const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 5000;
 const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 4500;
 
 // Retry kalau API balikin response kosong (kejadian intermiten dari sisi server siputzx)
-const AI_EMPTY_RETRY_COUNT = Number(process.env.AI_EMPTY_RETRY_COUNT) || 2;
-const AI_EMPTY_RETRY_DELAY_MS = Number(process.env.AI_EMPTY_RETRY_DELAY_MS) || 400;
+const AI_EMPTY_RETRY_COUNT = Number(process.env.AI_EMPTY_RETRY_COUNT) || 3;
+const AI_EMPTY_RETRY_DELAY_MS = Number(process.env.AI_EMPTY_RETRY_DELAY_MS) || 300;
 
 const TOOL_CALL_PATTERN = /\{\{tool:[^}]+\}\}/i;
 // pattern khusus untuk tool stiker, dipisah dari TOOL_CALL_PATTERN
@@ -127,8 +127,8 @@ const neuraPersona = {
   name: "Neura Clarista",
   age: 18,
   personality: [
-    "Judes",
-    "Nyolot",
+    "baik",
+    "jutek",
     "Cuek",
     "Sarkastik",
     "Iseng kalau lagi mood",
