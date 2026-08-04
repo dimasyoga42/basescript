@@ -130,7 +130,8 @@ const handler = async (m, { conn }) => {
       renderLargerThumbnail: true,
 
     },
-};
+  });
+}
 
 handler.command = "menu";
 handler.alias = ["help"];
