@@ -1,11 +1,10 @@
-import { config, thumbnail } from "../config.js";
+import { config } from "../config.js";
 import { scrapeBoostBoss } from "./toram/boost.js";
 import { sendFancyText, sendFancyTextModif } from "../src/config/message.js";
 import { supa } from "../src/config/supa.js";
 import { buildAvaGrid } from "./_function/_format.js";
 import axios from "axios";
 import { demoButtonV2, thumb } from "../src/config/ms.js";
-import { sendTextWithContext } from "../src/config/helper.js";
 
 const handler = async (m, { conn }) => {
   let image = null;
@@ -118,20 +117,8 @@ const handler = async (m, { conn }) => {
   //   config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
   //   randomThumb,
   // );
-  await sendTextWithContext(conn, m.chat, result, {
-    forwarded: true,
-    forwardingScore: 999,
-    externalAdReply: {
-      title: config.BotName,
-      body: config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
-      // pakai file lokal supaya tidak bergantung pada CDN eksternal yang kadang blok request
-      thumbnailUrl: thumbnail,
-      mediaType: 1,
-      renderLargerThumbnail: true,
-
-    },
-  });
-}
+  await thumb(conn, m, config.BotName, result, config.OwnerName, config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)], randomThumb)
+};
 
 handler.command = "menu";
 handler.alias = ["help"];
