@@ -1,6 +1,24 @@
 import { config } from "../../config.js";
 import { buildSelectButton, sendText } from "../../src/config/message.js";
-import { supa } from "../../src/config/supa.js";
+
+const TRAIT_API_URL = "https://server.neurasama.my.id/etc/toram/trait";
+
+const fetchTraitData = async (name) => {
+  try {
+    const url = name
+      ? `${TRAIT_API_URL}?name=${encodeURIComponent(name)}`
+      : TRAIT_API_URL;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Request gagal dengan status ${res.status}`);
+    }
+    const json = await res.json();
+    return Array.isArray(json?.data) ? json.data : [];
+  } catch (err) {
+    console.error("[ability] fetchTraitData error:", err);
+    throw err;
+  }
+};
 
 const handler = async (m, { conn }) => {
   try {
@@ -10,15 +28,15 @@ const handler = async (m, { conn }) => {
 
     // LIST SEMUA TRAIT
     if (!query) {
-      const { data, error } = await supa
-        .from("ablityv2")
-        .select("name")
-        .order("name", { ascending: true });
-
-      if (error || !data?.length) {
+      let data;
+      try {
+        data = await fetchTraitData();
+      } catch (err) {
         return sendText(conn, m.chat, "Gagal mengambil daftar ability.", m);
       }
-
+      if (!data?.length) {
+        return sendText(conn, m.chat, "Gagal mengambil daftar ability.", m);
+      }
       return await conn.sendButton(m.chat, {
         text: "format salah gunakan .trait mega",
         footer: config.OwnerName,
@@ -38,27 +56,30 @@ const handler = async (m, { conn }) => {
       });
     }
 
-    // EXACT MATCH
-    const { data: exactData, error: exactError } = await supa
-      .from("ablityv2")
-      .select("*")
-      .ilike("name", query)
-      .limit(1);
-
-    if (!exactError && exactData?.length === 1) {
-      const item = exactData[0];
-      return sendText(conn, m.chat, `${item.name}\n${item.stat_effect}`, m);
+    // CARI BERDASARKAN QUERY
+    let data;
+    try {
+      data = await fetchTraitData(query);
+    } catch (err) {
+      return sendText(
+        conn,
+        m.chat,
+        "Terjadi kesalahan saat mengambil data pada server.",
+        m,
+      );
     }
 
-    // PARTIAL MATCH
-    const { data, error } = await supa
-      .from("ablityv2")
-      .select("*")
-      .ilike("name", `%${query}%`)
-      .order("name", { ascending: true });
-
-    if (error || !data?.length) {
+    if (!data?.length) {
       return sendText(conn, m.chat, "Data trait tidak ditemukan.", m);
+    }
+
+    // EXACT MATCH
+    const exactMatches = data.filter(
+      (item) => item?.name?.toLowerCase() === query.toLowerCase(),
+    );
+    if (exactMatches.length === 1) {
+      const item = exactMatches[0];
+      return sendText(conn, m.chat, `${item.name}\n${item.stat_effect}`, m);
     }
 
     // JIKA CUMA 1 HASIL
@@ -95,7 +116,6 @@ const handler = async (m, { conn }) => {
     );
   }
 };
-
 handler.command = "trait";
 handler.alias = ["ability"];
 handler.category = "Toram Search";
