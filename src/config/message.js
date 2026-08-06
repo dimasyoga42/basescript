@@ -315,7 +315,7 @@ export const sendMenu = async (
       contextInfo: messagetxt({
         title,
         body,
-        thumbnailUrl: thumbnail,
+        thumbnail: thumbnail,
         renderLargerThumbnail,
         showAdAttribution: false,
         sourceUrl: "https://whatsapp.com",
