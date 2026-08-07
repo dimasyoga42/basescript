@@ -429,7 +429,7 @@ export const sendMenu = async (
       body,
       thumbnailUrl: thumbnail,
       renderLargerThumbnail,
-      showAdAttribution: false,
+      showAdAttribution: true,
       sourceUrl: "https://whatsapp.com",
     });
 
