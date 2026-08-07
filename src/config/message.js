@@ -1,4 +1,5 @@
 import fs from "fs";
+import { randomUUID } from "crypto";
 import { downloadContentFromMessage } from "@whiskeysockets/baileys";
 import { config } from "../../config.js";
 
@@ -6,22 +7,32 @@ const ensure = (v, name) => {
   if (!v) throw new Error(`${name} is required`);
 };
 
-// Satu-satunya tempat yang bikin contextInfo (isForwarded + externalAdReply).
-// Semua fungsi "fancy" (sendFancyText, sendMenu, sendBtns, sendFancyTextModif)
-// tinggal panggil ini, gak perlu bikin object externalAdReply sendiri-sendiri lagi.
-//
-// FIXED:
-// 1. "fisForwarded" -> "isForwarded" (typo)
-// 2. "Math.random() * config.thumbnail" -> "Math.random() * config.thumbnail.length"
-//    (sebelumnya array dikaliin number langsung -> NaN -> index jadi undefined
-//    -> thumbnailUrl selalu undefined -> context/card gak pernah muncul)
-// 3. Semua opsi sekarang bisa di-override per pemanggilan, fallback ke config kalau kosong.
+const pickRandom = (arr, fallback = "") => {
+  if (!Array.isArray(arr) || arr.length === 0) return fallback;
+  return arr[Math.floor(Math.random() * arr.length)];
+};
+
+const MIME_EXTENSION_MAP = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "video/mp4": "mp4",
+  "audio/mpeg": "mp3",
+  "audio/ogg": "ogg",
+  "audio/mp4": "m4a",
+  "application/pdf": "pdf",
+};
+
+const getExtensionFromMime = (mimetype) =>
+  MIME_EXTENSION_MAP[mimetype] || "bin";
+
 const messagetxt = ({
   title,
   body,
   thumbnailUrl,
   sourceUrl,
-  mediaType = 1, // 1 = image
+  mediaType = 1,
   previewType = "PHOTO",
   renderLargerThumbnail = true,
   showAdAttribution = true,
@@ -31,11 +42,8 @@ const messagetxt = ({
     forwardingScore: 999,
     externalAdReply: {
       title: title || config.BotName,
-      body:
-        body || config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
-      thumbnailUrl:
-        thumbnailUrl ||
-        config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)],
+      body: body || pickRandom(config.msgtxt),
+      thumbnailUrl: thumbnailUrl || pickRandom(config.thumbnail),
       mediaType,
       previewType,
       renderLargerThumbnail,
@@ -50,34 +58,48 @@ export const sendText = async (sock, jid, text, quoted = null) => {
   ensure(jid, "jid");
   ensure(text, "text");
 
-  await sock.sendMessage(jid, { text }, { quoted });
+  try {
+    return await sock.sendMessage(jid, { text }, { quoted });
+  } catch (error) {
+    throw new Error(`Gagal mengirim teks: ${error.message}`);
+  }
 };
 
 export const editText = async (sock, jid, message, text) => {
   ensure(jid, "jid");
+  ensure(message?.key, "message.key");
   ensure(text, "text");
 
-  await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 1000));
+  try {
+    await sock.sendPresenceUpdate("composing", jid);
+    await new Promise((r) => setTimeout(r, 1000));
 
-  await sock.sendMessage(jid, {
-    text,
-    edit: message.key,
-  });
+    await sock.sendMessage(jid, {
+      text,
+      edit: message.key,
+    });
 
-  return await sock.sendPresenceUpdate("paused", jid);
+    return await sock.sendPresenceUpdate("paused", jid);
+  } catch (error) {
+    throw new Error(`Gagal mengedit pesan: ${error.message}`);
+  }
 };
 
 export const reactMessage = async (sock, jid, message, emoji) => {
   ensure(jid, "jid");
+  ensure(message?.key, "message.key");
   ensure(emoji, "emoji");
 
-  return await sock.sendMessage(jid, {
-    react: {
-      text: emoji,
-      key: message.key,
-    },
-  });
+  try {
+    return await sock.sendMessage(jid, {
+      react: {
+        text: emoji,
+        key: message.key,
+      },
+    });
+  } catch (error) {
+    throw new Error(`Gagal mengirim reaksi: ${error.message}`);
+  }
 };
 
 export const sendImage = async (
@@ -88,20 +110,25 @@ export const sendImage = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
+  ensure(image, "image");
 
-  await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 100));
+  try {
+    await sock.sendPresenceUpdate("composing", jid);
+    await new Promise((r) => setTimeout(r, 100));
 
-  await sock.sendMessage(
-    jid,
-    {
-      image: Buffer.isBuffer(image) ? image : { url: image },
-      caption,
-    },
-    { quoted },
-  );
+    await sock.sendMessage(
+      jid,
+      {
+        image: Buffer.isBuffer(image) ? image : { url: image },
+        caption,
+      },
+      { quoted },
+    );
 
-  return await sock.sendPresenceUpdate("paused", jid);
+    return await sock.sendPresenceUpdate("paused", jid);
+  } catch (error) {
+    throw new Error(`Gagal mengirim gambar: ${error.message}`);
+  }
 };
 
 export const sendVideo = async (
@@ -112,20 +139,25 @@ export const sendVideo = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
+  ensure(video, "video");
 
-  await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 100));
+  try {
+    await sock.sendPresenceUpdate("composing", jid);
+    await new Promise((r) => setTimeout(r, 100));
 
-  await sock.sendMessage(
-    jid,
-    {
-      video: Buffer.isBuffer(video) ? video : { url: video },
-      caption,
-    },
-    { quoted },
-  );
+    await sock.sendMessage(
+      jid,
+      {
+        video: Buffer.isBuffer(video) ? video : { url: video },
+        caption,
+      },
+      { quoted },
+    );
 
-  return await sock.sendPresenceUpdate("paused", jid);
+    return await sock.sendPresenceUpdate("paused", jid);
+  } catch (error) {
+    throw new Error(`Gagal mengirim video: ${error.message}`);
+  }
 };
 
 export const sendAudio = async (
@@ -136,37 +168,47 @@ export const sendAudio = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
+  ensure(audio, "audio");
 
-  await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 100));
+  try {
+    await sock.sendPresenceUpdate("composing", jid);
+    await new Promise((r) => setTimeout(r, 100));
 
-  await sock.sendMessage(
-    jid,
-    {
-      audio: Buffer.isBuffer(audio) ? audio : { url: audio },
-      ptt,
-    },
-    { quoted },
-  );
+    await sock.sendMessage(
+      jid,
+      {
+        audio: Buffer.isBuffer(audio) ? audio : { url: audio },
+        ptt,
+      },
+      { quoted },
+    );
 
-  return await sock.sendPresenceUpdate("paused", jid);
+    return await sock.sendPresenceUpdate("paused", jid);
+  } catch (error) {
+    throw new Error(`Gagal mengirim audio: ${error.message}`);
+  }
 };
 
 export const sendSticker = async (sock, jid, sticker, quoted = null) => {
   ensure(jid, "jid");
+  ensure(sticker, "sticker");
 
-  await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 200));
+  try {
+    await sock.sendPresenceUpdate("composing", jid);
+    await new Promise((r) => setTimeout(r, 200));
 
-  await sock.sendMessage(
-    jid,
-    {
-      sticker: Buffer.isBuffer(sticker) ? sticker : { url: sticker },
-    },
-    { quoted },
-  );
+    await sock.sendMessage(
+      jid,
+      {
+        sticker: Buffer.isBuffer(sticker) ? sticker : { url: sticker },
+      },
+      { quoted },
+    );
 
-  return await sock.sendPresenceUpdate("paused", jid);
+    return await sock.sendPresenceUpdate("paused", jid);
+  } catch (error) {
+    throw new Error(`Gagal mengirim stiker: ${error.message}`);
+  }
 };
 
 export const sendDocument = async (
@@ -178,16 +220,21 @@ export const sendDocument = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
+  ensure(file, "file");
 
-  return await sock.sendMessage(
-    jid,
-    {
-      document: Buffer.isBuffer(file) ? file : { url: file },
-      fileName: filename,
-      mimetype,
-    },
-    { quoted },
-  );
+  try {
+    return await sock.sendMessage(
+      jid,
+      {
+        document: Buffer.isBuffer(file) ? file : { url: file },
+        fileName: filename,
+        mimetype,
+      },
+      { quoted },
+    );
+  } catch (error) {
+    throw new Error(`Gagal mengirim dokumen: ${error.message}`);
+  }
 };
 
 export const sendButton = async (
@@ -199,17 +246,26 @@ export const sendButton = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
-
-  return await sock.sendButton(
-    jid,
-    {
-      text,
-      footer,
-      buttons,
-      headerType: 1,
-    },
-    { quoted },
+  ensure(text, "text");
+  ensure(
+    Array.isArray(buttons) && buttons.length > 0,
+    "buttons",
   );
+
+  try {
+    return await sock.sendButton(
+      jid,
+      {
+        text,
+        footer,
+        buttons,
+        headerType: 1,
+      },
+      { quoted },
+    );
+  } catch (error) {
+    throw new Error(`Gagal mengirim button: ${error.message}`);
+  }
 };
 
 export const sendList = async (
@@ -223,18 +279,27 @@ export const sendList = async (
   quoted = null,
 ) => {
   ensure(jid, "jid");
-
-  return await sock.sendMessage(
-    jid,
-    {
-      text,
-      footer,
-      title,
-      buttonText,
-      sections,
-    },
-    { quoted },
+  ensure(text, "text");
+  ensure(
+    Array.isArray(sections) && sections.length > 0,
+    "sections",
   );
+
+  try {
+    return await sock.sendMessage(
+      jid,
+      {
+        text,
+        footer,
+        title,
+        buttonText,
+        sections,
+      },
+      { quoted },
+    );
+  } catch (error) {
+    throw new Error(`Gagal mengirim list: ${error.message}`);
+  }
 };
 
 export const sendFancyText = async (
@@ -249,48 +314,59 @@ export const sendFancyText = async (
     quoted = null,
   } = {},
 ) => {
-  await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 100));
+  ensure(jid, "jid");
 
-  await sock.sendMessage(
-    jid,
-    {
-      text,
-      contextInfo: messagetxt({
-        title,
-        body,
-        thumbnailUrl: thumbnail,
-        renderLargerThumbnail,
-        sourceUrl: "https://whatsapp.com",
-      }),
-    },
-    { quoted },
-  );
+  try {
+    await sock.sendPresenceUpdate("composing", jid);
+    await new Promise((r) => setTimeout(r, 100));
 
-  return await sock.sendPresenceUpdate("paused", jid);
+    await sock.sendMessage(
+      jid,
+      {
+        text,
+        contextInfo: messagetxt({
+          title,
+          body,
+          thumbnailUrl: thumbnail,
+          renderLargerThumbnail,
+          sourceUrl: "https://whatsapp.com",
+        }),
+      },
+      { quoted },
+    );
+
+    return await sock.sendPresenceUpdate("paused", jid);
+  } catch (error) {
+    throw new Error(`Gagal mengirim fancy text: ${error.message}`);
+  }
 };
 
-// FIXED: variabel "externalAdReply" lokal yang lama tidak pernah dipakai (dead code) -> dihapus.
-// Konteks yang benar-benar dikirim adalah hasil dari messagetxt(name).
 export const sendFancyTextModif = async (
   sock,
   jid,
   { name = "neura", image = "", caption = "", quoted = null } = {},
 ) => {
-  await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 100));
+  ensure(jid, "jid");
+  ensure(image, "image");
 
-  await sock.sendMessage(
-    jid,
-    {
-      image: { url: image },
-      caption: caption,
-      contextInfo: messagetxt({ title: name }),
-    },
-    { quoted },
-  );
+  try {
+    await sock.sendPresenceUpdate("composing", jid);
+    await new Promise((r) => setTimeout(r, 100));
 
-  return await sock.sendPresenceUpdate("paused", jid);
+    await sock.sendMessage(
+      jid,
+      {
+        image: { url: image },
+        caption: caption,
+        contextInfo: messagetxt({ title: name }),
+      },
+      { quoted },
+    );
+
+    return await sock.sendPresenceUpdate("paused", jid);
+  } catch (error) {
+    throw new Error(`Gagal mengirim fancy text modif: ${error.message}`);
+  }
 };
 
 export const sendMenu = async (
@@ -305,45 +381,61 @@ export const sendMenu = async (
     quoted = null,
   } = {},
 ) => {
-  await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 100));
+  ensure(jid, "jid");
 
-  await sock.sendMessage(
-    jid,
-    {
-      text,
-      contextInfo: messagetxt({
-        title,
-        body,
-        thumbnail: thumbnail,
-        renderLargerThumbnail,
-        showAdAttribution: false,
-        sourceUrl: "https://whatsapp.com",
-      }),
-    },
-    { quoted },
-  );
+  try {
+    await sock.sendPresenceUpdate("composing", jid);
+    await new Promise((r) => setTimeout(r, 100));
 
-  return await sock.sendPresenceUpdate("paused", jid);
+    await sock.sendMessage(
+      jid,
+      {
+        text,
+        contextInfo: messagetxt({
+          title,
+          body,
+          thumbnailUrl: thumbnail,
+          renderLargerThumbnail,
+          showAdAttribution: false,
+          sourceUrl: "https://whatsapp.com",
+        }),
+      },
+      { quoted },
+    );
+
+    return await sock.sendPresenceUpdate("paused", jid);
+  } catch (error) {
+    throw new Error(`Gagal mengirim menu: ${error.message}`);
+  }
 };
 
 export const downloadMedia = async (message, type = "buffer") => {
-  const stream = await downloadContentFromMessage(
-    message,
-    message.mimetype.split("/")[0],
-  );
+  ensure(message, "message");
+  ensure(message?.mimetype, "message.mimetype");
 
-  let buffer = Buffer.from([]);
+  try {
+    const mediaCategory = message.mimetype.split("/")[0];
+    const stream = await downloadContentFromMessage(message, mediaCategory);
 
-  for await (const chunk of stream) {
-    buffer = Buffer.concat([buffer, chunk]);
+    let buffer = Buffer.from([]);
+    for await (const chunk of stream) {
+      buffer = Buffer.concat([buffer, chunk]);
+    }
+
+    if (type === "buffer") {
+      return buffer;
+    }
+
+    const extension = getExtensionFromMime(message.mimetype);
+    const filePath = `./downloads/${randomUUID()}.${extension}`;
+
+    await fs.promises.mkdir("./downloads", { recursive: true });
+    await fs.promises.writeFile(filePath, buffer);
+
+    return filePath;
+  } catch (error) {
+    throw new Error(`Gagal mengunduh media: ${error.message}`);
   }
-
-  if (type === "buffer") {
-    return buffer;
-  }
-
-  return fs.writeFileSync("./downloaded_media", buffer);
 };
 
 export const sendbtn = () => {};
@@ -375,26 +467,36 @@ export const sendBtns = async (
     quoted = null,
   } = {},
 ) => {
-  await sock.sendPresenceUpdate("composing", jid);
-  await new Promise((r) => setTimeout(r, 100));
-
-  await sock.sendButton(
-    jid,
-    {
-      text,
-      footer,
-      buttons,
-      headerType: 1,
-      contextInfo: messagetxt({
-        title,
-        body,
-        thumbnailUrl: thumbnail,
-        renderLargerThumbnail,
-        sourceUrl: "https://whatsapp.com",
-      }),
-    },
-    { quoted },
+  ensure(jid, "jid");
+  ensure(
+    Array.isArray(buttons) && buttons.length > 0,
+    "buttons",
   );
 
-  return await sock.sendPresenceUpdate("paused", jid);
+  try {
+    await sock.sendPresenceUpdate("composing", jid);
+    await new Promise((r) => setTimeout(r, 100));
+
+    await sock.sendButton(
+      jid,
+      {
+        text,
+        footer,
+        buttons,
+        headerType: 1,
+        contextInfo: messagetxt({
+          title,
+          body,
+          thumbnailUrl: thumbnail,
+          renderLargerThumbnail,
+          sourceUrl: "https://whatsapp.com",
+        }),
+      },
+      { quoted },
+    );
+
+    return await sock.sendPresenceUpdate("paused", jid);
+  } catch (error) {
+    throw new Error(`Gagal mengirim button dengan preview: ${error.message}`);
+  }
 };
