@@ -51,45 +51,25 @@ const fetchThumbnailBuffer = async (url) => {
   }
 };
 
-// Satu-satunya tempat yang bikin contextInfo (externalAdReply).
-// Semua fungsi "fancy" (sendFancyText, sendMenu, sendBtns, sendFancyTextModif)
-// tinggal panggil ini, gak perlu bikin object externalAdReply sendiri-sendiri lagi.
-//
-// FIXED:
-// 1. "fisForwarded" -> "isForwarded" (typo, versi lama)
-// 2. "Math.random() * config.thumbnail" -> pickRandom() (array dikaliin number langsung -> NaN)
-// 3. thumbnailUrl (fetch eksternal oleh WhatsApp) -> thumbnail (buffer JPEG di-embed langsung).
-//    URL eksternal yang gagal di-fetch oleh WhatsApp menyebabkan seluruh pesan gagal
-//    sampai ke penerima meski tetap tersinkron ke device pengirim sendiri.
-// 4. isForwarded: true + forwardingScore: 999 dihapus -> pola ini mirip spam dan
-//    berisiko kena filter anti-spam WhatsApp di sisi server.
-const messagetxt = async ({
+// Membuat link preview standar WhatsApp (bukan externalAdReply/iklan).
+// Ini fitur normal yang dipakai semua user tiap kirim URL, jadi tidak
+// divalidasi khusus oleh server dan reliable sampai ke penerima.
+const buildLinkPreview = async ({
   title,
-  body,
-  thumbnailUrl,
+  description,
   sourceUrl,
-  mediaType = 1,
-  previewType = "PHOTO",
-  renderLargerThumbnail = true,
-  showAdAttribution = true,
+  thumbnailUrl,
 } = {}) => {
+  const resolvedUrl = sourceUrl || "https://neurasama.my.id";
   const resolvedThumbnailUrl = thumbnailUrl || pickRandom(config.thumbnail);
   const jpegThumbnail = await fetchThumbnailBuffer(resolvedThumbnailUrl);
 
   return {
-    isForwarded: false,
-    forwardingScore: 0,
-    externalAdReply: {
-      title: title || config.BotName,
-      body: body || pickRandom(config.msgtxt),
-      thumbnail: jpegThumbnail || undefined,
-      mediaType,
-      previewType,
-      renderLargerThumbnail,
-      showAdAttribution,
-      sourceUrl: sourceUrl || "https://neurasama.my.id",
-      containsAutoReply: true,
-    },
+    "canonical-url": resolvedUrl,
+    "matched-text": resolvedUrl,
+    title: title || config.BotName,
+    description: description || pickRandom(config.msgtxt),
+    jpegThumbnail: jpegThumbnail || undefined,
   };
 };
 
@@ -343,7 +323,6 @@ export const sendFancyText = async (
     body,
     text = "",
     thumbnail = null,
-    renderLargerThumbnail = true,
     quoted = null,
   } = {},
 ) => {
@@ -353,19 +332,17 @@ export const sendFancyText = async (
     await sock.sendPresenceUpdate("composing", jid);
     await new Promise((r) => setTimeout(r, 100));
 
-    const contextInfo = await messagetxt({
+    const linkPreview = await buildLinkPreview({
       title,
-      body,
+      description: body,
       thumbnailUrl: thumbnail,
-      renderLargerThumbnail,
-      sourceUrl: "https://whatsapp.com",
     });
 
     await sock.sendMessage(
       jid,
       {
-        text,
-        contextInfo,
+        text: text || linkPreview["canonical-url"],
+        linkPreview,
       },
       { quoted },
     );
@@ -388,14 +365,11 @@ export const sendFancyTextModif = async (
     await sock.sendPresenceUpdate("composing", jid);
     await new Promise((r) => setTimeout(r, 100));
 
-    const contextInfo = await messagetxt({ title: name });
-
     await sock.sendMessage(
       jid,
       {
         image: { url: image },
         caption: caption,
-        contextInfo,
       },
       { quoted },
     );
@@ -414,7 +388,6 @@ export const sendMenu = async (
     body,
     text = "",
     thumbnail = null,
-    renderLargerThumbnail = true,
     quoted = null,
   } = {},
 ) => {
@@ -424,20 +397,17 @@ export const sendMenu = async (
     await sock.sendPresenceUpdate("composing", jid);
     await new Promise((r) => setTimeout(r, 100));
 
-    const contextInfo = await messagetxt({
+    const linkPreview = await buildLinkPreview({
       title,
-      body,
+      description: body,
       thumbnailUrl: thumbnail,
-      renderLargerThumbnail,
-      showAdAttribution: true,
-      sourceUrl: "https://whatsapp.com",
     });
 
     await sock.sendMessage(
       jid,
       {
-        text,
-        contextInfo,
+        text: text || linkPreview["canonical-url"],
+        linkPreview,
       },
       { quoted },
     );
@@ -502,7 +472,6 @@ export const sendBtns = async (
     footer = "Dimasyoga",
     buttons = [],
     thumbnail = null,
-    renderLargerThumbnail = true,
     quoted = null,
   } = {},
 ) => {
@@ -513,22 +482,20 @@ export const sendBtns = async (
     await sock.sendPresenceUpdate("composing", jid);
     await new Promise((r) => setTimeout(r, 100));
 
-    const contextInfo = await messagetxt({
+    const linkPreview = await buildLinkPreview({
       title,
-      body,
+      description: body,
       thumbnailUrl: thumbnail,
-      renderLargerThumbnail,
-      sourceUrl: "https://whatsapp.com",
     });
 
     await sock.sendButton(
       jid,
       {
-        text,
+        text: text || linkPreview["canonical-url"],
         footer,
         buttons,
         headerType: 1,
-        contextInfo,
+        linkPreview,
       },
       { quoted },
     );
