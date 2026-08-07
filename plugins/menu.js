@@ -118,7 +118,7 @@ const handler = async (m, { conn }) => {
   //   randomThumb,
   // );
   await thumb(conn, m, config.BotName, result, config.OwnerName, config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)], "https://server.neurasama.my.id/etc/thumbnail")
-  await sendMenu(conn, m.chat, {
+  await sendFancyText(conn, m.chat, {
     title: config.BotName,
     body: "selalu ada",
     text: result,
