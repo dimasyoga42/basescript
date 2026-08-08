@@ -1,18 +1,47 @@
-// import { sendImage } from "../../src/config/message.js";
+import { AIRich } from "@ryuu-reinzz/luna-lib";
 
-// const handler = (m, { conn }) => {
-//   try {
-//     sendImage(
-//       conn,
-//       m.chat,
-//       "https://raw.githubusercontent.com/dimasyoga42/dataset/refs/heads/main/dye_table.png",
-//       "Dye Weapon Prediction",
-//       m,
-//     );
-//   } catch (err) {}
-// };
+const handler = async (m, { conn }) => {
+  try {
+    const response = await fetch(
+      "https://server.neurasama.my.id/etc/dye"
+    );
 
-// handler.command = ["dye"];
-// handler.category = "Toram Info";
-// handler.submenu = "Toram";
-// export default handler;
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (!result.data || result.data.length === 0) {
+      return m.reply("Data dye tidak ditemukan.");
+    }
+
+    const text = result.data
+      .map((item, index) => {
+        return `${index + 1}. ${item.name}\nColor: ${item.color}`;
+      })
+      .join("\n");
+
+    const message = `*DYE*\n${text}`;
+
+    await conn.sendMessage(
+      m.chat,
+      {
+        text: message
+      },
+      {
+        quoted: m
+      }
+    );
+
+  } catch (err) {
+    console.error(err);
+    await m.reply("Gagal mengambil data dye.");
+  }
+};
+
+handler.command = ["dye"];
+handler.category = "Toram Info";
+handler.submenu = "Toram";
+
+export default handler;
