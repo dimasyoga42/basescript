@@ -18,7 +18,7 @@ const handler = async (m, { conn }) => {
 
     const text = result.data
       .map((item, index) => {
-        return `${index + 1}. ${item.name}\nColor: ${item.color}`;
+        return `${index + 1}. ${item.name} - ${item.color}`;
       })
       .join("\n");
 
