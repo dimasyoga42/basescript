@@ -36,57 +36,6 @@ const handler = async (m, { conn }) => {
     categories[cat].push(...cmds);
   }
 
-  // Query bospeek dari Supabase
-  let bospeekSection = "*Bos Puncak:* Data tidak tersedia";
-  try {
-    const { data: dataPeek, error: peekError } = await supa
-      .from("bospeek")
-      .select("*")
-      .eq("active", true);
-    if (peekError) {
-      console.error("[menu] gagal ambil bospeek:", peekError.message);
-    } else if (dataPeek?.length) {
-      bospeekSection =
-        `*Puncak Petualang:*\n` +
-        dataPeek
-          .map((item) => `  - ${item.name} - ${item.element}`)
-          .join("\n");
-    } else {
-      bospeekSection = "*Bos Puncak Petualang:* Tidak ada bos aktif";
-    }
-  } catch (e) {
-    console.error("[menu] error query bospeek:", e.message);
-  }
-
-  // Section boost boss
-  let bossSection;
-  if (!dataBoses.active) {
-    bossSection = dataBoses.expired
-      ? `*Bos Boost:* Event berakhir ${dataBoses.lastDate}`
-      : `*Bos Boost:* Tidak ada event aktif saat ini`;
-  } else {
-    const bossList = dataBoses.bosses
-      .map((b) => `- ${b.name} (${b.level}): ${b.location || "-"}`)
-      .join("\n");
-    bossSection = `*Bos Boosting*:\n${bossList}`;
-  }
-
-  // Section ava
-  let ava = "*Ava Terbaru:* Data tidak tersedia";
-  try {
-    const res = await axios.get(
-      "https://neurapi.mochinime.cyou/api/toram/ava",
-    );
-    const data = res.data?.result;
-    if (Array.isArray(data?.data) && data.data.length > 0) {
-      const vals = data.data.map((item) => `- ${item.name}`).join("\n");
-      ava = `*Ava Terbaru*:\n${vals}`;
-    } else {
-      ava = "*Ava Terbaru:* Tidak ada data ava saat ini";
-    }
-  } catch (e) {
-    console.error("[menu] gagal ambil data ava:", e.message);
-  }
 
   // Section command
   const commandSection = Object.entries(categories)
@@ -96,7 +45,7 @@ const handler = async (m, { conn }) => {
     )
     .join("\n\n").trim();
 
-  const result = `${bossSection}\n\n${ava}\n\n${commandSection}`;
+  const result = `*Informasi Bot*\nLibrary: Luna-lib(JS)\nVersion: 1.2.5\Website: https://neurasama.my.id\nOwner:Dimas Yoga (0856643933331)\n*Rules*\n- dilarang spam cmd tertentu\n- dilarang membuat stiker jomok\n- bot hanya merespon chat grub tidak chat pribadi\n\n${commandSection}`;
 
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
