@@ -25,16 +25,16 @@ const handler = async (m, { conn }) => {
       )
     }
 
-    let data = await getUserData(db, (item) => item.id === m.chat)
-
-    if (!data) {
-      const newData = {
+    let data = await getUserData(db)
+    let dataentry = data.find((i) => i.id === m.chat)
+    if (!dataentry) {
+      dataentry = {
         id: m.chat,
         rate: vel,
       }
-      await saveUserData(db, newData)
+      await saveUserData(db, dataentry)
     } else {
-      data.rate = vel
+      dataentry.rate = vel
       await saveUserData(db, data)
     }
 

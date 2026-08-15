@@ -3,8 +3,9 @@ import path from "path"
 const db = path.resolve("db", "rate.json")
 const handler = async (m, {conn}) => {
   try {
-    let data = await getUserData(db, (item) => item.id === m.chat)
-    if (!data || !data.rate) {
+    const data = await getUserData(db)
+    let dataentry = data.find((i) => i.id === m.chat)
+    if (!dataentry || dataentry.rate) {
       return conn.sendMessage(m.chat, { text: "belum ada rate spina yang di set di chat ini, gunakan .setrate 100-150" }, { quoted: m })
     }
     return conn.sendMessage(m.chat, { text: `rate saat ini: *${data.rate}M*` }, { quoted: m })
