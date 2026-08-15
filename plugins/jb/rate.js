@@ -1,9 +1,7 @@
 import { getUserData, saveUserData } from "../../src/config/func.js"
 import path from "path"
 import { isAdmin } from "../_function/_admin.js";
-
 const db = path.resolve("db", "rate.json")
-
 const handler = async (m, { conn }) => {
   try {
     if (!(await isAdmin(conn, m))) return;
@@ -15,8 +13,6 @@ const handler = async (m, { conn }) => {
         { quoted: m }
       )
     }
-
-    // validasi format "angka-angka"
     if (!/^\d+-\d+$/.test(vel)) {
       return conn.sendMessage(
         m.chat,
@@ -24,20 +20,18 @@ const handler = async (m, { conn }) => {
         { quoted: m }
       )
     }
-
-    let data = await getUserData(db)
+    let data =  getUserData(db)
     let dataentry = data.find((i) => i.id === m.chat)
     if (!dataentry) {
       dataentry = {
         id: m.chat,
         rate: vel,
       }
-      await saveUserData(db, data)
+      data.push(dataentry)
     } else {
       dataentry.rate = vel
-      await saveUserData(db, data)
     }
-
+    saveUserData(db, data)
     return conn.sendMessage(
       m.chat,
       { text: `rate berhasil diatur ke *${vel}*` },
@@ -52,9 +46,7 @@ const handler = async (m, { conn }) => {
     )
   }
 }
-
 handler.command = "setrate"
 handler.category = "Menu Jb"
 handler.alias = "srate"
-
 export default handler
