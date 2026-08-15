@@ -12,7 +12,7 @@ const handler = async (m, {conn}) => {
     return conn.sendMessage(m.chat, {text: "terjadi kesalahan dalam mengambil database"}, {quoted: m})
   }
 }
-handler.command = "cakrate"
+handler.command = "cekrate"
 handler.category = "Menu Jb"
 handler.alias = "ceckrate"
 export default handler
