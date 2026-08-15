@@ -32,7 +32,7 @@ const handler = async (m, { conn }) => {
         id: m.chat,
         rate: vel,
       }
-      await saveUserData(db, dataentry)
+      await saveUserData(db, data)
     } else {
       dataentry.rate = vel
       await saveUserData(db, data)
