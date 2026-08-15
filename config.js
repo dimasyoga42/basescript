@@ -68,7 +68,7 @@ export const config = {
   1-2: 140-160M
 
   *BWG*
-  0-1: 15-20M
+  0-1: 5-10M
   0-2: 80-100M
 
   *KNUCK*
@@ -85,7 +85,7 @@ export const config = {
 
   *KTN*
   0-1: 20-35M
-  1-2: 120-140M
+  1-2: 100-120M
 
   *THS*
   0-1: 20-25M
@@ -93,7 +93,7 @@ export const config = {
 
   *HB*
   0-1 15-25M
-  1-2: 100M
+  1-2: 100M-110M
 
   *BOW*
   0-1: 10M - 15M
