@@ -11,73 +11,73 @@ import { formatDetail, parseMonsters } from "./_formater.js";
 const BASE_URL = "https://coryn.club";
 
 const handler = async (m, { conn }) => {
-  sendText(conn, m.chat, "sedang dalam perbaikan", m)
-  // try {
-  //   const arg = m.text.split(" ");
 
-  //   const name = arg.slice(1).join(" ").trim();
+  try {
+    const arg = m.text.split(" ");
 
-  //   if (!name) {
-  //     const { data: db, error } = await supa.from("bosdef").select("name");
+    const name = arg.slice(1).join(" ").trim();
 
-  //     if (error || !db)
-  //       return sendText(conn, m.chat, "bos tidak ditemukan!!", m);
+    if (!name) {
+      const { data: db, error } = await supa.from("bosdef").select("name");
 
-  //     return await conn.sendButton(m.chat, {
-  //       text: "Pilih Boss yang tersedia",
-  //       footer: config.OwnerName,
-  //       buttons: db.map((item) => ({
-  //         name: "quick_reply",
-  //         buttonParamsJson: JSON.stringify({
-  //           display_text: item.name,
-  //           id: `.bosdef ${item.name}`,
-  //         }),
-  //       })),
-  //       bottom_sheet: true,
-  //       bottom_name: "Bosdef",
-  //     });
-  //   }
+      if (error || !db)
+        return sendText(conn, m.chat, "bos tidak ditemukan!!", m);
 
-  //   const url = `${BASE_URL}/monster.php?name=${encodeURIComponent(name)}&type=&order=id+DESC&show=22`;
-  //   const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
-  //   const utlis = parseMonsters(await res.text());
+      return await conn.sendButton(m.chat, {
+        text: "Pilih Boss yang tersedia",
+        footer: config.OwnerName,
+        buttons: db.map((item) => ({
+          name: "quick_reply",
+          buttonParamsJson: JSON.stringify({
+            display_text: item.name,
+            id: `.bosdef ${item.name}`,
+          }),
+        })),
+        bottom_sheet: true,
+        bottom_name: "Bosdef",
+      });
+    }
 
-  //   const dtail =
-  //     utlis
-  //       .slice(0, 1)
-  //       .map((mob, i) => formatDetail(mob, i, utlis.length))[0] ?? "";
+    const url = `${BASE_URL}/monster.php?name=${encodeURIComponent(name)}&type=&order=id+DESC&show=22`;
+    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const utlis = parseMonsters(await res.text());
 
-  //   const { data } = await supa
-  //     .from("bosdef")
-  //     .select("name, type, image_url, spawn, element, spawn, stat")
-  //     .ilike("name", `%${name}%`)
-  //     .limit(1)
-  //     .maybeSingle();
+    const dtail =
+      utlis
+        .slice(0, 1)
+        .map((mob, i) => formatDetail(mob, i, utlis.length))[0] ?? "";
 
-  //   if (!data)
-  //     return sendFancyText(conn, m.chat, {
-  //       title: config.BotName,
-  //       body: `Developer By ${config.OwnerName}`,
-  //       thumbnail: thumbnail,
-  //       text: config.message.notFound ?? "Data tidak ditemukan.",
-  //       quoted: m,
-  //     });
+    const { data } = await supa
+      .from("bosdef")
+      .select("name, type, image_url, spawn, element, spawn, stat")
+      .ilike("name", `%${name}%`)
+      .limit(1)
+      .maybeSingle();
 
-  //   const parser =
-  //     `*${data.name}* ${data.spawn}\nElement:\n${data.element}\nType: ${data.type}\n${dtail}\n\nStat Info:\n${data.stat}`.trim();
+    if (!data)
+      return sendFancyText(conn, m.chat, {
+        title: config.BotName,
+        body: `Developer By ${config.OwnerName}`,
+        thumbnail: thumbnail,
+        text: config.message.notFound ?? "Data tidak ditemukan.",
+        quoted: m,
+      });
 
-  //   // sendFancyText(conn, m.chat, {
-  //   //   title: data.name,
-  //   //   body: `loc: ${data.spawn}`,
-  //   //   thumbnail: data.image_url,
-  //   //   text: parser,
-  //   //   quoted: m,
-  //   // });
-  //   const { data: db, error } = await supa.from("bosdef").select("name");
-  //   conn.sendMessage(m.chat, { text: parser }, { quoted: m });
-  // } catch (err) {
-  //   sendText(conn, m.chat, "terjadi kesalahan pada server harap di ulang", m);
-  // }
+    const parser =
+      `*${data.name}* ${data.spawn}\nElement:\n${data.element}\nType: ${data.type}\n${dtail}\n\nStat Info:\n${data.stat}`.trim();
+
+    // sendFancyText(conn, m.chat, {
+    //   title: data.name,
+    //   body: `loc: ${data.spawn}`,
+    //   thumbnail: data.image_url,
+    //   text: parser,
+    //   quoted: m,
+    // });
+    const { data: db, error } = await supa.from("bosdef").select("name");
+    conn.sendMessage(m.chat, { text: parser }, { quoted: m });
+  } catch (err) {
+    sendText(conn, m.chat, "terjadi kesalahan pada server harap di ulang", m);
+  }
 };
 
 handler.command = ["bosdef"];
