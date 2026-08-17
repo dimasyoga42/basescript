@@ -6,28 +6,20 @@ import { supa } from "../../src/config/supa.js";
 const handler = async (m, { conn }) => {
   try {
     const res = await axios.get(`${config.restapi.toram}toram/ava`);
-    const items = res.data.result; // confirm: is this the array, or res.data.result.data?
-
-    for (const item of items) {
-      const { data: existing, error } = await supa
-        .from("avatar")
-        .select("*")
-        .eq("name", item.name);
-
-      if (error) {
-        console.error("Supabase select error:", error);
-      } else if (!existing || existing.length === 0) {
-        // not in db yet -> insert
-        const { error: insertError } = await supa
-          .from("avatar")
-          .insert({ name: item.name, image_url: item.image });
-        if (insertError) console.error("Supabase insert error:", insertError);
-      }
-
-      await sendImage(conn, m.chat, item.image, item.name, m);
-    }
+    const { data } = res.data.result;
+    //const db = await supa.from("avatar").select("*").eq("name", data.name)
+    data.map((item) => {
+      // sendFancyText(conn, m.chat, {
+      //   title: config.BotName,
+      //   body: item.name,
+      //   thumbnail: item.image,
+      //   renderLargerThumbnail: true,
+      //   text: `*${item.name}*\n${item.date}`,
+      //   quoted: m,
+      // });
+      sendImage(conn, m.chat, item.image, item.name, m);
+    });
   } catch (err) {
-    console.error(err);
     sendFancyText(conn, m.chat, {
       title: config.BotName,
       body: `Developer By ${config.OwnerName}`,
