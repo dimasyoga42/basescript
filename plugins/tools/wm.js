@@ -19,14 +19,14 @@ const handler = (m, { conn }) => {
 
     const data = getUserData(db);
 
-    const dataPack = data.find((item) => item.id === m.chat);
+    const dataPack = data.find((item) => item.id === m.sender);
 
     if (dataPack) {
       dataPack.pack = pack;
       dataPack.author = author;
     } else {
       data.push({
-        id: m.chat,
+        id: m.sender,
         pack,
         author,
       });
