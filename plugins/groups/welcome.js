@@ -1,6 +1,6 @@
 import axios from "axios";
-import { config } from "../../../config.js";
-import { supa } from "../../../src/config/supa.js";
+import { supa } from "../../src/config/supa.js";
+import { config } from "../../config.js";
 const getProfilePicture = async (conn, jid) => {
   try {
     return await conn.profilePictureUrl(jid, "image");
@@ -55,7 +55,7 @@ const handler = async (m, { conn }) => {
             mentions: [jid],
           });
         } else {
-        const url = `https://api.siputzx.my.id/api/canvas/welcomev5?username=${encodeURIComponent(groupName)}&guildName=${encodeURIComponent(groupName)}&memberCount=${memberCount}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(config.welcomeBg || "")}&quality=90`;
+        const url = `https://api.siputzx.my.id/api/canvas/welcomev5?username=${encodeURIComponent(groupName)}&guildName=${encodeURIComponent(groupName)}&memberCount=${memberCount}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent( config.welcomeBg || "")}&quality=90`;
         let image;
         try {
           const res = await axios.get(url, {
