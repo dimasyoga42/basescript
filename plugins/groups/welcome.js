@@ -94,8 +94,7 @@ const handler = async (m, { conn }) => {
         }
         if (image) {
           await conn.sendMessage(id, {
-            image,
-            caption,
+            text: caption,
             mentions: [jid],
           });
         } else {
