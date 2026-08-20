@@ -1,6 +1,6 @@
 import axios from "axios";
-import { config } from "../../config.js";
-import { supa } from "../../src/config/supa.js";
+import { config } from "../../../config.js";
+import { supa } from "../../../src/config/supa.js";
 
 const getProfilePicture = async (conn, jid) => {
   try {
@@ -40,7 +40,6 @@ const handler = async (m, { conn }) => {
         typeof participant === "string"
           ? participant
           : participant.id || participant.jid;
-
       const number = jid.split("@")[0];
       const username = await getName(conn, jid);
       const avatar = await getProfilePicture(conn, jid);
@@ -49,66 +48,57 @@ const handler = async (m, { conn }) => {
       if (action === "add") {
         const rawText = data?.message || "@user selamat datang di @group";
 
+        // Jika template mengandung "@nopict", pesan dikirim polos (tanpa gambar canvas)
+        const noPict = /@nopict/.test(rawText);
+
         const caption = rawText
+          .replace(/@nopict/g, "") // penanda saja, tidak perlu tampil di teks akhir
           .replace(/@user/g, `@${number}`)
           .replace(/@nama/g, username)
           .replace(/@group/g, groupName)
           .replace(/@count/g, memberCount.toString())
-          .replace(/@desc/g, groupDesc);
+          .replace(/@desc/g, groupDesc)
+          .trim();
 
-        const url = `https://api.siputzx.my.id/api/canvas/welcomev5?username=${encodeURIComponent(username)}&guildName=${encodeURIComponent(groupName)}&memberCount=${memberCount}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(config.welcomeBg || "")}&quality=90`;
-
-        let image;
-        try {
-          const res = await axios.get(url, {
-            responseType: "arraybuffer",
-          });
-          image = Buffer.from(res.data);
-        } catch {
-          image = null;
-        }
-
-        if (image) {
-          await conn.sendMessage(id, {
-            image,
-            caption,
-            mentions: [jid],
-          });
+        if (noPict) {
+          // langsung kirim teks saja, tidak perlu request ke API canvas
+          await conn.sendMessage(id, { text: caption, mentions: [jid] });
         } else {
-          await conn.sendMessage(id, {
-            text: caption,
-            mentions: [jid],
-          });
+          const url = `https://api.siputzx.my.id/api/canvas/welcomev5?username=${encodeURIComponent(groupName)}&guildName=${encodeURIComponent(groupName)}&memberCount=${memberCount}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(config.welcomeBg || "")}&quality=90`;
+
+          let image;
+          try {
+            const res = await axios.get(url, { responseType: "arraybuffer" });
+            image = Buffer.from(res.data);
+          } catch {
+            image = null;
+          }
+
+          if (image) {
+            await conn.sendMessage(id, { image, caption, mentions: [jid] });
+          } else {
+            await conn.sendMessage(id, { text: caption, mentions: [jid] });
+          }
         }
       }
 
       // ================= GOODBYE =================
       if (action === "remove") {
         const caption = `Selamat tinggal @${number} 👋`;
-
         const url = `https://api.siputzx.my.id/api/canvas/goodbyev4?avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(config.goodbyeBg || "")}&title=Goodbye&description=${encodeURIComponent(`${username} keluar dari ${groupName}`)}&border=%232a2e35&avatarBorder=%232a2e35&overlayOpacity=0.3`;
 
         let image;
         try {
-          const res = await axios.get(url, {
-            responseType: "arraybuffer",
-          });
+          const res = await axios.get(url, { responseType: "arraybuffer" });
           image = Buffer.from(res.data);
         } catch {
           image = null;
         }
 
         if (image) {
-          await conn.sendMessage(id, {
-            image,
-            caption,
-            mentions: [jid],
-          });
+          await conn.sendMessage(id, { image, caption, mentions: [jid] });
         } else {
-          await conn.sendMessage(id, {
-            text: caption,
-            mentions: [jid],
-          });
+          await conn.sendMessage(id, { text: caption, mentions: [jid] });
         }
       }
     }

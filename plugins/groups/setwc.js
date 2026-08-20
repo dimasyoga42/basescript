@@ -22,7 +22,8 @@ Tag:
 @nama = nama user
 @group = nama grup
 @count = jumlah member
-@desc = deskripsi grup`,
+@desc = deskripsi grup
+@nopict = hide gambar`,
         },
         { quoted: m },
       );
