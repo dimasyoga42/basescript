@@ -11,20 +11,16 @@ const db = path.resolve("db", "packname.json");
 
 const getMediaMessage = (m) => {
   if (m.message?.imageMessage || m.message?.videoMessage) return m;
-
   const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-
   if (quoted?.imageMessage || quoted?.videoMessage) {
     return { message: quoted };
   }
-
   return null;
 };
 
 const parseText = (text = "") => {
   const input = text.replace(/\.(stiker|s|smeme)/i, "").trim();
   const [top = "_", bottom = "_"] = input.split("|");
-
   return {
     top: encodeURIComponent(top.trim() || "_"),
     bottom: encodeURIComponent(bottom.trim() || "_"),
@@ -33,28 +29,35 @@ const parseText = (text = "") => {
 
 const getStickerWM = (chatId) => {
   const data = getUserData(db);
-
   if (!Array.isArray(data)) {
     return {
       packname: config.BotName,
       author: config.OwnerName,
     };
   }
-
   const dataPack = data.find((item) => item.id === chatId);
-
   return {
     packname: dataPack?.pack || config.BotName,
     author: dataPack?.author || config.OwnerName,
   };
 };
 
+const buildSticker = async (buffer, packname, author) => {
+  const sticker = new Sticker(buffer, {
+    pack: packname,
+    author: author,
+    type: StickerTypes.FULL,
+    categories: ["🤩", "🎉"],
+    quality: 70,
+  });
+  return sticker.toBuffer();
+};
+
 const handler = async (m, { conn }) => {
   try {
     const mediaMsg = getMediaMessage(m);
-
     if (!mediaMsg) {
-      return sendText(conn, m.chat,  "Reply gambar/video dengan .stiker\nContoh: .stiker Halo | Dunia", m);
+      return sendText(conn, m.chat, "Reply gambar/video dengan .stiker\nContoh: .stiker Halo | Dunia", m);
     }
 
     const { packname, author } = getStickerWM(m.chat);
@@ -69,17 +72,16 @@ const handler = async (m, { conn }) => {
     );
 
     if (mediaMsg.message?.videoMessage) {
-      return conn.sendSticker(m.chat, {
-        sticker: buffer,
-        packname,
-        author,
-      });
+      const stickerBuffer = await buildSticker(buffer, packname, author);
+      return conn.sendMessage(
+        m.chat,
+        { sticker: stickerBuffer },
+        { quoted: m },
+      );
     }
 
     const { top, bottom } = parseText(m.text);
-
     const form = new FormData();
-
     form.append("image", buffer.toString("base64"));
 
     const upload = await axios.post(
@@ -91,21 +93,25 @@ const handler = async (m, { conn }) => {
     );
 
     const imageUrl = upload.data.data.url;
-
     const memeUrl = `https://api.memegen.link/images/custom/${top}/${bottom}.png?background=${encodeURIComponent(imageUrl)}`;
 
     const memeRes = await axios.get(memeUrl, {
       responseType: "arraybuffer",
     });
 
-    return conn.sendSticker(m.chat, {
-      sticker: memeRes.data,
+    const stickerBuffer = await buildSticker(
+      Buffer.from(memeRes.data),
       packname,
       author,
-    });
+    );
+
+    return conn.sendMessage(
+      m.chat,
+      { sticker: stickerBuffer },
+      { quoted: m },
+    );
   } catch (err) {
     console.error("[stiker]", err.message);
-
     await sendFancyText(conn, m.chat, {
       title: config.BotName,
       body: `Developer By ${config.OwnerName}`,
