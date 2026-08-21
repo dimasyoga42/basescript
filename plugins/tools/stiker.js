@@ -5,8 +5,15 @@ import { config, thumbnail } from "../../config.js";
 import { sendFancyText, sendText } from "../../src/config/message.js";
 import { getUserData } from "../../src/config/func.js";
 import path from "path";
+import fs from "fs";
+import crypto from "crypto";
 
 const db = path.resolve("db", "packname.json");
+const tmpDir = path.resolve("tmp");
+
+if (!fs.existsSync(tmpDir)) {
+  fs.mkdirSync(tmpDir, { recursive: true });
+}
 
 const getMediaMessage = (m) => {
   if (m.message?.imageMessage || m.message?.videoMessage) return m;
@@ -186,7 +193,28 @@ const buildSticker = async (buffer, packname, author) => {
   return sticker.toBuffer();
 };
 
+const saveTempFile = async (buffer, extension) => {
+  const fileName = `${crypto.randomBytes(8).toString("hex")}.${extension}`;
+  const filePath = path.join(tmpDir, fileName);
+  await fs.promises.writeFile(filePath, buffer);
+  return filePath;
+};
+
+const deleteTempFiles = async (filePaths) => {
+  await Promise.all(
+    filePaths
+      .filter(Boolean)
+      .map((filePath) =>
+        fs.promises.unlink(filePath).catch((err) => {
+          console.error("[stiker] gagal hapus file tmp:", filePath, err.message);
+        }),
+      ),
+  );
+};
+
 const handler = async (m, { conn }) => {
+  const tempFiles = [];
+
   try {
     const mediaMsg = getMediaMessage(m);
     if (!mediaMsg) {
@@ -208,9 +236,13 @@ const handler = async (m, { conn }) => {
       throw new Error("Gagal mengunduh media, buffer kosong");
     }
 
-    if (mediaMsg.message?.videoMessage) {
+    const isVideo = Boolean(mediaMsg.message?.videoMessage);
+    const downloadedPath = await saveTempFile(buffer, isVideo ? "mp4" : "jpg");
+    tempFiles.push(downloadedPath);
+
+    if (isVideo) {
       const stickerBuffer = await buildSticker(buffer, packname, author);
-      return conn.sendMessage(
+      return await conn.sendMessage(
         m.chat,
         { sticker: stickerBuffer },
         { quoted: m },
@@ -219,14 +251,16 @@ const handler = async (m, { conn }) => {
 
     const { top, bottom } = parseText(m.text);
 
-    const finalBuffer =
-      top || bottom
-        ? await composeMemeImage(buffer, top, bottom)
-        : buffer;
+    let finalBuffer = buffer;
+    if (top || bottom) {
+      finalBuffer = await composeMemeImage(buffer, top, bottom);
+      const editedPath = await saveTempFile(finalBuffer, "png");
+      tempFiles.push(editedPath);
+    }
 
     const stickerBuffer = await buildSticker(finalBuffer, packname, author);
 
-    return conn.sendMessage(
+    return await conn.sendMessage(
       m.chat,
       { sticker: stickerBuffer },
       { quoted: m },
@@ -240,6 +274,8 @@ const handler = async (m, { conn }) => {
       text: config.message.error,
       msg: m,
     });
+  } finally {
+    await deleteTempFiles(tempFiles);
   }
 };
 
