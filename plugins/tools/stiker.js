@@ -53,6 +53,38 @@ const buildSticker = async (buffer, packname, author) => {
   return sticker.toBuffer();
 };
 
+const uploadToImgbb = async (buffer) => {
+  if (!process.env.BBI_KEY) {
+    throw new Error("BBI_KEY tidak ditemukan di environment variable");
+  }
+
+  const form = new FormData();
+  form.append("image", buffer.toString("base64"));
+
+  try {
+    const upload = await axios.post(
+      `https://api.imgbb.com/1/upload?expiration=600&key=${process.env.BBI_KEY}`,
+      form,
+      {
+        headers: form.getHeaders(),
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+      },
+    );
+
+    const url = upload.data?.data?.url;
+    if (!url) {
+      throw new Error("imgbb tidak mengembalikan url gambar");
+    }
+    return url;
+  } catch (err) {
+    const detail = err.response?.data
+      ? JSON.stringify(err.response.data)
+      : err.message;
+    throw new Error(`Upload imgbb gagal: ${detail}`);
+  }
+};
+
 const handler = async (m, { conn }) => {
   try {
     const mediaMsg = getMediaMessage(m);
@@ -71,6 +103,10 @@ const handler = async (m, { conn }) => {
       },
     );
 
+    if (!buffer || buffer.length === 0) {
+      throw new Error("Gagal mengunduh media, buffer kosong");
+    }
+
     if (mediaMsg.message?.videoMessage) {
       const stickerBuffer = await buildSticker(buffer, packname, author);
       return conn.sendMessage(
@@ -81,18 +117,7 @@ const handler = async (m, { conn }) => {
     }
 
     const { top, bottom } = parseText(m.text);
-    const form = new FormData();
-    form.append("image", buffer.toString("base64"));
-
-    const upload = await axios.post(
-      `https://api.imgbb.com/1/upload?expiration=600&key=${process.env.BBI_KEY}`,
-      form,
-      {
-        headers: form.getHeaders(),
-      },
-    );
-
-    const imageUrl = upload.data.data.url;
+    const imageUrl = await uploadToImgbb(buffer);
     const memeUrl = `https://api.memegen.link/images/custom/${top}/${bottom}.png?background=${encodeURIComponent(imageUrl)}`;
 
     const memeRes = await axios.get(memeUrl, {
