@@ -23,7 +23,8 @@ Tag:
 @group = nama grup
 @count = jumlah member
 @desc = deskripsi grup
-@nopict = hide gambar`,
+@nopict = hide gambar
+@off = matikan notif wellcome`,
         },
         { quoted: m },
       );

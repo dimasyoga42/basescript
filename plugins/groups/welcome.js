@@ -38,10 +38,13 @@ const handler = async (m, { conn }) => {
       const username = await getName(conn, jid);
       const avatar = await getProfilePicture(conn, jid);
       let Condtion = false
+      let offMessage = false
       // ================= WELCOME =================
       if (action === "add") {
         const rawText = data?.message || "@user selamat datang di @group";
         Condtion = /@nopict/.test(rawText);
+        offMessage = /@off/.test(rawText);
+        if(offMessage) return
         const caption = rawText
           .replace(/@user/g, `@${number}`)
           .replace(/@nama/g, username)
@@ -49,6 +52,7 @@ const handler = async (m, { conn }) => {
           .replace(/@count/g, memberCount.toString())
           .replace(/@desc/g, groupDesc)
           .replace(/@nopict/g, "")
+          .replace(/@off/g, "");
         if (Condtion) {
           await conn.sendMessage(id, {
             text: caption,
