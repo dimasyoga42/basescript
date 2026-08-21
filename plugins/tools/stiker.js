@@ -1,6 +1,5 @@
 import { downloadMediaMessage } from "@whiskeysockets/baileys";
-import axios from "axios";
-import FormData from "form-data";
+import sharp from "sharp";
 import { Sticker, StickerTypes } from "wa-sticker-formatter";
 import { config, thumbnail } from "../../config.js";
 import { sendFancyText, sendText } from "../../src/config/message.js";
@@ -20,10 +19,10 @@ const getMediaMessage = (m) => {
 
 const parseText = (text = "") => {
   const input = text.replace(/\.(stiker|s|smeme)/i, "").trim();
-  const [top = "_", bottom = "_"] = input.split("|");
+  const [top = "", bottom = ""] = input.split("|");
   return {
-    top: encodeURIComponent(top.trim() || "_"),
-    bottom: encodeURIComponent(bottom.trim() || "_"),
+    top: top.trim(),
+    bottom: bottom.trim(),
   };
 };
 
@@ -42,6 +41,140 @@ const getStickerWM = (chatId) => {
   };
 };
 
+const escapeXml = (text = "") =>
+  text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+
+const estimateCharWidth = (fontSize) => fontSize * 0.6;
+
+const wrapTextToLines = (text, maxWidth, fontSize) => {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [];
+
+  const charWidth = estimateCharWidth(fontSize);
+  const maxCharsPerLine = Math.max(1, Math.floor(maxWidth / charWidth));
+
+  const lines = [];
+  let currentLine = "";
+
+  for (const word of words) {
+    const candidate = currentLine ? `${currentLine} ${word}` : word;
+    if (candidate.length <= maxCharsPerLine) {
+      currentLine = candidate;
+    } else {
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+      if (word.length > maxCharsPerLine) {
+        let remaining = word;
+        while (remaining.length > maxCharsPerLine) {
+          lines.push(remaining.slice(0, maxCharsPerLine));
+          remaining = remaining.slice(maxCharsPerLine);
+        }
+        currentLine = remaining;
+      } else {
+        currentLine = word;
+      }
+    }
+  }
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  return lines;
+};
+
+const fitTextToBox = (text, boxWidth, boxHeight, maxFontSize, minFontSize) => {
+  let fontSize = maxFontSize;
+
+  while (fontSize >= minFontSize) {
+    const lines = wrapTextToLines(text, boxWidth, fontSize);
+    const lineHeight = fontSize * 1.2;
+    const totalHeight = lines.length * lineHeight;
+
+    if (totalHeight <= boxHeight) {
+      return { lines, fontSize, lineHeight };
+    }
+
+    fontSize -= 2;
+  }
+
+  const lines = wrapTextToLines(text, boxWidth, minFontSize);
+  return { lines, fontSize: minFontSize, lineHeight: minFontSize * 1.2 };
+};
+
+const buildTextGroup = (lines, fontSize, lineHeight, centerX, anchorY, direction) => {
+  if (lines.length === 0) return "";
+
+  const strokeWidth = Math.max(2, Math.round(fontSize / 12));
+
+  return lines
+    .map((line, index) => {
+      const y =
+        direction === "down"
+          ? anchorY + index * lineHeight
+          : anchorY - (lines.length - 1 - index) * lineHeight;
+
+      return `<text x="${centerX}" y="${y}" font-family="Arial, sans-serif" font-weight="bold" font-size="${fontSize}" fill="#ffffff" stroke="#000000" stroke-width="${strokeWidth}" paint-order="stroke" text-anchor="middle">${escapeXml(line)}</text>`;
+    })
+    .join("");
+};
+
+const composeMemeImage = async (buffer, topText, bottomText) => {
+  const image = sharp(buffer);
+  const metadata = await image.metadata();
+  const width = metadata.width || 512;
+  const height = metadata.height || 512;
+
+  const horizontalPadding = width * 0.06;
+  const boxWidth = width - horizontalPadding * 2;
+  const verticalPadding = height * 0.04;
+  const maxBoxHeight = height * 0.28;
+
+  const maxFontSize = Math.round(width / 10);
+  const minFontSize = Math.max(12, Math.round(width / 28));
+
+  const centerX = width / 2;
+
+  let svgContent = "";
+
+  if (topText) {
+    const { lines, fontSize, lineHeight } = fitTextToBox(
+      topText,
+      boxWidth,
+      maxBoxHeight,
+      maxFontSize,
+      minFontSize,
+    );
+    const anchorY = verticalPadding + fontSize;
+    svgContent += buildTextGroup(lines, fontSize, lineHeight, centerX, anchorY, "down");
+  }
+
+  if (bottomText) {
+    const { lines, fontSize, lineHeight } = fitTextToBox(
+      bottomText,
+      boxWidth,
+      maxBoxHeight,
+      maxFontSize,
+      minFontSize,
+    );
+    const anchorY = height - verticalPadding;
+    svgContent += buildTextGroup(lines, fontSize, lineHeight, centerX, anchorY, "up");
+  }
+
+  const svgOverlay = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${svgContent}</svg>`;
+
+  return image
+    .composite([{ input: Buffer.from(svgOverlay), top: 0, left: 0 }])
+    .png()
+    .toBuffer();
+};
+
 const buildSticker = async (buffer, packname, author) => {
   const sticker = new Sticker(buffer, {
     pack: packname,
@@ -51,38 +184,6 @@ const buildSticker = async (buffer, packname, author) => {
     quality: 70,
   });
   return sticker.toBuffer();
-};
-
-const uploadToImgbb = async (buffer) => {
-  if (!process.env.BBI_KEY) {
-    throw new Error("BBI_KEY tidak ditemukan di environment variable");
-  }
-
-  const form = new FormData();
-  form.append("image", buffer.toString("base64"));
-
-  try {
-    const upload = await axios.post(
-      `https://api.imgbb.com/1/upload?expiration=600&key=${process.env.BBI_KEY}`,
-      form,
-      {
-        headers: form.getHeaders(),
-        maxBodyLength: Infinity,
-        maxContentLength: Infinity,
-      },
-    );
-
-    const url = upload.data?.data?.url;
-    if (!url) {
-      throw new Error("imgbb tidak mengembalikan url gambar");
-    }
-    return url;
-  } catch (err) {
-    const detail = err.response?.data
-      ? JSON.stringify(err.response.data)
-      : err.message;
-    throw new Error(`Upload imgbb gagal: ${detail}`);
-  }
 };
 
 const handler = async (m, { conn }) => {
@@ -117,18 +218,13 @@ const handler = async (m, { conn }) => {
     }
 
     const { top, bottom } = parseText(m.text);
-    const imageUrl = await uploadToImgbb(buffer);
-    const memeUrl = `https://api.memegen.link/images/custom/${top}/${bottom}.png?background=${encodeURIComponent(imageUrl)}`;
 
-    const memeRes = await axios.get(memeUrl, {
-      responseType: "arraybuffer",
-    });
+    const finalBuffer =
+      top || bottom
+        ? await composeMemeImage(buffer, top, bottom)
+        : buffer;
 
-    const stickerBuffer = await buildSticker(
-      Buffer.from(memeRes.data),
-      packname,
-      author,
-    );
+    const stickerBuffer = await buildSticker(finalBuffer, packname, author);
 
     return conn.sendMessage(
       m.chat,
