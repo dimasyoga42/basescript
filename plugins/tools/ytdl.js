@@ -1,7 +1,7 @@
 import fs                from 'node:fs';
 import path              from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ensureReady, ytdlp } from '../../src/lib/ytdl';
+import { ensureReady, ytdlp } from '../../src/lib/ytdl.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TMP_DIR   = path.join(__dirname, '..', 'tmp');
 fs.mkdirSync(TMP_DIR, { recursive: true });
