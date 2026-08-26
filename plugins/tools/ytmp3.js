@@ -1,13 +1,12 @@
 import fs                from 'node:fs';
 import path              from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { YtDlp }         from 'ytdlp-nodejs';
+import { ensureReady, ytdlp } from '../../src/lib/ytdl';
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TMP_DIR   = path.join(__dirname, 'tmp');
+const TMP_DIR   = path.join(__dirname, '..', 'tmp');
 fs.mkdirSync(TMP_DIR, { recursive: true });
-
-const ytdlp = new YtDlp();
 
 const handler = async (m, { conn }) => {
   const url = m.text.replace(/^[./#!]ytmp3/i, '').trim();
@@ -27,6 +26,8 @@ const handler = async (m, { conn }) => {
   const filePath = path.join(TMP_DIR, `${Date.now()}.mp3`);
 
   try {
+    await ensureReady();
+
     await conn.sendMessage(m.chat, { text: '⏳ Sedang mengunduh audio, mohon tunggu...' }, { quoted: m });
 
     await ytdlp

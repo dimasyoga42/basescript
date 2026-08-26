@@ -1,29 +1,12 @@
 import fs                from 'node:fs';
 import path              from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { YtDlp }         from 'ytdlp-nodejs';
-
+import { ensureReady, ytdlp } from '../../src/lib/ytdl';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TMP_DIR   = path.join(__dirname, 'tmp');
+const TMP_DIR   = path.join(__dirname, '..', 'tmp');
 fs.mkdirSync(TMP_DIR, { recursive: true });
 
-const ytdlp = new YtDlp();
-
-let readyPromise = null;
-function ensureReady() {
-  if (!readyPromise) {
-    readyPromise = (async () => {
-      const ok = await ytdlp.checkInstallationAsync({ ffmpeg: true });
-      if (!ok) {
-        console.log('[ytmp4] FFmpeg belum terpasang, mendownload...');
-        await ytdlp.downloadFFmpeg();
-        console.log('[ytmp4] FFmpeg siap dipakai.');
-      }
-    })();
-  }
-  return readyPromise;
-}
-ensureReady().catch((err) => console.error('[ytmp4] Gagal menyiapkan FFmpeg:', err));
+const MAX_VIDEO_SIZE = 64 * 1024 * 1024; // ~64MB, batas aman kirim video WA
 
 const handler = async (m, { conn }) => {
   const url = m.text.replace(/^[./#!](ytmp4|ytdlmp4)/i, '').trim();
@@ -55,38 +38,29 @@ const handler = async (m, { conn }) => {
       .pipeAsync(fs.createWriteStream(filePath));
 
     const { size } = fs.statSync(filePath);
-    const MAX_SIZE = 64 * 1024 * 1024; // ~64MB, batas aman kirim video WA
 
-    if (size > MAX_SIZE) {
+    if (size > MAX_VIDEO_SIZE) {
       await conn.sendMessage(
         m.chat,
-        {
-          document: fs.readFileSync(filePath),
-          mimetype: 'video/mp4',
-          fileName: 'video.mp4',
-        },
+        { document: fs.readFileSync(filePath), mimetype: 'video/mp4', fileName: 'video.mp4' },
         { quoted: m }
       );
     } else {
       await conn.sendMessage(
         m.chat,
-        {
-          video: fs.readFileSync(filePath),
-          mimetype: 'video/mp4',
-          fileName: 'video.mp4',
-        },
+        { video: fs.readFileSync(filePath), mimetype: 'video/mp4', fileName: 'video.mp4' },
         { quoted: m }
       );
     }
   } catch (err) {
-    console.error('[ytmp4] error:', err);
+    console.error('[ytdlmp4] error:', err);
     await conn.sendMessage(m.chat, { text: `Gagal mengunduh video.\n${err.message || err}` }, { quoted: m });
   } finally {
     fs.unlink(filePath, () => {});
   }
 };
 
-handler.command  = 'ytmp4';
+handler.command  = ['ytmp4', 'ytdlmp4'];
 handler.category = 'Menu Tools';
 
 export default handler;
