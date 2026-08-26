@@ -60,7 +60,7 @@ const handler = async (m, { conn }) => {
   }
 };
 
-handler.command  = ['ytmp4', 'ytdlmp4'];
+handler.command  = 'ytmp4';
 handler.category = 'Menu Tools';
 
 export default handler;
