@@ -1,61 +1,58 @@
-import { exec }          from 'node:child_process';
-import { promisify }     from 'node:util';
 import fs                from 'node:fs';
 import path              from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { reactMessage, sendText } from '../../src/config/message.js';
+import { YtDlp }         from 'ytdlp-nodejs';
 
-const execAsync = promisify(exec);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TMP_DIR   = path.join(__dirname, 'tmp');
-
 fs.mkdirSync(TMP_DIR, { recursive: true });
 
+const ytdlp = new YtDlp();
+
 const handler = async (m, { conn }) => {
-  try {
-    const link = m.text.replace(/\.ytdl\s*/i, '').trim();
+  const url = m.text.replace(/^[./#!]ytmp3/i, '').trim();
 
-    if (!link.startsWith('http')) {
-      return conn.sendMessage(m.chat, {text: "format anda salah gunakan .ytdl <url>"}, {quoted: m});
-    }
-
-    await reactMessage(conn, m.chat, m, "⌛");
-
-    // Download langsung ke folder tmp
-    const outTemplate = path.join(TMP_DIR, '%(title)s.%(ext)s');
-    await execAsync(
-      `yt-dlp -x --audio-format mp3 --audio-quality 0 -o "${outTemplate}" "${link}"`,
-      { maxBuffer: 50 * 1024 * 1024 }
+  if (!url) {
+    return conn.sendMessage(
+      m.chat,
+      { text: 'Masukkan link YouTube setelah .ytmp3\n\nContoh: .ytmp3 https://youtu.be/xxxxx' },
+      { quoted: m }
     );
+  }
 
-    // Cari file mp3 terbaru di tmp
-    const filePath = fs.readdirSync(TMP_DIR)
-      .filter(f => f.endsWith('.mp3'))
-      .map(f => ({ f, t: fs.statSync(path.join(TMP_DIR, f)).mtimeMs }))
-      .sort((a, b) => b.t - a.t)[0]?.f;
+  if (!/youtu\.?be/.test(url)) {
+    return conn.sendMessage(m.chat, { text: 'Link yang kamu kirim bukan link YouTube yang valid.' }, { quoted: m });
+  }
 
-    if (!filePath) throw new Error('File mp3 tidak ditemukan');
+  const filePath = path.join(TMP_DIR, `${Date.now()}.mp3`);
 
-    const fullPath = path.join(TMP_DIR, filePath);
+  try {
+    await conn.sendMessage(m.chat, { text: '⏳ Sedang mengunduh audio, mohon tunggu...' }, { quoted: m });
 
-    // Kirim langsung ke chat
-    await conn.sendMessage(m.chat, {
-      audio: fs.readFileSync(fullPath),
-      mimetype: 'audio/mpeg',
-      fileName: filePath,
-      ptt: false,
-    }, { quoted: m });
+    await ytdlp
+      .stream(url)
+      .filter('audioonly')
+      .type('mp3')
+      .pipeAsync(fs.createWriteStream(filePath));
 
-    // Hapus file tmp setelah terkirim
-    fs.unlinkSync(fullPath);
-
+    await conn.sendMessage(
+      m.chat,
+      {
+        audio: fs.readFileSync(filePath),
+        mimetype: 'audio/mpeg',
+        fileName: 'audio.mp3',
+      },
+      { quoted: m }
+    );
   } catch (err) {
-    console.error('[ytdl]', err.message);
-    sendText(conn, m.chat, `Gagal: ${err.message}`, m);
+    console.error('[ytmp3] error:', err);
+    await conn.sendMessage(m.chat, { text: `Gagal mengunduh audio.\n${err.message || err}` }, { quoted: m });
+  } finally {
+    fs.unlink(filePath, () => {});
   }
 };
 
-handler.command = 'ytdl';
-handler.category    = 'Menu Tools';
+handler.command  = 'ytmp3';
+handler.category = 'Menu Tools';
 
 export default handler;
