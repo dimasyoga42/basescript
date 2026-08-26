@@ -34,7 +34,7 @@ async function fetchSafeWaifu(maxAttempts = 5) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const { data } = await axios.get(API_URL, {
       params: { rating: "safe", limit: 1 },
-      timeout: 10_000,
+      timeout: 100_000,
     });
 
     const image = Array.isArray(data) ? data[0] : data;
