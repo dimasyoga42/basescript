@@ -8,11 +8,27 @@ import {
 
 const API_URL = "https://api.nekosapi.com/v4/images/random";
 
-// Tag yang mengindikasikan konten kurang pantas untuk command umum,
-// dipakai sebagai filter tambahan karena rating "safe" dari API ini
-// kadang masih meloloskan gambar semacam ini.
 const BLOCKED_TAG_PATTERN =
   /(nude|naked|nipple|breast|panty|panties|underwear|ecchi|hentai|pussy|sex|cum|topless|lingerie)/i;
+
+const COOLDOWN_MS = 15_000;
+const cooldownStore = new Map();
+const pendingRequests = new Set();
+
+function getRemainingCooldown(senderId) {
+  const lastUsed = cooldownStore.get(senderId);
+  if (!lastUsed) return 0;
+
+  const elapsed = Date.now() - lastUsed;
+  const remaining = COOLDOWN_MS - elapsed;
+
+  return remaining > 0 ? remaining : 0;
+}
+
+function formatRemainingTime(ms) {
+  const seconds = Math.ceil(ms / 1000);
+  return `${seconds} detik`;
+}
 
 async function fetchSafeWaifu(maxAttempts = 5) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -32,6 +48,39 @@ async function fetchSafeWaifu(maxAttempts = 5) {
 }
 
 const handler = async (m, { conn }) => {
+  const senderId = m?.sender;
+
+  if (!senderId) {
+    return sendText(
+      conn,
+      m.chat,
+      "Tidak dapat mengenali pengirim pesan, coba lagi.",
+      m
+    );
+  }
+
+  if (pendingRequests.has(senderId)) {
+    return sendText(
+      conn,
+      m.chat,
+      "Permintaan sebelumnya masih diproses, harap tunggu.",
+      m
+    );
+  }
+
+  const remainingCooldown = getRemainingCooldown(senderId);
+  if (remainingCooldown > 0) {
+    return sendText(
+      conn,
+      m.chat,
+      `⏳ Tunggu ${formatRemainingTime(remainingCooldown)} lagi sebelum menggunakan command ini.`,
+      m
+    );
+  }
+
+  pendingRequests.add(senderId);
+  cooldownStore.set(senderId, Date.now());
+
   try {
     const image = await fetchSafeWaifu();
 
@@ -51,7 +100,9 @@ const handler = async (m, { conn }) => {
     await sendImage(conn, m.chat, image.url, caption, m);
   } catch (err) {
     console.error("[waifu]", err);
-    sendText(conn, m.chat, `log: ${err.message}`, m);
+    sendText(conn, m.chat, `log: ${err}`, m);
+  } finally {
+    pendingRequests.delete(senderId);
   }
 };
 
