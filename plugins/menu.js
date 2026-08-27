@@ -45,7 +45,7 @@ const handler = async (m, { conn }) => {
     )
     .join("\n\n").trim();
 
-  const result = `*Informasi Bot*\nLibrary: Luna-lib(JS)\nVersion: 1.2.5\nWebsite: https://dimasyogaaa.vercel.app\nOwner:Dimas Yoga (0856643933331)\n\n*Rules*\n- dilarang spam cmd tertentu\n- dilarang membuat stiker jomok\n- bot hanya merespon chat grub tidak chat pribadi\n\n${commandSection}`;
+  const result = `*Informasi Bot*\nLibrary: Luna-lib(JS)\nVersion: 1.2.5\nWebsite: https://dimasyogaaa.vercel.app\nOwner:Dimas Yoga (085664393331)\n\n*Rules*\n- dilarang spam cmd tertentu\n- dilarang membuat stiker jomok\n- bot hanya merespon chat grub tidak chat pribadi\n\n${commandSection}`;
 
   const randomThumb =
     config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
