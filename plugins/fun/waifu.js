@@ -10,8 +10,8 @@ const BLOCKED_TAG_PATTERN =
   /(nude|naked|nipple|breast|panty|panties|underwear|ecchi|hentai|pussy|sex|cum|topless|lingerie)/i;
 
 const COOLDOWN_MS = 10_000;
-const MAX_API_ATTEMPTS = 10;
-const REQUEST_TIMEOUT = 30_000;
+const MAX_API_ATTEMPTS = 100;
+const REQUEST_TIMEOUT = 400_000;
 
 const cooldownStore = new Map();
 const pendingRequests = new Set();
