@@ -5,6 +5,7 @@ import {
   readFileSync,
   unlinkSync,
   existsSync,
+  readdirSync,
 } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -22,27 +23,48 @@ import { config, thumbnail } from "../../config.js";
 const execFileAsync = promisify(execFile);
 
 /* =========================================================
- * YT-DLP
+ * BINARIES
  * ======================================================= */
 
 let ytDlpPath = "yt-dlp";
+let ffmpegPath = "ffmpeg";
 
+/*
+ * Cari yt-dlp
+ */
 try {
-  ytDlpPath = execSync("which yt-dlp", {
+  const detectedYtDlp = execSync("which yt-dlp", {
     encoding: "utf8",
   }).trim();
 
-  if (!ytDlpPath) {
-    ytDlpPath = "yt-dlp";
+  if (detectedYtDlp) {
+    ytDlpPath = detectedYtDlp;
   }
 } catch {
   console.error(
     "[YT-DLP] yt-dlp tidak ditemukan di PATH."
   );
+}
+
+/*
+ * Cari ffmpeg
+ */
+try {
+  const detectedFfmpeg = execSync("which ffmpeg", {
+    encoding: "utf8",
+  }).trim();
+
+  if (detectedFfmpeg) {
+    ffmpegPath = detectedFfmpeg;
+  }
+} catch {
   console.error(
-    "[YT-DLP] Install dengan: pip install -U yt-dlp"
+    "[FFMPEG] ffmpeg tidak ditemukan di PATH."
   );
 }
+
+console.log("[PLAY] yt-dlp:", ytDlpPath);
+console.log("[PLAY] ffmpeg:", ffmpegPath);
 
 /* =========================================================
  * HELPERS
@@ -61,7 +83,9 @@ const formatDuration = (durationSeconds) => {
     return "-";
   }
 
-  const totalSeconds = Math.floor(Number(durationSeconds));
+  const totalSeconds = Math.floor(
+    Number(durationSeconds)
+  );
 
   if (
     Number.isNaN(totalSeconds) ||
@@ -70,14 +94,26 @@ const formatDuration = (durationSeconds) => {
     return "-";
   }
 
-  const hours = Math.floor(totalSeconds / 3600);
+  const hours = Math.floor(
+    totalSeconds / 3600
+  );
+
   const minutes = Math.floor(
     (totalSeconds % 3600) / 60
   );
-  const seconds = totalSeconds % 60;
 
-  const mm = String(minutes).padStart(2, "0");
-  const ss = String(seconds).padStart(2, "0");
+  const seconds =
+    totalSeconds % 60;
+
+  const mm = String(minutes).padStart(
+    2,
+    "0"
+  );
+
+  const ss = String(seconds).padStart(
+    2,
+    "0"
+  );
 
   if (hours > 0) {
     return `${hours}:${mm}:${ss}`;
@@ -88,38 +124,106 @@ const formatDuration = (durationSeconds) => {
 
 const safeFileName = (name) => {
   return String(name || "audio")
-    .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
+    .replace(
+      /[<>:"/\\|?*\x00-\x1F]/g,
+      ""
+    )
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 180) || "audio";
 };
 
 /* =========================================================
+ * TEMP FILE CLEANUP
+ * ======================================================= */
+
+const cleanupFile = (file) => {
+  if (!file) return;
+
+  try {
+    if (existsSync(file)) {
+      unlinkSync(file);
+    }
+  } catch (err) {
+    console.error(
+      "[PLAY CLEANUP ERROR]",
+      file,
+      err?.message
+    );
+  }
+};
+
+const cleanupTempFiles = (
+  basePath
+) => {
+  if (!basePath) return;
+
+  try {
+    const directory = tmpdir();
+
+    const baseName =
+      basePath.split("/").pop();
+
+    if (!baseName) return;
+
+    const files =
+      readdirSync(directory);
+
+    for (const file of files) {
+      if (
+        file.startsWith(baseName)
+      ) {
+        cleanupFile(
+          join(directory, file)
+        );
+      }
+    }
+  } catch (err) {
+    console.error(
+      "[PLAY TEMP CLEANUP ERROR]",
+      err?.message
+    );
+  }
+};
+
+/* =========================================================
  * YOUTUBE OEMBED
  * ======================================================= */
 
-const fetchVideoMeta = async (videoUrl) => {
+const fetchVideoMeta = async (
+  videoUrl
+) => {
   try {
-    const response = await axios.get(
-      "https://www.youtube.com/oembed",
-      {
-        params: {
-          url: videoUrl,
-          format: "json",
-        },
-        timeout: 15000,
-      }
-    );
+    const response =
+      await axios.get(
+        "https://www.youtube.com/oembed",
+        {
+          params: {
+            url: videoUrl,
+            format: "json",
+          },
+          timeout: 15000,
+        }
+      );
 
-    const data = response.data;
+    const data =
+      response?.data;
 
     return {
-      title: data?.title || "Unknown Title",
+      title:
+        data?.title ||
+        "Unknown Title",
+
       thumbnail:
-        data?.thumbnail_url || thumbnail,
+        data?.thumbnail_url ||
+        thumbnail,
+
       author: {
-        name: data?.author_name || "-",
+        name:
+          data?.author_name ||
+          "-",
       },
+
       timestamp: "-",
       views: "-",
     };
@@ -132,9 +236,11 @@ const fetchVideoMeta = async (videoUrl) => {
     return {
       title: "Unknown Title",
       thumbnail,
+
       author: {
         name: "-",
       },
+
       timestamp: "-",
       views: "-",
     };
@@ -142,279 +248,351 @@ const fetchVideoMeta = async (videoUrl) => {
 };
 
 /* =========================================================
- * DOWNLOAD AUDIO
+ * DOWNLOAD AUDIO SOURCE
+ *
+ * yt-dlp:
+ *   Hanya mengambil audio source.
+ *
+ * FFmpeg:
+ *   Melakukan conversion menjadi MP3.
  * ======================================================= */
 
-const downloadAudioWithYtDlp = async (videoUrl) => {
+const downloadAudio = async (
+  videoUrl
+) => {
   const uniqueId =
     `${Date.now()}_${Math.random()
       .toString(36)
       .slice(2)}`;
 
-  const outputBase = join(
+  const basePath = join(
     tmpdir(),
     `neura_${uniqueId}`
   );
 
-  const outputTemplate =
-    `${outputBase}.%(ext)s`;
+  const inputTemplate =
+    `${basePath}.%(ext)s`;
 
-  let outputPath = null;
+  const outputPath =
+    `${basePath}.mp3`;
 
-  const args = [
-    "--extract-audio",
-    "--audio-format",
-    "mp3",
-    "--audio-quality",
-    "0",
-
-    "--no-playlist",
-    "--no-warnings",
-    "--no-progress",
-    "--ignore-config",
-
-    /*
-     * Jangan hanya mengandalkan finalPath.
-     * yt-dlp akan mengembalikan path aktual
-     * setelah proses post-processing selesai.
-     */
-    "--print",
-    "after_move:filepath",
-
-    "--print",
-    "json",
-
-    "-o",
-    outputTemplate,
-
-    videoUrl,
-  ];
+  let sourcePath = null;
 
   try {
     console.log(
-      "[YT-DLP] Download:",
+      "[PLAY] Download audio source:",
       videoUrl
     );
 
-    const result = await execFileAsync(
-      ytDlpPath,
-      args,
-      {
-        maxBuffer: 50 * 1024 * 1024,
-        timeout: 180000,
-        windowsHide: true,
-      }
+    /* =====================================================
+     * 1. YT-DLP
+     * =================================================== */
+
+    const ytArgs = [
+      /*
+       * Audio terbaik saja.
+       *
+       * Tidak memakai:
+       * --extract-audio
+       * --audio-format
+       * --audio-quality
+       *
+       * Karena conversion dilakukan oleh FFmpeg.
+       */
+      "-f",
+      "bestaudio/best",
+
+      "--no-playlist",
+      "--no-warnings",
+      "--no-progress",
+      "--ignore-config",
+
+      /*
+       * Paksa pakai IPv4.
+       *
+       * Beberapa server/VPS punya IPv6 yang terdaftar
+       * di interface tapi tidak benar-benar bisa routing
+       * keluar, menyebabkan koneksi ke CDN video macet
+       * atau timeout meski akses web YouTube normal
+       * lancar (karena domain utama masih resolve IPv4).
+       */
+      "--force-ipv4",
+
+      /*
+       * Gunakan player client "android" (fallback ke
+       * "web") supaya ekstraksi tidak bergantung pada
+       * JS runtime untuk decode signature, dan koneksi
+       * ke CDN download biasanya lebih stabil.
+       */
+      "--extractor-args",
+      "youtube:player_client=android,web",
+
+      /*
+       * Retry & timeout socket supaya tidak langsung
+       * menyerah kalau koneksi ke CDN sedang lambat.
+       */
+      "--socket-timeout",
+      "15",
+      "--retries",
+      "5",
+
+      /*
+       * Jangan gunakan file .part sementara,
+       * langsung tulis ke file output.
+       */
+      "--no-part",
+
+      /*
+       * Output sementara.
+       */
+      "-o",
+      inputTemplate,
+
+      videoUrl,
+    ];
+
+    const ytResult =
+      await execFileAsync(
+        ytDlpPath,
+        ytArgs,
+        {
+          maxBuffer:
+            50 * 1024 * 1024,
+
+          timeout:
+            180000,
+
+          windowsHide:
+            true,
+        }
+      );
+
+    console.log(
+      "[PLAY] yt-dlp selesai."
     );
 
-    const stdout = String(
-      result?.stdout || ""
-    ).trim();
-
-    const stderr = String(
-      result?.stderr || ""
-    ).trim();
-
-    if (stderr) {
+    if (ytResult?.stderr) {
       console.log(
         "[YT-DLP STDERR]",
-        stderr
+        ytResult.stderr
       );
     }
 
-    /*
-     * after_move:filepath menghasilkan path
-     * file setelah post-processing.
-     *
-     * Ambil baris yang berakhiran .mp3.
-     */
-    const lines = stdout
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
+    /* =====================================================
+     * 2. CARI FILE HASIL YT-DLP
+     * =================================================== */
 
-    outputPath =
-      [...lines]
-        .reverse()
-        .find((line) =>
-          /\.mp3$/i.test(line)
-        ) || null;
-
-    /*
-     * Fallback apabila output path tidak
-     * berhasil ditemukan dari stdout.
-     */
-    if (
-      !outputPath ||
-      !existsSync(outputPath)
-    ) {
-      const fallbackPath =
-        `${outputBase}.mp3`;
-
-      if (existsSync(fallbackPath)) {
-        outputPath = fallbackPath;
-      }
-    }
-
-    if (
-      !outputPath ||
-      !existsSync(outputPath)
-    ) {
-      console.error(
-        "[YT-DLP] Output tidak ditemukan."
-      );
-      console.error(
-        "[YT-DLP STDOUT]",
-        stdout
-      );
-
-      throw new Error(
-        "File MP3 hasil yt-dlp tidak ditemukan."
-      );
-    }
-
-    /*
-     * Parse metadata JSON.
-     *
-     * --print json bisa menghasilkan JSON
-     * di antara output lainnya, jadi cari
-     * baris yang valid JSON object.
-     */
-    let info = {};
+    const possibleExtensions = [
+      "webm",
+      "m4a",
+      "opus",
+      "mp4",
+      "aac",
+      "ogg",
+    ];
 
     for (
-      let i = lines.length - 1;
-      i >= 0;
-      i--
+      const ext of possibleExtensions
     ) {
-      const line = lines[i];
+      const candidate =
+        `${basePath}.${ext}`;
 
       if (
-        !line.startsWith("{") ||
-        !line.endsWith("}")
+        existsSync(candidate)
       ) {
-        continue;
-      }
-
-      try {
-        const parsed = JSON.parse(line);
-
-        if (
-          parsed &&
-          typeof parsed === "object"
-        ) {
-          info = parsed;
-          break;
-        }
-      } catch {
-        // lanjut cari JSON berikutnya
+        sourcePath =
+          candidate;
+        break;
       }
     }
-
-    const buffer = readFileSync(
-      outputPath
-    );
 
     /*
-     * Hapus file temporary setelah dibaca.
+     * Fallback:
+     * cari file dengan prefix basePath.
      */
-    try {
-      unlinkSync(outputPath);
-    } catch (cleanupError) {
-      console.error(
-        "[YT-DLP CLEANUP ERROR]",
-        cleanupError?.message
+    if (!sourcePath) {
+      try {
+        const files =
+          readdirSync(tmpdir());
+
+        const prefix =
+          `neura_${uniqueId}.`;
+
+        const found =
+          files.find(
+            (file) =>
+              file.startsWith(prefix) &&
+              !file.endsWith(".mp3")
+          );
+
+        if (found) {
+          sourcePath =
+            join(
+              tmpdir(),
+              found
+            );
+        }
+      } catch {}
+    }
+
+    if (
+      !sourcePath ||
+      !existsSync(sourcePath)
+    ) {
+      throw new Error(
+        "File audio hasil yt-dlp tidak ditemukan."
       );
     }
+
+    console.log(
+      "[PLAY] Source audio:",
+      sourcePath
+    );
+
+    /* =====================================================
+     * 3. FFMPEG
+     * =================================================== */
+
+    console.log(
+      "[PLAY] Convert menggunakan FFmpeg..."
+    );
+
+    const ffmpegArgs = [
+      "-y",
+
+      /*
+       * Input audio.
+       */
+      "-i",
+      sourcePath,
+
+      /*
+       * Jangan masukkan video.
+       */
+      "-vn",
+
+      /*
+       * MP3 encoder.
+       */
+      "-c:a",
+      "libmp3lame",
+
+      /*
+       * VBR quality.
+       *
+       * 0 = kualitas tertinggi.
+       * 2 = sangat baik dan ukuran lebih kecil.
+       */
+      "-q:a",
+      "2",
+
+      /*
+       * Metadata tidak perlu dibawa.
+       */
+      "-map_metadata",
+      "-1",
+
+      outputPath,
+    ];
+
+    const ffmpegResult =
+      await execFileAsync(
+        ffmpegPath,
+        ffmpegArgs,
+        {
+          maxBuffer:
+            50 * 1024 * 1024,
+
+          timeout:
+            180000,
+
+          windowsHide:
+            true,
+        }
+      );
+
+    if (
+      ffmpegResult?.stderr
+    ) {
+      console.log(
+        "[FFMPEG]",
+        ffmpegResult.stderr
+      );
+    }
+
+    /* =====================================================
+     * 4. VALIDASI MP3
+     * =================================================== */
+
+    if (
+      !existsSync(outputPath)
+    ) {
+      throw new Error(
+        "FFmpeg tidak menghasilkan file MP3."
+      );
+    }
+
+    const buffer =
+      readFileSync(outputPath);
+
+    if (
+      !buffer ||
+      buffer.length === 0
+    ) {
+      throw new Error(
+        "File MP3 kosong."
+      );
+    }
+
+    console.log(
+      "[PLAY] MP3 berhasil dibuat:",
+      buffer.length,
+      "bytes"
+    );
+
+    /* =====================================================
+     * 5. CLEANUP
+     * =================================================== */
+
+    cleanupFile(sourcePath);
+    cleanupFile(outputPath);
 
     return {
       buffer,
-
-      title:
-        info?.title ||
-        "Unknown Title",
-
-      duration:
-        formatDuration(info?.duration),
-
-      thumbnail:
-        info?.thumbnail ||
-        null,
-
-      uploader:
-        info?.uploader ||
-        info?.channel ||
-        null,
-
-      viewCount:
-        info?.view_count ??
-        info?.viewCount ??
-        null,
     };
   } catch (err) {
     console.error(
-      "[YT-DLP ERROR]",
+      "[PLAY DOWNLOAD ERROR]",
       err?.message
     );
 
     if (err?.stdout) {
       console.error(
-        "[YT-DLP STDOUT]",
+        "[PLAY STDOUT]",
         err.stdout
       );
     }
 
     if (err?.stderr) {
       console.error(
-        "[YT-DLP STDERR]",
+        "[PLAY STDERR]",
         err.stderr
       );
     }
 
-    /*
-     * Bersihkan file temporary apabila
-     * proses gagal.
-     */
-    if (
-      outputPath &&
-      existsSync(outputPath)
-    ) {
-      try {
-        unlinkSync(outputPath);
-      } catch {}
-    }
-
-    /*
-     * Coba bersihkan kemungkinan file
-     * dengan beberapa extension.
-     */
-    const possibleFiles = [
-      `${outputBase}.mp3`,
-      `${outputBase}.m4a`,
-      `${outputBase}.webm`,
-      `${outputBase}.opus`,
-      `${outputBase}.mp4`,
-    ];
-
-    for (const file of possibleFiles) {
-      if (existsSync(file)) {
-        try {
-          unlinkSync(file);
-        } catch {}
-      }
-    }
+    cleanupFile(sourcePath);
+    cleanupFile(outputPath);
+    cleanupTempFiles(basePath);
 
     throw new Error(
-      `yt-dlp gagal mengunduh audio: ${
-        err?.stderr ||
-        err?.message ||
-        "Unknown error"
-      }`
+      err?.message ||
+        "Gagal mengunduh audio."
     );
   }
 };
 
 /* =========================================================
- * ERROR MESSAGE
+ * ERROR RESPONSE
  * ======================================================= */
 
 const sendPlayError = async (
@@ -426,13 +604,18 @@ const sendPlayError = async (
     conn,
     chat,
     {
-      title: config.BotName,
+      title:
+        config.BotName,
+
       body:
         `Developer By ${config.OwnerName}`,
+
       thumbnail,
+
       text:
         config.message.notFound ||
         "Lagu tidak dapat ditemukan atau diunduh.",
+
       msg: m,
     }
   );
@@ -447,14 +630,17 @@ const handler = async (
   { conn }
 ) => {
   try {
-    const query = String(
-      m.text || ""
-    )
-      .replace(
-        /^(\.play|\.music|\.p)\s*/i,
-        ""
-      )
-      .trim();
+    /* =====================================================
+     * QUERY
+     * =================================================== */
+
+    const query =
+      String(m.text || "")
+        .replace(
+          /^(\.play|\.music|\.p)\s*/i,
+          ""
+        )
+        .trim();
 
     if (!query) {
       return sendText(
@@ -472,19 +658,27 @@ const handler = async (
       "🔍"
     );
 
-    let video;
+    let video = null;
 
     /* =====================================================
-     * PILIH VIDEO DARI ID
+     * DIRECT VIDEO ID
      * =================================================== */
 
-    if (/^id:/i.test(query)) {
-      const videoId = query
-        .replace(/^id:/i, "")
-        .trim();
+    if (
+      /^id:/i.test(query)
+    ) {
+      const videoId =
+        query
+          .replace(
+            /^id:/i,
+            ""
+          )
+          .trim();
 
       if (
-        !isValidVideoId(videoId)
+        !isValidVideoId(
+          videoId
+        )
       ) {
         return sendText(
           conn,
@@ -504,11 +698,21 @@ const handler = async (
 
       video = {
         url: videoUrl,
-        title: meta.title,
-        thumbnail: meta.thumbnail,
-        timestamp: meta.timestamp,
-        views: meta.views,
-        author: meta.author,
+
+        title:
+          meta.title,
+
+        thumbnail:
+          meta.thumbnail,
+
+        timestamp:
+          meta.timestamp,
+
+        views:
+          meta.views,
+
+        author:
+          meta.author,
       };
     }
 
@@ -524,6 +728,7 @@ const handler = async (
             params: {
               query,
             },
+
             timeout: 30000,
           }
         );
@@ -567,13 +772,16 @@ const handler = async (
         {
           text:
             `Ditemukan ${results.length} hasil untuk *${query}*\n\n` +
-            `Silahkan pilih salah satu lagu di bawah ini.`,
+            "Silahkan pilih salah satu lagu di bawah ini.",
+
           footer:
             config.OwnerName,
+
           buttons: [
             buildSelectButton(
               "Daftar Lagu",
               "Silahkan pilih salah satu",
+
               results.map(
                 (item) => ({
                   title:
@@ -591,7 +799,10 @@ const handler = async (
               )
             ),
           ],
-          bottom_sheet: true,
+
+          bottom_sheet:
+            true,
+
           bottom_name:
             "Menu Musik",
         }
@@ -611,11 +822,11 @@ const handler = async (
       "⬇️"
     );
 
-    let downloadInfo;
+    let audio;
 
     try {
-      downloadInfo =
-        await downloadAudioWithYtDlp(
+      audio =
+        await downloadAudio(
           video.url
         );
     } catch (err) {
@@ -632,11 +843,11 @@ const handler = async (
     }
 
     if (
-      !downloadInfo?.buffer ||
+      !audio?.buffer ||
       !Buffer.isBuffer(
-        downloadInfo.buffer
+        audio.buffer
       ) ||
-      downloadInfo.buffer.length === 0
+      audio.buffer.length === 0
     ) {
       return sendPlayError(
         conn,
@@ -647,35 +858,34 @@ const handler = async (
 
     /* =====================================================
      * METADATA
+     *
+     * Metadata utama berasal dari hasil
+     * search/oEmbed karena downloader sekarang
+     * fokus mengambil audio source.
      * =================================================== */
 
     const title =
-      downloadInfo.title ||
       video.title ||
       "Unknown Title";
 
     const duration =
-      downloadInfo.duration ||
       video.timestamp ||
       "-";
 
     const displayThumbnail =
-      downloadInfo.thumbnail ||
       video.thumbnail ||
       thumbnail;
 
     const authorName =
-      downloadInfo.uploader ||
       video.author?.name ||
       "-";
 
     const views =
-      downloadInfo.viewCount ??
       video.views ??
       "-";
 
     /* =====================================================
-     * SEND INFO
+     * SEND INFORMATION
      * =================================================== */
 
     try {
@@ -696,15 +906,14 @@ const handler = async (
         }
       );
     } catch (err) {
+      /*
+       * Jika thumbnail gagal,
+       * audio tetap dikirim.
+       */
       console.error(
         "[PLAY INFO MESSAGE ERROR]",
         err?.message
       );
-
-      /*
-       * Jangan gagalkan pengiriman audio
-       * hanya karena thumbnail/info gagal.
-       */
     }
 
     /* =====================================================
@@ -722,7 +931,7 @@ const handler = async (
       m.chat,
       {
         audio:
-          downloadInfo.buffer,
+          audio.buffer,
 
         mimetype:
           "audio/mpeg",
@@ -736,6 +945,10 @@ const handler = async (
         quoted: m,
       }
     );
+
+    /* =====================================================
+     * SUCCESS
+     * =================================================== */
 
     await reactMessage(
       conn,
@@ -775,7 +988,8 @@ handler.alias = [
   "music",
   "p",
 ];
-handler.category = "Menu Tools";
-handler.submenu = "Tools";
-
+handler.category =
+  "Menu Tools";
+handler.submenu =
+  "Tools";
 export default handler;
