@@ -1,11 +1,10 @@
 import axios from "axios";
-import { execFile, execSync } from "child_process";
-import { promisify } from "util";
+import { execSync } from "child_process";
+import ffmpeg from "fluent-ffmpeg";
 import {
   readFileSync,
   unlinkSync,
   existsSync,
-  readdirSync,
 } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -20,35 +19,12 @@ import {
 
 import { config, thumbnail } from "../../config.js";
 
-const execFileAsync = promisify(execFile);
-
 /* =========================================================
- * BINARIES
+ * BINARY FFMPEG
  * ======================================================= */
 
-let ytDlpPath = "yt-dlp";
 let ffmpegPath = "ffmpeg";
 
-/*
- * Cari yt-dlp
- */
-try {
-  const detectedYtDlp = execSync("which yt-dlp", {
-    encoding: "utf8",
-  }).trim();
-
-  if (detectedYtDlp) {
-    ytDlpPath = detectedYtDlp;
-  }
-} catch {
-  console.error(
-    "[YT-DLP] yt-dlp tidak ditemukan di PATH."
-  );
-}
-
-/*
- * Cari ffmpeg
- */
 try {
   const detectedFfmpeg = execSync("which ffmpeg", {
     encoding: "utf8",
@@ -63,7 +39,8 @@ try {
   );
 }
 
-console.log("[PLAY] yt-dlp:", ytDlpPath);
+ffmpeg.setFfmpegPath(ffmpegPath);
+
 console.log("[PLAY] ffmpeg:", ffmpegPath);
 
 /* =========================================================
@@ -72,54 +49,6 @@ console.log("[PLAY] ffmpeg:", ffmpegPath);
 
 const isValidVideoId = (id) => {
   return /^[a-zA-Z0-9_-]{11}$/.test(id);
-};
-
-const formatDuration = (durationSeconds) => {
-  if (
-    durationSeconds === null ||
-    durationSeconds === undefined ||
-    durationSeconds === ""
-  ) {
-    return "-";
-  }
-
-  const totalSeconds = Math.floor(
-    Number(durationSeconds)
-  );
-
-  if (
-    Number.isNaN(totalSeconds) ||
-    totalSeconds < 0
-  ) {
-    return "-";
-  }
-
-  const hours = Math.floor(
-    totalSeconds / 3600
-  );
-
-  const minutes = Math.floor(
-    (totalSeconds % 3600) / 60
-  );
-
-  const seconds =
-    totalSeconds % 60;
-
-  const mm = String(minutes).padStart(
-    2,
-    "0"
-  );
-
-  const ss = String(seconds).padStart(
-    2,
-    "0"
-  );
-
-  if (hours > 0) {
-    return `${hours}:${mm}:${ss}`;
-  }
-
-  return `${minutes}:${ss}`;
 };
 
 const safeFileName = (name) => {
@@ -133,10 +62,6 @@ const safeFileName = (name) => {
     .slice(0, 180) || "audio";
 };
 
-/* =========================================================
- * TEMP FILE CLEANUP
- * ======================================================= */
-
 const cleanupFile = (file) => {
   if (!file) return;
 
@@ -148,39 +73,6 @@ const cleanupFile = (file) => {
     console.error(
       "[PLAY CLEANUP ERROR]",
       file,
-      err?.message
-    );
-  }
-};
-
-const cleanupTempFiles = (
-  basePath
-) => {
-  if (!basePath) return;
-
-  try {
-    const directory = tmpdir();
-
-    const baseName =
-      basePath.split("/").pop();
-
-    if (!baseName) return;
-
-    const files =
-      readdirSync(directory);
-
-    for (const file of files) {
-      if (
-        file.startsWith(baseName)
-      ) {
-        cleanupFile(
-          join(directory, file)
-        );
-      }
-    }
-  } catch (err) {
-    console.error(
-      "[PLAY TEMP CLEANUP ERROR]",
       err?.message
     );
   }
@@ -248,13 +140,368 @@ const fetchVideoMeta = async (
 };
 
 /* =========================================================
- * DOWNLOAD AUDIO SOURCE
+ * RESOLVE DIRECT AUDIO URL (via API savefrom)
+ * ======================================================= */
+
+const collectFormatCandidates = (
+  node,
+  candidates,
+  depth = 0
+) => {
+  if (
+    !node ||
+    typeof node !== "object" ||
+    depth > 12
+  ) {
+    return;
+  }
+
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      collectFormatCandidates(
+        item,
+        candidates,
+        depth + 1
+      );
+    }
+    return;
+  }
+
+  if (
+    typeof node.url === "string" &&
+    /^https?:\/\//i.test(node.url)
+  ) {
+    candidates.push(node);
+  }
+
+  for (const key of Object.keys(node)) {
+    if (
+      key === "url" &&
+      typeof node.url === "string"
+    ) {
+      continue;
+    }
+
+    collectFormatCandidates(
+      node[key],
+      candidates,
+      depth + 1
+    );
+  }
+};
+
+const scoreFormatCandidate = (
+  candidate
+) => {
+  const type = (
+    candidate.type || ""
+  )
+    .toString()
+    .toLowerCase();
+
+  const ext = (
+    candidate.ext || ""
+  )
+    .toString()
+    .toLowerCase();
+
+  const quality =
+    parseInt(
+      candidate.qualityNumber,
+      10
+    ) ||
+    parseInt(
+      candidate.quality,
+      10
+    ) ||
+    0;
+
+  if (
+    type.includes("mp3") ||
+    ext === "mp3"
+  ) {
+    return 3000 + quality;
+  }
+
+  if (
+    type.includes("opus") ||
+    ext === "opus"
+  ) {
+    return 2000 + quality;
+  }
+
+  if (
+    type.includes("m4a") ||
+    ext === "m4a" ||
+    type.includes("audio")
+  ) {
+    return 2000 + quality;
+  }
+
+  if (candidate.audio === true) {
+    return 1500 + quality;
+  }
+
+  if (
+    candidate.downloadable === true
+  ) {
+    return 500 + quality;
+  }
+
+  return quality;
+};
+
+const findMetaInfo = (
+  node,
+  depth = 0
+) => {
+  if (
+    !node ||
+    typeof node !== "object" ||
+    depth > 12
+  ) {
+    return null;
+  }
+
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const result = findMetaInfo(
+        item,
+        depth + 1
+      );
+
+      if (result) return result;
+    }
+    return null;
+  }
+
+  if (
+    node.meta &&
+    typeof node.meta === "object" &&
+    node.meta.title
+  ) {
+    return {
+      title:
+        node.meta.title || null,
+
+      duration:
+        node.meta.duration || null,
+
+      thumb:
+        node.thumb ||
+        node.thumbnail ||
+        node.image ||
+        null,
+    };
+  }
+
+  if (
+    typeof node.title === "string" &&
+    node.title.trim()
+  ) {
+    return {
+      title: node.title,
+
+      duration:
+        node.duration ||
+        node.timestamp ||
+        null,
+
+      thumb:
+        node.thumb ||
+        node.thumbnail ||
+        node.image ||
+        null,
+    };
+  }
+
+  for (const key of Object.keys(node)) {
+    const result = findMetaInfo(
+      node[key],
+      depth + 1
+    );
+
+    if (result) return result;
+  }
+
+  return null;
+};
+
+const resolveDirectAudioUrl = async (
+  videoUrl
+) => {
+  const dlRes = await axios.get(
+    "https://api.siputzx.my.id/api/d/savefrom",
+    {
+      params: {
+        url: videoUrl,
+      },
+      timeout: 30000,
+    }
+  );
+
+  const dlData = dlRes?.data;
+
+  console.log(
+    "[PLAY DOWNLOAD API]",
+    JSON.stringify(dlData).slice(0, 2000)
+  );
+
+  if (!dlData?.status) {
+    throw new Error(
+      "API resolver gagal mengambil data audio."
+    );
+  }
+
+  const candidates = [];
+
+  collectFormatCandidates(
+    dlData?.data,
+    candidates
+  );
+
+  if (candidates.length === 0) {
+    throw new Error(
+      "Tidak ditemukan format audio yang valid."
+    );
+  }
+
+  const usableCandidates =
+    candidates.filter(
+      (c) =>
+        !c.url.includes(
+          "local-converter"
+        )
+    );
+
+  const finalCandidates =
+    usableCandidates.length > 0
+      ? usableCandidates
+      : candidates;
+
+  finalCandidates.sort(
+    (a, b) =>
+      scoreFormatCandidate(b) -
+      scoreFormatCandidate(a)
+  );
+
+  const bestFormat =
+    finalCandidates[0];
+
+  if (!bestFormat?.url) {
+    throw new Error(
+      "URL audio tidak ditemukan pada hasil resolver."
+    );
+  }
+
+  const meta =
+    findMetaInfo(dlData?.data) || {};
+
+  return {
+    downloadUrl: bestFormat.url,
+    title: meta.title || null,
+    duration: meta.duration || null,
+    thumb: meta.thumb || null,
+  };
+};
+
+/* =========================================================
+ * CONVERT KE MP3 (fluent-ffmpeg)
+ * ======================================================= */
+
+/*
+ * Konversi langsung dari URL remote.
  *
- * yt-dlp:
- *   Hanya mengambil audio source.
- *
- * FFmpeg:
- *   Melakukan conversion menjadi MP3.
+ * FFmpeg yang menangani proses download +
+ * decode + encode ke MP3 sekaligus (streaming),
+ * tanpa perlu file mentah lokal.
+ */
+const convertRemoteUrlToMp3 = (
+  sourceUrl,
+  outputPath
+) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(sourceUrl)
+      .inputOptions([
+        "-user_agent",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "-reconnect",
+        "1",
+        "-reconnect_streamed",
+        "1",
+        "-reconnect_delay_max",
+        "5",
+        "-rw_timeout",
+        "30000000",
+      ])
+      .noVideo()
+      .audioCodec("libmp3lame")
+      .audioQuality(2)
+      .outputOptions([
+        "-ar",
+        "44100",
+        "-ac",
+        "2",
+        "-map_metadata",
+        "-1",
+      ])
+      .format("mp3")
+      .on("stderr", (line) => {
+        console.log(
+          "[FFMPEG STREAM]",
+          line
+        );
+      })
+      .on("error", (err) => {
+        reject(err);
+      })
+      .on("end", () => {
+        resolve();
+      })
+      .save(outputPath);
+  });
+};
+
+/*
+ * Fallback: konversi dari file lokal
+ * (dipakai kalau streaming langsung dari URL gagal).
+ */
+const convertLocalFileToMp3 = (
+  inputPath,
+  outputPath
+) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .noVideo()
+      .audioCodec("libmp3lame")
+      .audioQuality(2)
+      .outputOptions([
+        "-ar",
+        "44100",
+        "-ac",
+        "2",
+        "-map_metadata",
+        "-1",
+      ])
+      .format("mp3")
+      .on("stderr", (line) => {
+        console.log(
+          "[FFMPEG LOCAL]",
+          line
+        );
+      })
+      .on("error", (err) => {
+        reject(err);
+      })
+      .on("end", () => {
+        resolve();
+      })
+      .save(outputPath);
+  });
+};
+
+/* =========================================================
+ * DOWNLOAD AUDIO (ffmpeg only, tanpa yt-dlp)
  * ======================================================= */
 
 const downloadAudio = async (
@@ -265,268 +512,92 @@ const downloadAudio = async (
       .toString(36)
       .slice(2)}`;
 
-  const basePath = join(
+  const rawPath = join(
     tmpdir(),
-    `neura_${uniqueId}`
+    `neura_${uniqueId}_raw`
   );
 
-  const inputTemplate =
-    `${basePath}.%(ext)s`;
-
-  const outputPath =
-    `${basePath}.mp3`;
-
-  let sourcePath = null;
+  const outputPath = join(
+    tmpdir(),
+    `neura_${uniqueId}.mp3`
+  );
 
   try {
     console.log(
-      "[PLAY] Download audio source:",
+      "[PLAY] Resolve URL audio:",
       videoUrl
     );
 
-    /* =====================================================
-     * 1. YT-DLP
-     * =================================================== */
-
-    const ytArgs = [
-      /*
-       * Audio terbaik saja.
-       *
-       * Tidak memakai:
-       * --extract-audio
-       * --audio-format
-       * --audio-quality
-       *
-       * Karena conversion dilakukan oleh FFmpeg.
-       */
-      "-f",
-      "bestaudio/best",
-
-      "--no-playlist",
-      "--no-warnings",
-      "--no-progress",
-      "--ignore-config",
-
-      /*
-       * Paksa pakai IPv4.
-       *
-       * Beberapa server/VPS punya IPv6 yang terdaftar
-       * di interface tapi tidak benar-benar bisa routing
-       * keluar, menyebabkan koneksi ke CDN video macet
-       * atau timeout meski akses web YouTube normal
-       * lancar (karena domain utama masih resolve IPv4).
-       */
-      "--force-ipv4",
-
-      /*
-       * Gunakan player client "android" (fallback ke
-       * "web") supaya ekstraksi tidak bergantung pada
-       * JS runtime untuk decode signature, dan koneksi
-       * ke CDN download biasanya lebih stabil.
-       */
-      "--extractor-args",
-      "youtube:player_client=android,web",
-
-      /*
-       * Retry & timeout socket supaya tidak langsung
-       * menyerah kalau koneksi ke CDN sedang lambat.
-       */
-      "--socket-timeout",
-      "15",
-      "--retries",
-      "5",
-
-      /*
-       * Jangan gunakan file .part sementara,
-       * langsung tulis ke file output.
-       */
-      "--no-part",
-
-      /*
-       * Output sementara.
-       */
-      "-o",
-      inputTemplate,
-
-      videoUrl,
-    ];
-
-    const ytResult =
-      await execFileAsync(
-        ytDlpPath,
-        ytArgs,
-        {
-          maxBuffer:
-            50 * 1024 * 1024,
-
-          timeout:
-            180000,
-
-          windowsHide:
-            true,
-        }
+    const downloadInfo =
+      await resolveDirectAudioUrl(
+        videoUrl
       );
 
     console.log(
-      "[PLAY] yt-dlp selesai."
+      "[PLAY] Direct audio URL ditemukan."
     );
 
-    if (ytResult?.stderr) {
-      console.log(
-        "[YT-DLP STDERR]",
-        ytResult.stderr
+    /* =====================================================
+     * 1. COBA STREAMING LANGSUNG VIA FFMPEG
+     * =================================================== */
+
+    try {
+      await convertRemoteUrlToMp3(
+        downloadInfo.downloadUrl,
+        outputPath
+      );
+    } catch (err) {
+      console.error(
+        "[FFMPEG STREAM ERROR] Fallback ke download manual:",
+        err?.message
+      );
+
+      /* =================================================
+       * 2. FALLBACK: DOWNLOAD FILE MENTAH DULU,
+       *    LALU CONVERT LOKAL
+       * =============================================== */
+
+      const rawRes =
+        await axios.get(
+          downloadInfo.downloadUrl,
+          {
+            responseType:
+              "arraybuffer",
+
+            timeout: 60000,
+
+            maxContentLength:
+              Infinity,
+
+            maxBodyLength:
+              Infinity,
+
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0",
+            },
+          }
+        );
+
+      const { writeFileSync } =
+        await import("fs");
+
+      writeFileSync(
+        rawPath,
+        Buffer.from(rawRes.data)
+      );
+
+      await convertLocalFileToMp3(
+        rawPath,
+        outputPath
       );
     }
 
     /* =====================================================
-     * 2. CARI FILE HASIL YT-DLP
+     * 3. VALIDASI MP3
      * =================================================== */
 
-    const possibleExtensions = [
-      "webm",
-      "m4a",
-      "opus",
-      "mp4",
-      "aac",
-      "ogg",
-    ];
-
-    for (
-      const ext of possibleExtensions
-    ) {
-      const candidate =
-        `${basePath}.${ext}`;
-
-      if (
-        existsSync(candidate)
-      ) {
-        sourcePath =
-          candidate;
-        break;
-      }
-    }
-
-    /*
-     * Fallback:
-     * cari file dengan prefix basePath.
-     */
-    if (!sourcePath) {
-      try {
-        const files =
-          readdirSync(tmpdir());
-
-        const prefix =
-          `neura_${uniqueId}.`;
-
-        const found =
-          files.find(
-            (file) =>
-              file.startsWith(prefix) &&
-              !file.endsWith(".mp3")
-          );
-
-        if (found) {
-          sourcePath =
-            join(
-              tmpdir(),
-              found
-            );
-        }
-      } catch {}
-    }
-
-    if (
-      !sourcePath ||
-      !existsSync(sourcePath)
-    ) {
-      throw new Error(
-        "File audio hasil yt-dlp tidak ditemukan."
-      );
-    }
-
-    console.log(
-      "[PLAY] Source audio:",
-      sourcePath
-    );
-
-    /* =====================================================
-     * 3. FFMPEG
-     * =================================================== */
-
-    console.log(
-      "[PLAY] Convert menggunakan FFmpeg..."
-    );
-
-    const ffmpegArgs = [
-      "-y",
-
-      /*
-       * Input audio.
-       */
-      "-i",
-      sourcePath,
-
-      /*
-       * Jangan masukkan video.
-       */
-      "-vn",
-
-      /*
-       * MP3 encoder.
-       */
-      "-c:a",
-      "libmp3lame",
-
-      /*
-       * VBR quality.
-       *
-       * 0 = kualitas tertinggi.
-       * 2 = sangat baik dan ukuran lebih kecil.
-       */
-      "-q:a",
-      "2",
-
-      /*
-       * Metadata tidak perlu dibawa.
-       */
-      "-map_metadata",
-      "-1",
-
-      outputPath,
-    ];
-
-    const ffmpegResult =
-      await execFileAsync(
-        ffmpegPath,
-        ffmpegArgs,
-        {
-          maxBuffer:
-            50 * 1024 * 1024,
-
-          timeout:
-            180000,
-
-          windowsHide:
-            true,
-        }
-      );
-
-    if (
-      ffmpegResult?.stderr
-    ) {
-      console.log(
-        "[FFMPEG]",
-        ffmpegResult.stderr
-      );
-    }
-
-    /* =====================================================
-     * 4. VALIDASI MP3
-     * =================================================== */
-
-    if (
-      !existsSync(outputPath)
-    ) {
+    if (!existsSync(outputPath)) {
       throw new Error(
         "FFmpeg tidak menghasilkan file MP3."
       );
@@ -535,10 +606,7 @@ const downloadAudio = async (
     const buffer =
       readFileSync(outputPath);
 
-    if (
-      !buffer ||
-      buffer.length === 0
-    ) {
+    if (!buffer || buffer.length === 0) {
       throw new Error(
         "File MP3 kosong."
       );
@@ -551,14 +619,17 @@ const downloadAudio = async (
     );
 
     /* =====================================================
-     * 5. CLEANUP
+     * 4. CLEANUP
      * =================================================== */
 
-    cleanupFile(sourcePath);
+    cleanupFile(rawPath);
     cleanupFile(outputPath);
 
     return {
       buffer,
+      title: downloadInfo.title,
+      duration: downloadInfo.duration,
+      thumb: downloadInfo.thumb,
     };
   } catch (err) {
     console.error(
@@ -566,23 +637,8 @@ const downloadAudio = async (
       err?.message
     );
 
-    if (err?.stdout) {
-      console.error(
-        "[PLAY STDOUT]",
-        err.stdout
-      );
-    }
-
-    if (err?.stderr) {
-      console.error(
-        "[PLAY STDERR]",
-        err.stderr
-      );
-    }
-
-    cleanupFile(sourcePath);
+    cleanupFile(rawPath);
     cleanupFile(outputPath);
-    cleanupTempFiles(basePath);
 
     throw new Error(
       err?.message ||
@@ -859,20 +915,22 @@ const handler = async (
     /* =====================================================
      * METADATA
      *
-     * Metadata utama berasal dari hasil
-     * search/oEmbed karena downloader sekarang
-     * fokus mengambil audio source.
+     * Prioritas: metadata dari resolver savefrom,
+     * fallback ke metadata dari search/oEmbed.
      * =================================================== */
 
     const title =
+      audio.title ||
       video.title ||
       "Unknown Title";
 
     const duration =
+      audio.duration ||
       video.timestamp ||
       "-";
 
     const displayThumbnail =
+      audio.thumb ||
       video.thumbnail ||
       thumbnail;
 
