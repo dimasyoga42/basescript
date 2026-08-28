@@ -80,6 +80,7 @@ const downloadAudioWithYtDlp = async (videoUrl) => {
     "--no-playlist",
     "--no-warnings",
     "--no-progress",
+    "--ignore-config",
     "--print-json",
     "-o",
     outputTemplate,
@@ -95,7 +96,11 @@ const downloadAudioWithYtDlp = async (videoUrl) => {
     stdout = result.stdout;
   } catch (err) {
     if (existsSync(finalPath)) unlinkSync(finalPath);
-    throw new Error(`yt-dlp gagal mengunduh audio: ${err.message}`);
+    console.error("[YT-DLP STDOUT]", err.stdout || "(kosong)");
+    console.error("[YT-DLP STDERR]", err.stderr || "(kosong)");
+    throw new Error(
+      `yt-dlp gagal mengunduh audio: ${err.stderr || err.message}`,
+    );
   }
 
   let info = {};
