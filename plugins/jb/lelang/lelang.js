@@ -2,6 +2,7 @@ import { downloadMedia, sendText } from "../../../src/config/message.js";
 import { getContentType } from "@whiskeysockets/baileys";
 import  { lelangStore} from "../../../src/lib/map.js";
 import {isAdmin} from "../../_function/_admin.js";
+import {selesaikanLelang} from "../../_function/_lelang.js";
 
 const handler = async (m, { conn }) => {
     try {

@@ -113,7 +113,7 @@ const start = async () => {
       await cronLive(sock);
       await cronMt(sock);
       await cronCode(sock);
-      await selesaikanLelang(sock, m.chat)
+      //await selesaikanLelang(sock, m.chat)
       // setInterval(
       //   () => {
       //     cronCode(sock);
