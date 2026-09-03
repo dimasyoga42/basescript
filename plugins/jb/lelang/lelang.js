@@ -54,7 +54,7 @@ const handler = async (m, { conn }) => {
         const caption =
             `*LELANG DIMULAI!*\n` +
             `Barang: ${barang}\n` +
-            `Harga awal: Rp${hargaAwal.toLocaleString("id-ID")}\n` +
+            `Harga awal: spina ${hargaAwal.toLocaleString("id-ID")}\n` +
             `Durasi: ${durasiMenit} menit\n\n` +
             `Ketik *.tawar <jumlah>* untuk menawar!`;
 

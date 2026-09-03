@@ -19,7 +19,7 @@ const handler = async (m, { conn }) => {
             return sendText(
                 conn,
                 m.chat,
-                `Tawaran harus lebih tinggi dari Rp${lelang.hargaTertinggi.toLocaleString("id-ID")}`,
+                `Tawaran harus lebih tinggi dari spina ${lelang.hargaTertinggi.toLocaleString("id-ID")}`,
                 m
             );
         }
@@ -34,7 +34,7 @@ const handler = async (m, { conn }) => {
         const sisaMenit = Math.ceil((lelang.waktuSelesai - Date.now()) / 60000);
 
         await conn.sendMessage(m.chat, {
-            text: `Tawaran diterima!\n@${m.sender.split("@")[0]} menawar Rp${jumlah.toLocaleString("id-ID")}\nSisa waktu: ~${sisaMenit} menit`,
+            text: `Tawaran diterima!\n@${m.sender.split("@")[0]} menawar spina ${jumlah.toLocaleString("id-ID")}\nSisa waktu: ~${sisaMenit} menit`,
             mentions: [m.sender],
         });
     } catch (error) {

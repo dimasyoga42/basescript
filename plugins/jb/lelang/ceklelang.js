@@ -12,7 +12,7 @@ const handler = async (m, { conn }) => {
         const teks =
             `*STATUS LELANG*\n` +
             `Barang: ${lelang.barang}\n` +
-            `Harga tertinggi: Rp${lelang.hargaTertinggi.toLocaleString("id-ID")}\n` +
+            `Harga tertinggi: spina ${lelang.hargaTertinggi.toLocaleString("id-ID")}\n` +
             `Penawar tertinggi: ${lelang.penawarTertinggi ? "@" + lelang.penawarTertinggi.split("@")[0] : "Belum ada"}\n` +
             `Sisa waktu: ~${sisaMenit} menit`;
 

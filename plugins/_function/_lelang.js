@@ -12,7 +12,7 @@ export async function selesaikanLelang(conn, chat) {
             `*LELANG SELESAI*\n` +
             `Barang: ${lelang.barang}\n` +
             `Pemenang: @${lelang.penawarTertinggi.split("@")[0]}\n` +
-            `Harga akhir: Rp${lelang.hargaTertinggi.toLocaleString("id-ID")}`;
+            `Harga akhir: spina ${lelang.hargaTertinggi.toLocaleString("id-ID")}`;
         mentions.push(lelang.penawarTertinggi);
     } else {
         teks =
