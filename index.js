@@ -32,6 +32,7 @@ import { cronMt } from "./plugins/_function/_cornmt.js";
 import { cronCode } from "./plugins/_function/_codes.js";
 import { isAdmin } from "./plugins/_function/_admin.js";
 import { getDevice } from "@whiskeysockets/baileys";
+import {selesaikanLelang} from "./plugins/_function/_lelang.js";
 dotenv.config();
 const start = async () => {
   // Load semua plugin dulu sebelum bot jalan
@@ -112,6 +113,7 @@ const start = async () => {
       await cronLive(sock);
       await cronMt(sock);
       await cronCode(sock);
+      await selesaikanLelang(sock, m.chat)
       // setInterval(
       //   () => {
       //     cronCode(sock);

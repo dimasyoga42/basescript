@@ -1,0 +1,1 @@
+export const lelangStore = new Map();
