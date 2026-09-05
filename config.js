@@ -80,7 +80,7 @@ export const config = {
   1-2: 50-90M
 
   *MD*
-  0-1 5-10M
+  0-1 2-8M
   1-2 20-35M
 
   *KTN*
