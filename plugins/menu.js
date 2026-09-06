@@ -5,7 +5,9 @@ import { supa } from "../src/config/supa.js";
 import { buildAvaGrid } from "./_function/_format.js";
 import axios from "axios";
 import { demoButtonV2, thumb } from "../src/config/ms.js";
-
+import path from "path"
+import { getUserData } from "../src/config/func.js";
+const db = path.resolve("db", "prefix.json")
 const handler = async (m, { conn }) => {
   let image = null;
   try {
@@ -38,10 +40,13 @@ const handler = async (m, { conn }) => {
 
 
   // Section command
+  const data = getUserData(db)
+  const pref = Array.isArray(data) ? data.find((item) => item?.id === m.chat) : null;
+  const prefix = pref?.prefix || ".";
   const commandSection = Object.entries(categories)
     .map(
       ([cat, cmds]) =>
-        `_${cat}_\n` + cmds.map((c) => `➤ .${c}`).join("\n") + `\n`,
+        `_${cat}_\n` + cmds.map((c) => `➤ ${prefix}${c}`).join("\n") + `\n`,
     )
     .join("\n\n").trim();
 

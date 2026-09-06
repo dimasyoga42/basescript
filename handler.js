@@ -3,8 +3,9 @@ import { checkUnAfk } from "./plugins/_function/_afk.js";
 import { isBan } from "./plugins/_function/_ban.js";
 import { isMuted } from "./plugins/_function/_muted.js";
 import { checkVip, cleanExpiredVip } from "./plugins/_function/_vip.js";
+import { getUserData } from "./src/config/func.js";
 import { checkGroupLimit } from "./src/config/limit.js";
-
+import path from "path"
 function isMatch(pattern, command) {
   if (!pattern) return false;
   if (typeof pattern === "string") return pattern === command;
@@ -46,7 +47,10 @@ function extractBody(m) {
 }
 
 export async function runCommand(conn, m, plugins) {
-  const prefix = config.prefix;
+  const db = path.resolve("db", "prefix.json");
+  const data = getUserData(db);
+  const pref = Array.isArray(data) ? data.find((item) => item?.id === m.chat) : null;
+  const prefix = pref?.prefix || config.prefix;
   const body = extractBody(m);
 
   if (!body) return;
