@@ -44,13 +44,14 @@ const handler = async (m, { conn }) => {
     const message = `*RAID PARTY UPDATED*
 Element Boss : ${raid.bos_ele || "-"}
 Hadiah       : ${raid.hadiah || "-"}
-Party 1 (${raid.party.pt1.length}/4)
+Jam          : ${raid.jam || "-"}
+Party A (${raid.party.pt1.length}/4)
 ${list("pt1")}
-Party 2 (${raid.party.pt2.length}/4)
+Party B (${raid.party.pt2.length}/4)
 ${list("pt2")}
-Party 3 (${raid.party.pt3.length}/4)
+Party C (${raid.party.pt3.length}/4)
 ${list("pt3")}
-Party 4 (${raid.party.pt4.length}/4)
+Party D (${raid.party.pt4.length}/4)
 ${list("pt4")}
 > join: .join <ign> <pt1-pt4>`;
 

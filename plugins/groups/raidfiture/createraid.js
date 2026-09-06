@@ -11,22 +11,24 @@ const handler = async (m, { conn }) => {
     const arg = m.text.split(" ");
     const ele = arg[1];
     const price = arg[2];
-    if (!ele || !price) return sendText(conn, m.chat, "gunakan .createraid element bos hadiah, contoh .createraid bumi 50m", m);
+    const jam = arg[3]
+    if (!ele || !price || !jam) return sendText(conn, m.chat, "gunakan .createraid element bos hadiah, contoh .createraid bumi 50m 19:30", m);
     const data = await getUserData(db);
     const raidReady = data.find((item) => item.id === m.chat);
     if (raidReady) return await conn.sendMessage(
-        m.chat,
-        {
-          text: "Party Raid sudah di buat harap hapus terlebih dahulu jika ingin membuatnya kembali",
+      m.chat,
+      {
+        text: "Party Raid sudah di buat harap hapus terlebih dahulu jika ingin membuatnya kembali",
 
-        },
-        { quoted: m },
-      );
+      },
+      { quoted: m },
+    );
 
     const newParty = {
       id: m.chat,
       bos_ele: ele,
       hadiah: price,
+      jam: jam,
       party: {
         pt1: [],
         pt2: [],
@@ -35,7 +37,7 @@ const handler = async (m, { conn }) => {
       },
     };
     const mtext =
-      `Raid Party\n- Element Bos: ${ele}\n- Hadiah: ${price}\n\n- pt1(0/4)\n- pt2(0/4)\n- pt(0/4)\n- pt4(0/4)`.trim();
+      `Raid Party\n- Element Bos: ${ele}\n- Hadiah: ${price}\nJam: ${jam}\n\n- pt A(0/4)\n- pt B(0/4)\n- pt C(0/4)\n- pt B(0/4)\n _gunakan .join ign pt1-4 gunakan urutan a-d_`.trim();
     data.push(newParty);
     saveUserData(db, data);
     await conn.sendMessage(

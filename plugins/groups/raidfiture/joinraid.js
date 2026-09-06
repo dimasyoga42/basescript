@@ -73,17 +73,18 @@ const handler = async (m, { conn }) => {
     const message = `*RAID PARTY UPDATED*
 Element Boss : ${isValidData.bos_ele || "-"}
 Hadiah       : ${isValidData.hadiah || "-"}
+Jam          : ${isValidData.jam || "-"}
 
-Party 1 (${isValidData.party.pt1.length}/4)
+Party A (${isValidData.party.pt1.length}/4)
 ${list("pt1")}
 
-Party 2 (${isValidData.party.pt2.length}/4)
+Party B (${isValidData.party.pt2.length}/4)
 ${list("pt2")}
 
-Party 3 (${isValidData.party.pt3.length}/4)
+Party C (${isValidData.party.pt3.length}/4)
 ${list("pt3")}
 
-Party 4 (${isValidData.party.pt4.length}/4)
+Party D (${isValidData.party.pt4.length}/4)
 ${list("pt4")}
 
 > join: .join <ign> <pt1-pt4>`;
