@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import fetch from "node-fetch";
 import { downloadContentFromMessage } from "@whiskeysockets/baileys";
 import { config } from "../../config.js";
-
+import axios from "axios";
 const ensure = (v, name) => {
   if (!v) throw new Error(`${name} is required`);
 };
