@@ -4,6 +4,9 @@ import fetch from "node-fetch";
 import { downloadContentFromMessage } from "@whiskeysockets/baileys";
 import { config } from "../../config.js";
 import axios from "axios";
+import sharp from "sharp";
+import path from "path";
+
 const ensure = (v, name) => {
   if (!v) throw new Error(`${name} is required`);
 };
