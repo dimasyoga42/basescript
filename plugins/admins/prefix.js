@@ -11,15 +11,15 @@ const handler = async (m, { conn }) => {
       return sendText(conn, m.chat, "kamu bukan admin", m)
     }
 
-    const prefix = m.text.replace(/^\.setprefix\s*/, "").trim()
-
-    if (!prefix) {
-      return sendText(conn, m.chat, "format salah, berikan prefix setelah .setprefix", m)
-    }
 
     const data = getUserData(db)
     const prefixs = data.find((item) => item.id === m.chat)
-
+    const pref = Array.isArray(data) ? data.find((item) => item?.id === m.chat) : null;
+    const id = pref?.prefix || "."
+    const prefix = m.text.replace(`${id}setprefix`, "").trim()
+    if (!prefix) {
+      return sendText(conn, m.chat, "format salah, berikan prefix setelah .setprefix", m)
+    }
     if (!prefixs) {
       data.push({
         id: m.chat,
