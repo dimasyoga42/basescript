@@ -1,6 +1,6 @@
 import { config, thumbnail } from "../config.js";
 import { scrapeBoostBoss } from "./toram/boost.js";
-import { sendFancyText, sendFancyTextModif, sendMenu } from "../src/config/message.js";
+import { sendFancyText, sendFancyTextModif, sendMenu, sendTextWithContext } from "../src/config/message.js";
 import { supa } from "../src/config/supa.js";
 import { buildAvaGrid } from "./_function/_format.js";
 import axios from "axios";
@@ -71,7 +71,21 @@ const handler = async (m, { conn }) => {
   //   config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)],
   //   randomThumb,
   // );
-  await thumb(conn, m, config.BotName, result, config.OwnerName, config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)], "https://server.neurasama.my.id/etc/thumbnail")
+  // await thumb(conn, m, config.BotName, result, config.OwnerName, config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)], "https://server.neurasama.my.id/etc/thumbnail")
+
+  await sendTextWithContext(conn, m.chat, result, {
+    forwarded: true,
+    forwardingScore: 999,
+    externalAdReply: {
+      title: config.BotName,
+      body: "Selalu ada",
+      // pakai file lokal supaya tidak bergantung pada CDN eksternal yang kadang blok request
+      thumbnailUrl: "https://server.neurasama.my.id/etc/thumbnail",
+      mediaType: 1,
+      renderLargerThumbnail: true,
+
+    },
+  });
   // await sendFancyText(conn, m.chat, {
   //   title: config.BotName,
   //   body: "selalu ada",
