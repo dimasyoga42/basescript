@@ -34,8 +34,8 @@ const handler = async (m, { conn }) => {
     const progressText =
       Array.isArray(result.progress) && result.progress.length > 0
         ? result.progress
-            .map((v) => `- Run ${v.run}x → Lv ${v.level} (${v.percent}%)`)
-            .join("\n")
+          .map((v) => `- Run ${v.run}x → Lv ${v.level} (${v.percent}%)`)
+          .join("\n")
         : "  Detail progres tidak tersedia.";
 
     const responseText = `

@@ -85,7 +85,7 @@ export const config = {
 
   *KTN*
   0-1: 20-35M
-  1-2: 90-130M
+  1-2: 80-100M
 
   *THS*
   0-1: 20-25M
@@ -104,7 +104,7 @@ export const config = {
   High-Grade Ornament 2M+
   legendary needle 550M - 700M
   leg ornament: 600-650M
-  leg silk: 800M
+  leg silk: 500M
 
   Ini hanya perkiraan, jika kalian punya info bisa .saran nama pembolong + harga contoh: .saran leg silk 1,4B. Terima kasih
   `,
