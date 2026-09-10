@@ -44,7 +44,7 @@ const handler = async (m, { conn }) => {
         const rawText = data?.message || "@user selamat datang di @group";
         Condtion = /@nopict/.test(rawText);
         offMessage = /@off/.test(rawText);
-        if(offMessage) return
+        if (offMessage) return
         const caption = rawText
           .replace(/@user/g, `@${number}`)
           .replace(/@nama/g, username)
@@ -59,28 +59,27 @@ const handler = async (m, { conn }) => {
             mentions: [jid],
           });
         } else {
-        const url = `https://api.siputzx.my.id/api/canvas/welcomev5?username=${encodeURIComponent(groupName)}&guildName=${encodeURIComponent(groupName)}&memberCount=${memberCount}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent( config.welcomeBg || "")}&quality=90`;
-        let image;
-        try {
-          const res = await axios.get(url, {
-            responseType: "arraybuffer",
-          });
-          image = Buffer.from(res.data);
-        } catch {
-          image = null;
-        }
-        if (image) {
-          await conn.sendMessage(id, {
-            image,
-            caption,
-            mentions: [jid],
-          });
-        } else {
-          await conn.sendMessage(id, {
-            text: caption,
-            mentions: [jid],
-          });
-        }
+          const url = `https://api.siputzx.my.id/api/canvas/welcomev5?username=${encodeURIComponent(groupName)}&guildName=${encodeURIComponent(groupName)}&memberCount=${memberCount}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(config.welcomeBg || "")}&quality=90`;
+          let image;
+          try {
+            const res = await axios.get(url, {
+              responseType: "arraybuffer",
+            });
+            image = Buffer.from(res.data);
+          } catch {
+            image = null;
+          }
+          if (image) {
+            await conn.sendMessage(id, {
+              text: caption,
+              mentions: [jid],
+            });
+          } else {
+            await conn.sendMessage(id, {
+              text: caption,
+              mentions: [jid],
+            });
+          }
         }
       }
       // ================= GOODBYE =================
