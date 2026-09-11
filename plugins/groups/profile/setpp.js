@@ -55,7 +55,7 @@ const handler = async (m, { conn }) => {
 
     const { error } = await supa
       .from("profile")
-      .upsert({ user_id: userId, profile_path: filePath });
+      .upsert({ user_id: userId, profile_path: filePath }, { onConflict: "user_id" });
 
     if (error) throw error;
 
