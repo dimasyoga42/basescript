@@ -57,7 +57,7 @@ const handler = async (m, { conn }) => {
 
 
   await thumb(conn, m, config.BotName, result, config.OwnerName, config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)], "https://server.neurasama.my.id/etc/thumbnail")
-  await sendText(conn, m.chat, "update:\n- add cmd hd\n- add cmd bgromove\n _Neura Sama_")
+  await sendText(conn, m.chat, "update:\n- add cmd hd\n- add cmd bgromove\n bugs:\n- profile")
 };
 
 handler.command = "menu";

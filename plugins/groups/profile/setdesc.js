@@ -1,9 +1,6 @@
-import path from "path";
 import { config } from "../../../config.js";
-import { getUserData, saveUserData } from "../../../src/config/func.js";
 import { sendText } from "../../../src/config/message.js";
-
-const db = path.resolve("db", "profil.json");
+import { supa } from "../../../src/config/supa.js";
 
 const getUserId = (m) =>
   m.key.remoteJid.endsWith("@s.whatsapp.net")
@@ -29,16 +26,13 @@ const handler = async (m, { conn }) => {
       return sendText(conn, m.chat, `Bio is too long (${text.length}/500)`, m);
 
     const userId = getUserId(m);
-    const data = await getUserData(db);
-    let user = data.find((u) => u.userId === userId);
 
-    if (!user) {
-      data.push({ userId, bio: text, profilPath: null, idBuff: null });
-    } else {
-      user.bio = text;
-    }
+    const { error } = await supa
+      .from("profile")
+      .upsert({ user_id: userId, bio: text }, { onConflict: "user_id" });
 
-    saveUserData(db, data);
+    if (error) throw error;
+
     await sendText(conn, m.chat, "Bio updated successfully!", m);
   } catch (err) {
     console.error("[setdesc]", err);

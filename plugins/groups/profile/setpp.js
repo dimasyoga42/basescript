@@ -2,10 +2,9 @@ import path from "path";
 import fs from "fs";
 import { downloadMediaMessage } from "@whiskeysockets/baileys";
 import { config } from "../../../config.js";
-import { getUserData, saveUserData } from "../../../src/config/func.js";
 import { sendText } from "../../../src/config/message.js";
+import { supa } from "../../../src/config/supa.js";
 
-const db = path.resolve("db", "profil.json");
 const profileDir = path.resolve("db", "profiles");
 if (!fs.existsSync(profileDir)) fs.mkdirSync(profileDir, { recursive: true });
 
@@ -40,20 +39,26 @@ const handler = async (m, { conn }) => {
     const userId = getUserId(m);
     const fileName = `${userId.split("@")[0]}_${Date.now()}.jpg`;
     const filePath = path.join(profileDir, fileName);
+
+    // ambil path lama dari Supabase (kalau ada) supaya file lama bisa dihapus
+    const { data: existing } = await supa
+      .from("profile")
+      .select("profile_path")
+      .eq("user_id", userId)
+      .single();
+
     fs.writeFileSync(filePath, buffer);
 
-    const data = await getUserData(db);
-    let user = data.find((u) => u.userId === userId);
-
-    if (!user) {
-      data.push({ userId, bio: "", profilPath: filePath, idBuff: null });
-    } else {
-      if (user.profilPath && fs.existsSync(user.profilPath))
-        fs.unlinkSync(user.profilPath);
-      user.profilPath = filePath;
+    if (existing?.profile_path && fs.existsSync(existing.profile_path)) {
+      fs.unlinkSync(existing.profile_path);
     }
 
-    saveUserData(db, data);
+    const { error } = await supa
+      .from("profile")
+      .upsert({ user_id: userId, profile_path: filePath }, { onConflict: "user_id" });
+
+    if (error) throw error;
+
     await sendText(conn, m.chat, "Profile photo set successfully!", m);
   } catch (err) {
     console.error("[setpp]", err);
