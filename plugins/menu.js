@@ -57,7 +57,7 @@ const handler = async (m, { conn }) => {
 
 
   await thumb(conn, m, config.BotName, result, config.OwnerName, config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)], "https://server.neurasama.my.id/etc/thumbnail")
-  await sendText(conn, m.chat, "*Info Penting:*\n\nNeura adalah bot yang hanya bisa digunakan pada chat grup, jadi tidak perlu menggunakan nya melalui private chat kerena tidak akan di jawab!\n _Neura Sama_")
+  await sendText(conn, m.chat, "update:\n- add cmd hd\n- add cmd bgromove\n _Neura Sama_")
 };
 
 handler.command = "menu";
