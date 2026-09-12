@@ -11,7 +11,7 @@ dotenv.config();
 
 const db = path.resolve("db", "neura.json");
 
-const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/gptoss120b";
+const AI_API_ENDPOINT = process.env.AI_API_ENDPOINT || "https://api.siputzx.my.id/api/ai/qwq32b";
 const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.4";
 
 // Dipangkas dari 1800/1500 -> payload lebih kecil = request lebih cepat diproses server
