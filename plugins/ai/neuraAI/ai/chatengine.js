@@ -25,7 +25,6 @@ export default class ChatEngine {
     const stored = this.memoryEngine.get(userId);
     const evolution = this.evolutionEngine.update(userId, message);
 
-    // baseline mood dipengaruhi karakter global yang udah berkembang
     const evolvedBaseline = {
       happiness: DEFAULT_MOOD.happiness,
       patience: DEFAULT_MOOD.patience,
@@ -41,6 +40,9 @@ export default class ChatEngine {
       message
     );
 
+    // [OPTIMASI] Satu kali upsert gabungan mood+relationship. Sebelumnya ini
+    // langsung memicu readFileSync+writeFileSync sinkron; sekarang cuma
+    // ubah cache di memori + jadwalkan satu debounced write.
     this.memoryEngine.save(userId, { mood, relationship });
 
     return this.promptBuilder.build({ persona, mood, relationship, memory: stored, evolution });
@@ -49,5 +51,15 @@ export default class ChatEngine {
   saveFacts(userId, facts) {
     if (!facts || typeof facts !== "object" || !Object.keys(facts).length) return;
     this.memoryEngine.save(userId, { facts });
+  }
+
+  /**
+   * Paksa tulis semua perubahan yang masih tertunda (debounced) ke disk.
+   * Panggil ini saat proses mau dimatikan (mis. di handler SIGINT/SIGTERM)
+   * supaya tidak ada update mood/relationship/facts yang hilang.
+   */
+  flush() {
+    this.memoryEngine.flush();
+    this.evolutionEngine.flush();
   }
 }

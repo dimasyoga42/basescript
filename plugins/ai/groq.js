@@ -18,18 +18,23 @@ const AI_TEMPERATURE = process.env.AI_TEMPERATURE || "0.4";
 const MAX_PROMPT_CHARS = Number(process.env.AI_MAX_PROMPT_CHARS) || 5000;
 const MAX_SYSTEM_CHARS = Number(process.env.AI_MAX_SYSTEM_CHARS) || 4500;
 
-// Retry kalau API balikin response kosong (kejadian intermiten dari sisi server siputzx)
-const AI_EMPTY_RETRY_COUNT = Number(process.env.AI_EMPTY_RETRY_COUNT) || 3;
-const AI_EMPTY_RETRY_DELAY_MS = Number(process.env.AI_EMPTY_RETRY_DELAY_MS) || 300;
+// [OPTIMASI] Retry & continuation dipangkas -> ini penyumbang latensi terbesar
+// karena tiap retry/continuation nunggu request penuh ke API lagi.
+const AI_EMPTY_RETRY_COUNT = Number(process.env.AI_EMPTY_RETRY_COUNT) || 1; // sebelumnya 3
+const AI_EMPTY_RETRY_DELAY_MS = Number(process.env.AI_EMPTY_RETRY_DELAY_MS) || 150; // sebelumnya 300
 
-// Batas token output yang diminta ke API. Beberapa provider men-cutoff jawaban
-// di tengah kalimat kalau default max token-nya kecil, jadi kita paksa naikkan.
-const AI_MAX_TOKENS = Number(process.env.AI_MAX_TOKENS) || 2048;
+// [OPTIMASI] Token dipangkas dari 2048 -> kebanyakan chat kasual gak butuh sebanyak itu,
+// makin gede max_tokens makin lama waktu generate di sisi server.
+const AI_MAX_TOKENS = Number(process.env.AI_MAX_TOKENS) || 700;
 
-// Kalau jawaban API kelihatan berhenti di tengah kalimat/kata, kita minta AI
-// melanjutkan dari titik berhenti tersebut, maksimal sekian kali percobaan.
-const AI_CONTINUE_MAX_ROUNDS = Number(process.env.AI_CONTINUE_MAX_ROUNDS) || 2;
+// [OPTIMASI] Continuation round dipangkas jadi 1x -> kalau masih kepotong setelah 1x
+// lanjutan, mending kirim apa adanya daripada nambah 1 round request lagi.
+const AI_CONTINUE_MAX_ROUNDS = Number(process.env.AI_CONTINUE_MAX_ROUNDS) || 1; // sebelumnya 2
 const AI_CONTINUE_MIN_LENGTH = Number(process.env.AI_CONTINUE_MIN_LENGTH) || 20;
+
+// [OPTIMASI] Timeout keras per request AI supaya gak ada request yang nge-hang
+// tanpa batas dan nge-block seluruh alur balasan (termasuk typing indicator).
+const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 20000;
 
 const TOOL_CALL_PATTERN = /\{\{tool:[^}]+\}\}/i;
 // pattern khusus untuk tool stiker, dipisah dari TOOL_CALL_PATTERN
@@ -118,32 +123,48 @@ function joinContinuation(base, continuation) {
   return `${trimmedBase}${separator}${trimmedContinuation}`;
 }
 
+// [OPTIMASI] Tambah AbortController dengan timeout supaya request yang
+// nge-hang di sisi server AI tidak ikut membekukan seluruh alur balasan bot.
 async function requestAIOnce(safeSystem, safePrompt) {
-  const response = await fetch(AI_API_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      // keep-alive supaya koneksi TCP/TLS ke API dipakai ulang, bukan dibangun dari nol tiap request
-      Connection: "keep-alive",
-    },
-    body: JSON.stringify({
-      prompt: safePrompt,
-      system: safeSystem,
-      temperature: Number(AI_TEMPERATURE),
-      max_tokens: AI_MAX_TOKENS,
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
 
-  if (!response.ok) {
-    const errBody = await response.text().catch(() => "");
-    console.error(`[Neura] AI API status ${response.status}: ${errBody.slice(0, 500)}`);
-    throw new Error(`AI API merespons dengan status ${response.status}`);
+  try {
+    const response = await fetch(AI_API_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // keep-alive supaya koneksi TCP/TLS ke API dipakai ulang, bukan dibangun dari nol tiap request
+        Connection: "keep-alive",
+      },
+      body: JSON.stringify({
+        prompt: safePrompt,
+        system: safeSystem,
+        temperature: Number(AI_TEMPERATURE),
+        max_tokens: AI_MAX_TOKENS,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text().catch(() => "");
+      console.error(`[Neura] AI API status ${response.status}: ${errBody.slice(0, 500)}`);
+      throw new Error(`AI API merespons dengan status ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = extractTextFromApiResponse(data);
+
+    return { text, data };
+  } catch (err) {
+    if (err?.name === "AbortError") {
+      console.error(`[Neura] Request AI timeout setelah ${AI_REQUEST_TIMEOUT_MS}ms`);
+      throw new Error("AI API timeout");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  const data = await response.json();
-  const text = extractTextFromApiResponse(data);
-
-  return { text, data };
 }
 
 async function requestContinuation(safeSystem, safePrompt, currentText) {
@@ -174,7 +195,22 @@ async function fetchAIText(system, prompt) {
   let finalText = "";
 
   for (let attempt = 0; attempt <= AI_EMPTY_RETRY_COUNT; attempt++) {
-    const { text, data } = await requestAIOnce(safeSystem, safePrompt);
+    let text = "";
+    let data = null;
+
+    try {
+      const result = await requestAIOnce(safeSystem, safePrompt);
+      text = result.text;
+      data = result.data;
+    } catch (err) {
+      // [OPTIMASI] Kalau timeout/error di percobaan terakhir, langsung berhenti
+      // daripada nunggu delay lagi untuk retry yang kemungkinan gagal juga.
+      console.error(`[Neura] Request AI gagal (percobaan ${attempt + 1}):`, err.message);
+      if (attempt >= AI_EMPTY_RETRY_COUNT) break;
+      await new Promise((r) => setTimeout(r, AI_EMPTY_RETRY_DELAY_MS * (attempt + 1)));
+      continue;
+    }
+
     lastData = data;
 
     if (text) {
@@ -253,6 +289,14 @@ const MAX_HISTORY = 3;
 const MAX_CONTEXT = 4;
 const MAX_MESSAGE_LENGTH = 2000;
 const MIN_LENGTH_FOR_EXTRACTION = 6;
+
+// [OPTIMASI] extractFacts adalah request AI KEDUA setiap pesan masuk.
+// Ini menggandakan beban ke endpoint yang sama dan bisa antre di belakang
+// request jawaban utama kalau server AI-nya membatasi concurrency.
+// EXTRACTION_SAMPLE_RATE < 1 akan melewati sebagian ekstraksi secara acak
+// untuk mengurangi jumlah request tanpa mematikan fitur memori sepenuhnya.
+// Set ke 1 kalau mau perilaku original (ekstraksi di setiap pesan).
+const EXTRACTION_SAMPLE_RATE = Number(process.env.AI_EXTRACTION_SAMPLE_RATE ?? 0.5);
 
 const processingLocks = new Set();
 
@@ -374,7 +418,7 @@ function startTypingIndicator(sock, chatId) {
     if (stopped) return;
     try {
       await sock.sendPresenceUpdate("composing", chatId);
-    } catch {}
+    } catch { }
   };
 
   tick();
@@ -385,23 +429,23 @@ function startTypingIndicator(sock, chatId) {
     clearInterval(interval);
     try {
       await sock.sendPresenceUpdate("paused", chatId);
-    } catch {}
+    } catch { }
   };
 }
 
 const randomBetween = (min, max) => Math.random() * (max - min) + min;
 
-// Peluang pesan dipecah jadi beberapa bubble, divariasikan sesuai jumlah kalimat.
-// Makin banyak kalimat/makin panjang isinya, makin besar peluang dipecah jadi beberapa pesan.
+// [OPTIMASI] Peluang split & delay antar-bubble diturunkan sedikit supaya
+// jawaban panjang tidak terasa lambat sampai ke user, tanpa menghilangkan
+// kesan "natural" sepenuhnya.
 function getSplitChance(sentenceCount, textLength) {
   if (sentenceCount <= 1) {
-    // 1 kalimat doang: kecil kemungkinan dipecah, cuma kalau teksnya lumayan panjang
-    return textLength > 60 ? 0.2 : 0.05;
+    return textLength > 80 ? 0.15 : 0.03;
   }
-  if (sentenceCount === 2) return 0.45;
-  if (sentenceCount === 3) return 0.6;
-  if (sentenceCount === 4) return 0.7;
-  return 0.8; // 5+ kalimat, kemungkinan besar dipecah jadi beberapa bubble
+  if (sentenceCount === 2) return 0.3;
+  if (sentenceCount === 3) return 0.4;
+  if (sentenceCount === 4) return 0.5;
+  return 0.6; // 5+ kalimat
 }
 
 function chunkMessage(text) {
@@ -480,17 +524,18 @@ const sendNaturally = async (sock, chatId, msg, text) => {
 
     try {
       await sock.sendPresenceUpdate("composing", chatId);
-    } catch {}
+    } catch { }
 
-    const typingSpeed = randomBetween(15, 40);
+    const typingSpeed = randomBetween(12, 30); // [OPTIMASI] dipercepat dari 15-40
 
     let typingDelay = Math.min(
-      4000,
-      Math.max(350, chunk.length * typingSpeed),
+      2500, // [OPTIMASI] cap diturunkan dari 4000
+      Math.max(250, chunk.length * typingSpeed),
     );
 
-    if (Math.random() < 0.15) {
-      typingDelay += randomBetween(800, 2000);
+    if (Math.random() < 0.1) {
+      // [OPTIMASI] peluang & besar jeda tambahan diturunkan
+      typingDelay += randomBetween(400, 1000);
     }
 
     await new Promise((r) => setTimeout(r, typingDelay));
@@ -503,50 +548,50 @@ const sendNaturally = async (sock, chatId, msg, text) => {
 
     if (i !== chunks.length - 1) {
       await new Promise((r) =>
-        setTimeout(r, randomBetween(250, 900)),
+        setTimeout(r, randomBetween(150, 500)), // [OPTIMASI] dipercepat dari 250-900
       );
     }
   }
 
   try {
     await sock.sendPresenceUpdate("paused", chatId);
-  } catch {}
+  } catch { }
 };
 
 /**
  * Kirim stiker ke chat berdasarkan URL gambar.
  * Download dulu jadi buffer, baru dikirim lewat sock.sendMessage.
  */
- const sendStikerToChat = async (sock, chatId, msg, stickerUrl) => {
-   try {
-     const res = await axios.get(stickerUrl, {
-       responseType: "arraybuffer",
-       timeout: 30000,
-     });
+const sendStikerToChat = async (sock, chatId, msg, stickerUrl) => {
+  try {
+    const res = await axios.get(stickerUrl, {
+      responseType: "arraybuffer",
+      timeout: 30000,
+    });
 
-     if (!res?.data) {
-       throw new Error("Response stiker kosong");
-     }
+    if (!res?.data) {
+      throw new Error("Response stiker kosong");
+    }
 
-     const inputBuffer = Buffer.from(res.data);
+    const inputBuffer = Buffer.from(res.data);
 
-     const webpBuffer = await sharp(inputBuffer)
-       .resize(512, 512, {
-         fit: "contain",
-         background: { r: 0, g: 0, b: 0, alpha: 0 },
-       })
-       .webp({ quality: 90 })
-       .toBuffer();
+    const webpBuffer = await sharp(inputBuffer)
+      .resize(512, 512, {
+        fit: "contain",
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .webp({ quality: 90 })
+      .toBuffer();
 
-     await sock.sendMessage(
-       chatId,
-       { sticker: webpBuffer },
-       { quoted: msg },
-     );
-   } catch (err) {
-     console.error("[Neura] Gagal kirim stiker:", err.message);
-   }
- };
+    await sock.sendMessage(
+      chatId,
+      { sticker: webpBuffer },
+      { quoted: msg },
+    );
+  } catch (err) {
+    console.error("[Neura] Gagal kirim stiker:", err.message);
+  }
+};
 
 export const NeuraBot = async (sock, chatId, msg, arg) => {
   const groupId = msg?.key?.remoteJid;
@@ -648,8 +693,6 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
 
     saveUserData(db, database);
 
-    // --- Kirim stiker dulu (kalau ada) ---
-
     // --- Kirim teks (kalau masih ada isi setelah tag stiker dibuang) ---
     if (answer.length) {
       if (isToolAnswer) {
@@ -658,25 +701,33 @@ export const NeuraBot = async (sock, chatId, msg, arg) => {
         await sendNaturally(sock, chatId, msg, answer);
       }
     }
+
+    // --- Kirim stiker (kalau ada) ---
     if (stickerUrl) {
       await sendStikerToChat(sock, chatId, msg, stickerUrl);
     }
 
-    if (sanitizedMessage.length >= MIN_LENGTH_FOR_EXTRACTION) {
+    // [OPTIMASI] extractFacts tetap async/non-blocking (tidak mengubah waktu
+    // balasan ke user), tapi sekarang di-sample sebagian saja supaya tidak
+    // membebani endpoint AI yang sama dengan request kedua di setiap pesan.
+    if (
+      sanitizedMessage.length >= MIN_LENGTH_FOR_EXTRACTION &&
+      Math.random() < EXTRACTION_SAMPLE_RATE
+    ) {
       extractFacts(sender, sanitizedMessage)
         .then((facts) => {
           if (facts && Object.keys(facts).length) {
             chatEngine.saveFacts(senderId, facts);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
   } catch (err) {
     console.error("[Neura Error]");
     console.dir(err, { depth: null });
     await sock
       .sendMessage(chatId, { text: "Neura lagi error nih, coba lagi bentar ya~" }, { quoted: msg })
-      .catch(() => {});
+      .catch(() => { });
   } finally {
     processingLocks.delete(groupId);
   }

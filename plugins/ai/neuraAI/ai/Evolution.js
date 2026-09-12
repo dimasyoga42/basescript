@@ -1,45 +1,4 @@
-import fs from "fs";
-import path from "path";
-
-const ensureDir = (dbPath) => {
-  const dir = path.dirname(dbPath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-};
-
-function getUserData(dbPath) {
-  try {
-    ensureDir(dbPath);
-
-    if (!fs.existsSync(dbPath)) {
-      fs.writeFileSync(dbPath, "[]");
-      return [];
-    }
-
-    const raw = fs.readFileSync(dbPath, "utf-8");
-
-    if (!raw) return [];
-
-    const parsed = JSON.parse(raw);
-
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed;
-  } catch (err) {
-    console.error("Gagal membaca file:", err);
-    return [];
-  }
-}
-
-const saveUserData = (dbPath, data) => {
-  try {
-    ensureDir(dbPath);
-    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
-  } catch (err) {
-    console.error(`Error writing to ${dbPath}:`, err);
-  }
-};
+import JsonStore from "./store.js";
 
 const GLOBAL_ID = "global";
 const DEFAULT_TRAITS = {
@@ -54,21 +13,11 @@ const TRAIT_STEP = 0.5;
 
 export default class PersonalityEvolutionEngine {
   constructor(dbPath) {
-    this.dbPath = dbPath;
-  }
-
-  _load() {
-    const data = getUserData(this.dbPath);
-    return Array.isArray(data) ? data : [];
-  }
-
-  _save(data) {
-    saveUserData(this.dbPath, data);
+    this.store = new JsonStore(dbPath);
   }
 
   get() {
-    const data = this._load();
-    const entry = data.find((v) => v?.id === GLOBAL_ID);
+    const entry = this.store.get(GLOBAL_ID);
     if (!entry) {
       return {
         traits: { ...DEFAULT_TRAITS },
@@ -115,7 +64,12 @@ export default class PersonalityEvolutionEngine {
       bump("openness", TRAIT_STEP * 0.5);
     }
 
-    const knownSenders = Array.from(new Set([...current.knownSenders, senderId]));
+    // [OPTIMASI] Cek includes() langsung, tidak perlu bikin objek Set baru
+    // tiap panggilan cuma buat dedupe satu elemen.
+    const knownSenders = current.knownSenders.includes(senderId)
+      ? current.knownSenders
+      : [...current.knownSenders, senderId];
+
     const confidenceCeiling = Math.min(95, 45 + knownSenders.length * 0.4);
     const opennessCeiling = Math.min(90, 50 + current.interactionCount * 0.02);
     traits.confidence += (confidenceCeiling - traits.confidence) * 0.015;
@@ -126,25 +80,27 @@ export default class PersonalityEvolutionEngine {
     }
 
     const now = new Date().toISOString();
-    const data = this._load();
-    let entry = data.find((v) => v?.id === GLOBAL_ID);
-    if (!entry) {
-      entry = { id: GLOBAL_ID };
-      data.push(entry);
-    }
-    entry.traits = traits;
-    entry.interactionCount = current.interactionCount + 1;
-    entry.knownSenders = knownSenders;
-    entry.firstInteractionAt = current.firstInteractionAt || now;
-    entry.lastInteractionAt = now;
-    this._save(data);
+
+    // [OPTIMASI] Satu kali upsert (cache + debounced write), bukan
+    // find-manual + writeFileSync langsung.
+    const entry = this.store.upsert(GLOBAL_ID, {
+      traits,
+      interactionCount: current.interactionCount + 1,
+      knownSenders,
+      firstInteractionAt: current.firstInteractionAt || now,
+      lastInteractionAt: now,
+    });
 
     return {
-      traits,
+      traits: entry.traits,
       interactionCount: entry.interactionCount,
-      knownSenders,
+      knownSenders: entry.knownSenders,
       firstInteractionAt: entry.firstInteractionAt,
       lastInteractionAt: entry.lastInteractionAt,
     };
+  }
+
+  flush() {
+    this.store.flushSync();
   }
 }
