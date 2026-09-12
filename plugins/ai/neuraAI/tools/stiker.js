@@ -36,7 +36,7 @@ export const sendStiker = async (teks) => {
         "https://i.pinimg.com/736x/5f/84/da/5f84da6206caa2857f6916be7020542f.jpg",
         "https://i.pinimg.com/736x/c6/dc/4b/c6dc4b9b216861c0f55d8a9c7be0a06d.jpg"
       ],
-      merasa_keren: [
+      merasakeren: [
         "https://i.pinimg.com/736x/31/b1/b0/31b1b05e548d0a2ad0c4e1bd8c14ddab.jpg"
       ],
       malu: [
@@ -49,7 +49,7 @@ export const sendStiker = async (teks) => {
       bingung: [
         "https://i.pinimg.com/736x/01/99/68/0199682e98fca55fddb324186076e427.jpg"
       ],
-      tak_percaya: [
+      gakpercaya: [
         "https://i.pinimg.com/736x/8c/db/fb/8cdbfb5ba520ff4cb27be0429ef844a0.jpg",
         "https://i.pinimg.com/736x/8a/92/d3/8a92d336c405fa64fd7358086072b4a7.jpg",
         ""
@@ -66,8 +66,21 @@ export const sendStiker = async (teks) => {
       kategori = 'sedih'
     } else if (teksLower.includes('marah') || teksLower.includes('kesal')) {
       kategori = 'marah'
+    } else if (teksLower.includes('malu') || teksLower.includes('malu')) {
+      kategori = 'malu'
+    } else if (teksLower.includes('bingung') || teksLower.includes('bingung')) {
+      kategori = 'bingung'
+    } else if (teksLower.includes('curiga') || teksLower.includes('curiga')) {
+      kategori = 'curiga'
+    } else if (teksLower.includes('spam') || teksLower.includes('spam')) {
+      kategori = 'spam'
+    } else if (teksLower.includes('lawak') || teksLower.includes('lawak')) {
+      kategori = 'lawak'
+    } else if (teksLower.includes('gakpercaya') || teksLower.includes('gakpercaya')) {
+      kategori = 'gakpercaya'
+    } else if (teksLower.includes('merasakeren') || teksLower.includes('merasakeren')) {
+      kategori = 'merasakeren'
     }
-
     if (!kategori) return null
 
     const daftarStiker = data[kategori]
