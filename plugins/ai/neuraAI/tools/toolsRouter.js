@@ -1,6 +1,6 @@
 import { safeCalc, currentTime } from "./basicTools.js";
 import { xtalFinder } from "./toramTools.js";
-import { xtalStatsDump, xtalStatSearch } from "./xtalsearch.js";
+import { xtalStatList, xtalStatsDump, xtalStatSearch } from "./xtalsearch.js";
 import { replyReader } from "./replayrender.js";
 import { sendStiker } from "./stiker.js";
 
@@ -17,6 +17,7 @@ const registry = {
   // media (URL gambar), bukan teks. Tool ini di-intercept lebih dulu
   // di file Neura sebelum runTools() dipanggil (lihat STICKER_PATTERN).
   stiker: async (arg) => sendStiker(arg),
+  liststats: async (arg) => xtalStatList(arg)
 };
 
 export async function runTools(text, ctx = {}) {

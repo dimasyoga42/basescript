@@ -43,7 +43,7 @@ export const xtalStatSearch = async (statKeyword) => {
   const { data, error } = await supa
     .from("xtal")
     .select("name, type, stats, upgrade_route, max_upgrade_route")
-    .ilike("stats", `%${escaped}%`)
+    .ilike("stats", `%${escaped}`)
     .limit(20);
 
   if (error) {
@@ -57,10 +57,8 @@ export const xtalStatSearch = async (statKeyword) => {
   return `Ditemukan ${data.length} xtal dengan stat "${keyword}":\n\n${data
     .map(
       (item, index) =>
-        `${index + 1}. ${item.name} (${item.type ?? "-"})\n   Stat: ${
-          item.stats ?? "-"
-        }\n   Rute: ${item.upgrade_route ?? "-"} → ${
-          item.max_upgrade_route ?? "-"
+        `${index + 1}. ${item.name} (${item.type ?? "-"})\n   Stat: ${item.stats ?? "-"
+        }\n   Rute: ${item.upgrade_route ?? "-"} → ${item.max_upgrade_route ?? "-"
         }`,
     )
     .join("\n\n")}`;
