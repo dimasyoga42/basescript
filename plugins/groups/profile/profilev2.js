@@ -49,9 +49,8 @@ const handler = async (m, { conn }) => {
     const { data, error } = await supa
       .from("profile")
       .select("user_id, bio, profile_path")
-      .ilike("user_id", `%${targetId}`)
-      .maybeSingle()
-
+      .eq("user_id", `${targetId}`)
+    console.log(data)
     if (error) throw error
 
     if (!data) {
