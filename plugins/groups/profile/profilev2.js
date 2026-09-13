@@ -44,7 +44,7 @@ const handler = async (m, { conn }) => {
     const { data, error } = await supa
       .from("profile")
       .select("user_id, bio, profile_path")
-      .eq("user_id", `${targetId}`).maybeSingle()
+      .eq("user_id", `${targetId}`)
     console.log(data, targetId)
     if (error) throw error
 
