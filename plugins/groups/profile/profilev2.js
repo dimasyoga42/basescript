@@ -1,4 +1,3 @@
-
 import { sendImage, sendText } from "../../../src/config/message.js"
 import { supa } from "../../../src/config/supa.js"
 
@@ -9,6 +8,16 @@ const getUserId = (m) => {
     return remoteJid
 
   return m.key?.participantAlt || m.key?.participant || remoteJid
+}
+
+const DEFAULT_PP = "https://telegra.ph/file/24fa902ead26340f3df2c.png"
+
+const getProfilePicture = async (conn, jid) => {
+  try {
+    return await conn.profilePictureUrl(jid, "image")
+  } catch {
+    return DEFAULT_PP
+  }
 }
 
 const handler = async (m, { conn }) => {
@@ -29,59 +38,48 @@ const handler = async (m, { conn }) => {
     const self = getUserId(m)
     const targetId = mention || quotedParticipant || self
     const isSelf = targetId === self
+    const isOther = !isSelf
+
+    const displayName = isSelf
+      ? (m.pushName || "User")
+      : `@${targetId.split("@")[0]}`
+
+    const mentions = isOther ? [targetId] : []
 
     const { data, error } = await supa
       .from("profile")
       .select("user_id, bio, profile_path")
-      .ilike("user_id", `%${targetId}`).single()
+      .ilike("user_id", `%${targetId}`)
+      .maybeSingle()
 
-    if (error)
-      throw error
+    if (error) throw error
 
     if (!data) {
-      let profileUrl
-
-      try {
-        profileUrl = await conn.profilePictureUrl(targetId, "image")
-      } catch {
-        profileUrl = "https://telegra.ph/file/24fa902ead26340f3df2c.png"
-      }
-
-      const name = isSelf
-        ? m.pushName || "User"
-        : mention
-          ? `@${targetId.split("@")[0]} `
-          : "User"
+      const profileUrl = await getProfilePicture(conn, targetId)
 
       return await conn.sendMessage(
         m.chat,
         {
           image: { url: profileUrl },
-          caption: `${name} belum membuat profile.\nGunakan.setdesc | .setpp untuk menambahkan profile.`,
-          mentions: mention ? [targetId] : [],
+          caption: `${displayName} belum membuat profile.\nGunakan .setdesc | .setpp untuk menambahkan profile.`,
+          mentions,
         },
         { quoted: m }
       )
     }
 
-    let profilePath = data.profile_path
-
-    if (!profilePath) {
-      try {
-        profilePath = await conn.profilePictureUrl(targetId, "image")
-      } catch {
-        profilePath = "https://telegra.ph/file/24fa902ead26340f3df2c.png"
-      }
-    }
+    const profilePath = data.profile_path || (await getProfilePicture(conn, targetId))
 
     return sendImage(
       conn,
       m.chat,
       profilePath,
-      data.bio || "Belum ada bio.",
-      m
+      `${displayName}\n${data.bio || "Belum ada bio."}`,
+      m,
+      mentions
     )
   } catch (err) {
+    console.error("[profile handler]", err)
     return sendText(
       conn,
       m.chat,
