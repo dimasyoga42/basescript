@@ -33,7 +33,7 @@ const handler = async (m, { conn }) => {
     const { data, error } = await supa
       .from("profile")
       .select("user_id, bio, profile_path")
-      .eq("user_id", targetId).single()
+      .ilike("user_id", `%${targetId}`).single()
 
     if (error)
       throw error
