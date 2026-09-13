@@ -30,15 +30,15 @@ const handler = async (m, { conn }) => {
       m.message?.imageMessage?.contextInfo ||
       m.message?.videoMessage?.contextInfo
 
-    const mention = contextInfo?.mentionedJid?.[0]
-    const quotedParticipant =
-      contextInfo?.participantAlt ||
-      contextInfo?.participant
+    const mention =
+      m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0];
 
-    const self = getUserId(m)
-    const targetId = mention || quotedParticipant || self
-    const isSelf = targetId === self
-    const isOther = !isSelf
+    const quotedParticipant =
+      m.message?.extendedTextMessage?.contextInfo?.participant;
+
+    const self = getUserId(m);
+    const targetId = mention || quotedParticipant || self;
+    const isSelf = targetId === self;
 
     const displayName = isSelf
       ? (m.pushName || "User")
@@ -50,7 +50,7 @@ const handler = async (m, { conn }) => {
       .from("profile")
       .select("user_id, bio, profile_path")
       .eq("user_id", `${targetId}`)
-    console.log(data)
+    console.log(data, targetId)
     if (error) throw error
 
     if (!data) {
