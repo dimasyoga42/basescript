@@ -22,7 +22,7 @@ const handler = async (m, { conn }) => {
     const targetId = mention || quotedParticipant || self;
     const isSelf = targetId === self;
     const { data, error } = await supa.from("profile").select("user_id, bio, profile_path").eq("user_id", targetId)
-    if (error || !data || data.length === 0) {
+    if (error || !data) {
       let profileUrl
 
       if (!data) {

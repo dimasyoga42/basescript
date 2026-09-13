@@ -32,7 +32,7 @@ import { cronMt } from "./plugins/_function/_cornmt.js";
 import { cronCode } from "./plugins/_function/_codes.js";
 import { isAdmin } from "./plugins/_function/_admin.js";
 import { getDevice } from "@whiskeysockets/baileys";
-import {selesaikanLelang} from "./plugins/_function/_lelang.js";
+import { selesaikanLelang } from "./plugins/_function/_lelang.js";
 dotenv.config();
 const start = async () => {
   // Load semua plugin dulu sebelum bot jalan
@@ -65,10 +65,10 @@ const start = async () => {
     try {
       const params = JSON.parse(
         msg.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson ||
-          "{}",
+        "{}",
       );
       if (params.id) return params.id;
-    } catch {}
+    } catch { }
     return (
       msg.conversation ||
       msg.extendedTextMessage?.text ||
@@ -85,7 +85,7 @@ const start = async () => {
     if (type !== "notify") return;
 
     const m = messages[0];
-   // console.log(m);
+    // console.log(m);
     //console.log(m);
     if (!m?.message) return;
 
@@ -110,8 +110,8 @@ const start = async () => {
       await jawab(sock, m);
       await messageHandler(sock, m.chat, m);
       await runCommand(sock, m, plugins);
-      await cronLive(sock);
-      await cronMt(sock);
+      //await cronLive(sock);
+      //await cronMt(sock);
       await cronCode(sock);
       //await selesaikanLelang(sock, m.chat)
       // setInterval(
