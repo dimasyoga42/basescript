@@ -1,14 +1,10 @@
 import { sendImage, sendText } from "../../../src/config/message.js"
 import { supa } from "../../../src/config/supa.js"
 
-const getUserId = (m) => {
-  const remoteJid = m.key?.remoteJid
-
-  if (remoteJid?.endsWith("@s.whatsapp.net"))
-    return remoteJid
-
-  return m.key?.participantAlt || m.key?.participant || remoteJid
-}
+const getUserId = (m) =>
+  m.key.remoteJid.endsWith("@s.whatsapp.net")
+    ? m.key.remoteJid
+    : m.key.participant || m.key.remoteJid;
 
 const DEFAULT_PP = "https://telegra.ph/file/24fa902ead26340f3df2c.png"
 
