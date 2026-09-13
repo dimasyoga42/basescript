@@ -64,13 +64,11 @@ const handler = async (m, { conn }) => {
 
     const profilePath = data.profile_path || (await getProfilePicture(conn, targetId))
 
-    return sendImage(
-      conn,
-      m.chat,
-      profilePath,
-      `${displayName}\n${data.bio || "Belum ada bio."}`,
-      m,
-    )
+    return conn.sendMessage(m.chat, {
+      image: { url: profilePath },
+      caption: data.bio,
+      mention
+    }, { quoted: m })
   } catch (err) {
     console.error("[profile handler]", err)
     return sendText(
