@@ -44,7 +44,6 @@ const handler = async (m, { conn }) => {
       ? (m.pushName || "User")
       : `@${targetId.split("@")[0]}`
 
-    const mentions = isOther ? [targetId] : []
 
     const { data, error } = await supa
       .from("profile")
@@ -75,7 +74,7 @@ const handler = async (m, { conn }) => {
       profilePath,
       `${displayName}\n${data.bio || "Belum ada bio."}`,
       m,
-      mentions
+      mention
     )
   } catch (err) {
     console.error("[profile handler]", err)
