@@ -56,7 +56,7 @@ const handler = async (m, { conn }) => {
         {
           image: { url: profileUrl },
           caption: `${displayName} belum membuat profile.\nGunakan .setdesc | .setpp untuk menambahkan profile.`,
-          mentions,
+          mention,
         },
         { quoted: m }
       )
@@ -70,7 +70,6 @@ const handler = async (m, { conn }) => {
       profilePath,
       `${displayName}\n${data.bio || "Belum ada bio."}`,
       m,
-      mention
     )
   } catch (err) {
     console.error("[profile handler]", err)
