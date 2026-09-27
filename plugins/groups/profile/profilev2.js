@@ -46,7 +46,6 @@ const handler = async (m, { conn }) => {
       .select("user_id, bio, profile_path")
       .eq("user_id", `${targetId}`)
     console.log(data, targetId)
-    if (error) throw error
 
     if (!data || error) {
       const profileUrl = await getProfilePicture(conn, targetId)
