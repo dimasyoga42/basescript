@@ -1,12 +1,12 @@
-import { sendImage, sendText } from "../../../src/config/message.js"
+import { sendText } from "../../../src/config/message.js"
 import { supa } from "../../../src/config/supa.js"
 
-const getUserId = (m) =>
-  m.key.remoteJid.endsWith("@s.whatsapp.net")
-    ? m.key.remoteJid
-    : m.key.participant || m.key.remoteJid;
-
 const DEFAULT_PP = "https://telegra.ph/file/24fa902ead26340f3df2c.png"
+
+const getUserId = (m) =>
+  m.key.remoteJid?.endsWith("@s.whatsapp.net")
+    ? m.key.remoteJid
+    : m.key.participant || m.key.remoteJid
 
 const getProfilePicture = async (conn, jid) => {
   try {
@@ -24,30 +24,34 @@ const handler = async (m, { conn }) => {
     const contextInfo =
       m.message?.extendedTextMessage?.contextInfo ||
       m.message?.imageMessage?.contextInfo ||
-      m.message?.videoMessage?.contextInfo
+      m.message?.videoMessage?.contextInfo ||
+      m.message?.buttonsResponseMessage?.contextInfo ||
+      m.message?.listResponseMessage?.contextInfo ||
+      m.message?.templateButtonReplyMessage?.contextInfo
 
-    const mention =
-      m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0];
+    const mention = contextInfo?.mentionedJid?.[0]
+    const quotedParticipant = contextInfo?.participant
 
-    const quotedParticipant =
-      m.message?.extendedTextMessage?.contextInfo?.participant;
-
-    const self = getUserId(m);
-    const targetId = mention || quotedParticipant || self;
-    const isSelf = targetId === self;
+    const self = getUserId(m)
+    const targetId = mention || quotedParticipant || self
+    const isSelf = targetId === self
 
     const displayName = isSelf
-      ? (m.pushName || "User")
+      ? m.pushName || "User"
       : `@${targetId.split("@")[0]}`
-
 
     const { data, error } = await supa
       .from("profile")
       .select("user_id, bio, profile_path")
-      .eq("user_id", `${targetId}`)
-    console.log(data, targetId)
+      .eq("user_id", targetId)
+      .maybeSingle()
 
-    if (!data || error) {
+    if (error) {
+      console.error("[profile query]", error)
+      throw error
+    }
+
+    if (!data) {
       const profileUrl = await getProfilePicture(conn, targetId)
 
       return await conn.sendMessage(
@@ -55,20 +59,27 @@ const handler = async (m, { conn }) => {
         {
           image: { url: profileUrl },
           caption: `${displayName} belum membuat profile.\nGunakan .setdesc | .setpp untuk menambahkan profile.`,
-          mention,
+          mentions: isSelf ? [] : [targetId],
         },
         { quoted: m }
       )
     }
 
-    const profilePath = data[0].profile_path || (await getProfilePicture(conn, targetId))
+    const profilePath =
+      data.profile_path || await getProfilePicture(conn, targetId)
 
-    return conn.sendMessage(m.chat, {
-      image: { url: profilePath },
-      caption: data[0].bio,
-    }, { quoted: m })
+    return await conn.sendMessage(
+      m.chat,
+      {
+        image: { url: profilePath },
+        caption: data.bio || "Belum ada bio.",
+        mentions: isSelf ? [] : [targetId],
+      },
+      { quoted: m }
+    )
   } catch (err) {
     console.error("[profile handler]", err)
+
     return sendText(
       conn,
       m.chat,
