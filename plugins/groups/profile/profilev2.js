@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises"
 import { sendText } from "../../../src/config/message.js"
 import { supa } from "../../../src/config/supa.js"
 
@@ -13,6 +14,28 @@ const getProfilePicture = async (conn, jid) => {
     return await conn.profilePictureUrl(jid, "image")
   } catch {
     return DEFAULT_PP
+  }
+}
+
+const getImageBuffer = async (conn, jid, profilePath) => {
+  if (profilePath) {
+    try {
+      return await readFile(profilePath)
+    } catch (err) {
+      console.error("[profile image]", err)
+    }
+  }
+
+  try {
+    const profileUrl = await getProfilePicture(conn, jid)
+    const response = await fetch(profileUrl)
+
+    if (!response.ok)
+      return null
+
+    return Buffer.from(await response.arrayBuffer())
+  } catch {
+    return null
   }
 }
 
@@ -46,18 +69,24 @@ const handler = async (m, { conn }) => {
       .eq("user_id", targetId)
       .maybeSingle()
 
-    if (error) {
-      console.error("[profile query]", error)
+    if (error)
       throw error
-    }
 
     if (!data) {
-      const profileUrl = await getProfilePicture(conn, targetId)
+      const image = await getImageBuffer(conn, targetId)
+
+      if (!image)
+        return sendText(
+          conn,
+          m.chat,
+          `${displayName} belum membuat profile.\nGunakan .setdesc | .setpp untuk menambahkan profile.`,
+          m
+        )
 
       return await conn.sendMessage(
         m.chat,
         {
-          image: { url: profileUrl },
+          image,
           caption: `${displayName} belum membuat profile.\nGunakan .setdesc | .setpp untuk menambahkan profile.`,
           mentions: isSelf ? [] : [targetId],
         },
@@ -65,13 +94,24 @@ const handler = async (m, { conn }) => {
       )
     }
 
-    const profilePath =
-      data.profile_path || await getProfilePicture(conn, targetId)
+    const image = await getImageBuffer(
+      conn,
+      targetId,
+      data.profile_path
+    )
+
+    if (!image)
+      return sendText(
+        conn,
+        m.chat,
+        "Foto profile tidak ditemukan.",
+        m
+      )
 
     return await conn.sendMessage(
       m.chat,
       {
-        image: { url: profilePath },
+        image,
         caption: data.bio || "Belum ada bio.",
         mentions: isSelf ? [] : [targetId],
       },
