@@ -48,7 +48,7 @@ const handler = async (m, { conn }) => {
     console.log(data, targetId)
     if (error) throw error
 
-    if (!data) {
+    if (!data || error) {
       const profileUrl = await getProfilePicture(conn, targetId)
 
       return await conn.sendMessage(
