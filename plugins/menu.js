@@ -1,63 +1,105 @@
-import { config, thumbnail } from "../config.js";
-import { scrapeBoostBoss } from "./toram/boost.js";
-import { sendFancyText, sendFancyTextModif, sendMenu, sendText, sendTextWithContext } from "../src/config/message.js";
-import { supa } from "../src/config/supa.js";
-import { buildAvaGrid } from "./_function/_format.js";
-import axios from "axios";
-import { demoButtonV2, thumb } from "../src/config/ms.js";
-import path from "path"
+import path from "path";
+import { config } from "../config.js";
+import { buildSelectButton } from "../src/config/message.js";
 import { getUserData } from "../src/config/func.js";
-const db = path.resolve("db", "prefix.json")
-const handler = async (m, { conn }) => {
-  let image = null;
-  try {
-    image = await buildAvaGrid("https://neurapi.mochinime.cyou/api/toram/ava");
-  } catch (e) {
-    console.error("[menu] gagal build ava grid:", e.message);
-  }
 
-  // Scrape boost boss
-  let dataBoses = { active: false, bosses: [] };
-  try {
-    dataBoses = await scrapeBoostBoss();
-  } catch (e) {
-    console.error("[menu] gagal scrape boss:", e.message);
-  }
+const db = path.resolve("db", "prefix.json");
+const CAPTION_LIMIT = 1800; // batas karakter command di caption
+const THUMBNAIL = "https://server.neurasama.my.id/etc/thumbnail";
 
-  // Load plugins
+const INFO = `*Informasi Bot*
+Library: Luna-lib(JS)
+Version: 1.2.5
+Owner: Dimas Yoga (085664393331)
+
+*Rules*
+- dilarang spam cmd tertentu
+- dilarang membuat stiker jomok
+- bot hanya merespon chat grub tidak chat pribadi`;
+
+// Ambil prefix per chat (default ".")
+async function getPrefix(chatId) {
+  try {
+    const data = await getUserData(db); // aman walau sync atau async
+    const pref = Array.isArray(data) ? data.find((i) => i?.id === chatId) : null;
+    return pref?.prefix || ".";
+  } catch (e) {
+    console.error("[menu] gagal baca prefix:", e.message);
+    return ".";
+  }
+}
+
+// Kelompokkan command berdasarkan kategori plugin
+async function loadCategories() {
   const { plugins } = await import("./index.js");
   const categories = {};
-  for (const name in plugins) {
-    const plugin = plugins[name];
+  for (const plugin of Object.values(plugins)) {
     if (!plugin?.command) continue;
-    const cmds = Array.isArray(plugin.command)
-      ? plugin.command
-      : [plugin.command];
+    const cmds = [plugin.command].flat().filter((c) => typeof c === "string");
+    if (!cmds.length) continue;
     const cat = plugin.category || "other";
-    if (!categories[cat]) categories[cat] = [];
-    categories[cat].push(...cmds);
+    (categories[cat] ??= []).push(...cmds);
+  }
+  return categories;
+}
+
+// Ambil baris sebanyak muat dalam limit, dipotong rapi per baris (bukan di tengah kata)
+function fitLines(lines, limit) {
+  const out = [];
+  let len = 0;
+  for (const line of lines) {
+    if (len + line.length + 1 > limit) return { text: out.join("\n"), truncated: true };
+    out.push(line);
+    len += line.length + 1;
+  }
+  return { text: out.join("\n"), truncated: false };
+}
+
+const handler = async (m, { conn }) => {
+  const query = (m.text || "").trim().split(/\s+/).slice(1).join(" ").trim().toLowerCase();
+
+  const [categories, prefix] = await Promise.all([loadCategories(), getPrefix(m.chat)]);
+  const catNames = Object.keys(categories);
+
+  // Tombol pilih kategori
+  const selectButton = buildSelectButton(
+    "Menu Command",
+    "Silahkan pilih salah satu",
+    catNames.map((cat) => ({
+      title: cat,
+      description: `Lihat command ${cat}`,
+      id: `${prefix}menu ${cat}`,
+    })),
+  );
+
+  let body;
+  const matched = catNames.find((c) => c.toLowerCase() === query);
+
+  if (matched) {
+    // .menu <kategori> -> tampilkan command kategori itu saja
+    const cmds = categories[matched].map((c) => `➤ ${prefix}${c}`).join("\n");
+    body = `*Kategori: ${matched}*\n${cmds}`;
+  } else {
+    // .menu -> info bot + sebagian command di caption, sisanya lewat tombol
+    const lines = catNames.flatMap((cat) => [
+      `_${cat}_`,
+      ...categories[cat].map((c) => `➤ ${prefix}${c}`),
+      "",
+    ]);
+    const { text, truncated } = fitLines(lines, CAPTION_LIMIT);
+    const notFound = query ? `_Kategori "${query}" tidak ditemukan._\n\n` : "";
+    const more = truncated ? "\n...\n_Pilih kategori lewat tombol untuk lihat lengkap_" : "";
+    body = `${INFO}\n\n${notFound}${text.trim()}${more}`;
   }
 
-
-  // Section command
-  const data = getUserData(db)
-  const pref = Array.isArray(data) ? data.find((item) => item?.id === m.chat) : null;
-  const prefix = pref?.prefix || ".";
-  const commandSection = Object.entries(categories)
-    .map(
-      ([cat, cmds]) =>
-        `_${cat}_\n` + cmds.map((c) => `➤ ${prefix}${c}`).join("\n") + `\n`,
-    )
-    .join("\n\n").trim();
-
-  const result = `*Informasi Bot*\nLibrary: Luna-lib(JS)\nVersion: 1.2.5\nWebsite: https://dimasyogaaa.vercel.app\nOwner:Dimas Yoga (085664393331)\n\n*Rules*\n- dilarang spam cmd tertentu\n- dilarang membuat stiker jomok\n- bot hanya merespon chat grub tidak chat pribadi\n\n${commandSection}`;
-
-  const randomThumb =
-    config.thumbnail[Math.floor(Math.random() * config.thumbnail.length)];
-
-
-  await thumb(conn, m, config.BotName, result, config.OwnerName, config.msgtxt[Math.floor(Math.random() * config.msgtxt.length)], "https://server.neurasama.my.id/etc/thumbnail")
-  await sendText(conn, m.chat, "*Informasi:*\ndata profile mengalami corrupt jadi semua data kembali di reset dengan database yang baru")
+  await conn.sendButton(m.chat, {
+    image: { url: THUMBNAIL },
+    caption: body,
+    button: [selectButton],
+    footer: config.OwnerName,
+    bottom_sheet: true,
+    bottom_name: "daftar menu",
+  });
 };
 
 handler.command = "menu";
