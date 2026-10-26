@@ -10,6 +10,7 @@ const THUMBNAIL = "https://server.neurasama.my.id/etc/thumbnail";
 const INFO = `*Informasi Bot*
 Library: Luna-lib(JS)
 Version: 1.2.5
+Website: https://dimasyogaaa.vercel.app
 Owner: Dimas Yoga (085664393331)
 
 *Rules*
@@ -95,7 +96,8 @@ const handler = async (m, { conn }) => {
   await conn.sendButton(m.chat, {
     image: { url: THUMBNAIL },
     caption: body,
-    button: [selectButton],
+    buttons: [selectButton],
+    button: [selectButton], // kompatibilitas versi luna-lib lama
     footer: config.OwnerName,
     bottom_sheet: true,
     bottom_name: "daftar menu",
