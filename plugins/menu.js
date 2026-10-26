@@ -5,6 +5,7 @@ import { getUserData } from "../src/config/func.js";
 
 const db = path.resolve("db", "prefix.json");
 const CAPTION_LIMIT = 1800; // batas karakter command di caption
+const DEFAULT_CATEGORY = "menu admin"; // kategori yang tampil di caption awal
 const THUMBNAIL = "https://server.neurasama.my.id/etc/thumbnail";
 
 const INFO = `*Informasi Bot*
@@ -81,16 +82,16 @@ const handler = async (m, { conn }) => {
     const cmds = categories[matched].map((c) => `➤ ${prefix}${c}`).join("\n");
     body = `*Kategori: ${matched}*\n${cmds}`;
   } else {
-    // .menu -> info bot + sebagian command di caption, sisanya lewat tombol
-    const lines = catNames.flatMap((cat) => [
-      `_${cat}_`,
-      ...categories[cat].map((c) => `➤ ${prefix}${c}`),
-      "",
-    ]);
-    const { text, truncated } = fitLines(lines, CAPTION_LIMIT);
+    // .menu -> info bot + kategori default (Menu Admin) saja, sisanya lewat tombol
+    const defCat = catNames.find((c) => c.toLowerCase() === DEFAULT_CATEGORY);
     const notFound = query ? `_Kategori "${query}" tidak ditemukan._\n\n` : "";
-    const more = truncated ? "\n...\n_Pilih kategori lewat tombol untuk lihat lengkap_" : "";
-    body = `${INFO}\n\n${notFound}${text.trim()}${more}`;
+    let list = "";
+    if (defCat) {
+      const lines = categories[defCat].map((c) => `➤ ${prefix}${c}`);
+      const { text, truncated } = fitLines(lines, CAPTION_LIMIT);
+      list = `*${defCat}*\n${text}${truncated ? "\n..." : ""}\n\n`;
+    }
+    body = `${INFO}\n\n${notFound}${list}_Pilih kategori lain lewat tombol di bawah_`;
   }
 
   await conn.sendButton(m.chat, {
