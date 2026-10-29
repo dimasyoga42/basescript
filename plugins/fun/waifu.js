@@ -5,7 +5,8 @@ import {
 
 const handler = async (m, { conn }) => {
   try {
-   sendImage(conn, m.chat, "https://shinraapi.cloud/api/waifu", "ini adalah waifu anda hari ini", m)
+   //sendImage(conn, m.chat, "https://shinraapi.cloud/api/waifu", "ini adalah waifu anda hari ini", m)
+   conn.sendMessage(m.chat, { image: { url: "https://shinraapi.cloud/api/waifu" } }, { quoted: m });
   } catch (err) {
     sendText(conn, m.chat, err, m)
  }
