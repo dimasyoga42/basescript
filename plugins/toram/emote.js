@@ -192,7 +192,7 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = ["emot"];
-handler.category = "Toram Search";
+handler.category = "Menu Toram";
 handler.submenu = "Toram";
 
 export default handler;

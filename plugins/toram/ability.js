@@ -118,6 +118,6 @@ const handler = async (m, { conn }) => {
 };
 handler.command = "trait";
 handler.alias = ["ability"];
-handler.category = "Toram Search";
+handler.category = "Menu Toram";
 handler.submenu = "Toram";
 export default handler;

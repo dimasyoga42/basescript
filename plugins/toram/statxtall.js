@@ -399,6 +399,6 @@ Pilih salah satu:`,
 };
 
 handler.command = "statsxtal";
-handler.category = "Toram Search";
+handler.category = "Menu Toram";
 
 export default handler;

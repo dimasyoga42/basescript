@@ -41,7 +41,7 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = ["dye"];
-handler.category = "Toram Info";
+handler.category = "Menu Toram";
 handler.submenu = "Toram";
 
 export default handler;

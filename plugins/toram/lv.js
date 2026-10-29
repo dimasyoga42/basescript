@@ -114,7 +114,7 @@ const handler = async (m, { conn }) => {
 
 handler.command = "lv";
 handler.alias = ["level", "lvl"];
-handler.category = "Toram Search";
+handler.category = "Menu Toram";
 handler.submenu = "Toram";
 
 export default handler;

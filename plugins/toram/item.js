@@ -92,6 +92,6 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = "item";
-handler.category = "Toram Search";
+handler.category = "Menu Toram";
 
 export default handler;

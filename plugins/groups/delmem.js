@@ -88,6 +88,6 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = "delmem";
-handler.category = "Menu Raid";
+handler.category = "Menu grub";
 
 export default handler;

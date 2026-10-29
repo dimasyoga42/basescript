@@ -56,7 +56,7 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = ["hdb"];
-handler.category = "Toram Search";
+handler.category = "Menu Toram";
 handler.submenu = "Toram";
 
 export default handler;

@@ -125,6 +125,6 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = "gacharaid";
-handler.category = "Menu Raid";
+handler.category = "Menu grub";
 
 export default handler;

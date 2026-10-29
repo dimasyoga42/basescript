@@ -53,6 +53,6 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = "raidmem";
-handler.category = "Menu Raid";
+handler.category = "Menu grub";
 
 export default handler;

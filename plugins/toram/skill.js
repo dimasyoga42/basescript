@@ -199,7 +199,7 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = "skill";
-handler.category = "Toram Search";
+handler.category = "Menu Toram";
 handler.submenu = "Toram";
 
 export default handler;

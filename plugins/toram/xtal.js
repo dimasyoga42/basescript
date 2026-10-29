@@ -151,6 +151,6 @@ const handler = async (m, { conn }) => {
 
 handler.command = "xtall";
 handler.alias = ["xtal"];
-handler.category = "Toram Search";
+handler.category = "Menu Toram";
 
 export default handler;

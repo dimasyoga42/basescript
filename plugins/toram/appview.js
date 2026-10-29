@@ -41,5 +41,5 @@ const handler = async (m, { conn }) => {
 
 handler.command = "appview";
 handler.alias = ["app"];
-handler.category = "Toram Search";
+handler.category = "Menu Toram";
 export default handler;

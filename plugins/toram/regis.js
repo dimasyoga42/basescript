@@ -94,6 +94,6 @@ const handler = async (m, { conn, text }) => {
 };
 handler.command = "regis";
 handler.alias = ["regist"];
-handler.category = "Toram Search";
+handler.category = "Menu Toram";
 handler.submenu = "Toram";
 export default handler;

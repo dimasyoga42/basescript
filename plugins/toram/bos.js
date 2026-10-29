@@ -81,6 +81,6 @@ const handler = async (m, { conn }) => {
 };
 
 handler.command = ["bosdef"];
-handler.category = "Toram Search";
+handler.category = "Menu Toram";
 handler.submenu = "Toram";
 export default handler;

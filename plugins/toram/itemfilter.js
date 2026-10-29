@@ -464,6 +464,6 @@
 // };
 
 // handler.command = "itemfilter";
-// handler.category = "Toram Search";
+// handler.category = "Menu Toram";
 
 // export default handler;

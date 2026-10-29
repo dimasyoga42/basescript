@@ -62,6 +62,6 @@ Source: ${res.data?.result?.source || "Neura API"}`;
 };
 
 handler.command = ["spamadv"];
-handler.category = "Toram Simulator";
+handler.category = "Menu Toramulator";
 handler.submenu = "Simulator";
 export default handler;
