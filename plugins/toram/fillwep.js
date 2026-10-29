@@ -60,6 +60,6 @@
 // };
 
 // handler.command = ["fillwep"];
-// handler.category = "Menu Toramulator";
+// handler.category = "Menu Toramlator";
 // handler.submenu = "Toram";
 // export default handler;

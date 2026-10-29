@@ -95,7 +95,7 @@ Process Time        : ${data.duration} ms
 };
 
 handler.command = ["fillarm"];
-handler.category = "Menu Toramulator";
+handler.category = "Menu Toramlator";
 handler.submenu = "Toram";
 
 export default handler;
